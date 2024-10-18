@@ -1,11 +1,8 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 
-// Define the User interface
 interface User {
-  _id: {
-    $oid: string; // or just string if you prefer
-  };
+  _id: { $oid: string };
   firstName: string;
   lastName: string;
   email: string;
@@ -18,20 +15,10 @@ interface User {
 }
 
 export default function DataBase() {
-  const [data, setData] = useState<User[]>([]); // Use the User type
-
-  //   useEffect(() => {
-  //     const fetchData = async () => {
-  //       const response = await fetch("/api");
-  //       const result = await response.json();
-  //       setData(result.reverse());
-  //     };
-
-  //     fetchData();
-  //   }, []);
+  const [data, setData] = useState<User[]>([]);
 
   return (
-    <div className="">
+    <div>
       <div className="flex justify-center items-center h-16 text-3xl bg-slate-800 text-white">
         <h1>Production DataBase</h1>
       </div>
@@ -39,16 +26,22 @@ export default function DataBase() {
         <table className="box-border w-full border border-gray-700">
           <thead>
             <tr className="bg-gray-200">
-              <th className="border px-4 py-2">ID</th>
-              <th className="border px-4 py-2">First Name</th>
-              <th className="border px-4 py-2">Last Name</th>
-              <th className="border px-4 py-2">Email</th>
-              <th className="border px-4 py-2">Phone</th>
-              <th className="border px-4 py-2">Role</th>
-              <th className="border px-4 py-2">Status</th>
-              <th className="border px-4 py-2">Institution</th>
-              <th className="border px-4 py-2">Portfolio</th>
-              <th className="border px-4 py-2">About</th>
+              {[
+                "ID",
+                "First Name",
+                "Last Name",
+                "Email",
+                "Phone",
+                "Role",
+                "Status",
+                "Institution",
+                "Portfolio",
+                "About",
+              ].map((heading, i) => (
+                <th key={i} className="border px-4 py-2">
+                  {heading}
+                </th>
+              ))}
             </tr>
           </thead>
           <tbody>
@@ -57,7 +50,7 @@ export default function DataBase() {
                 key={row._id.$oid || index}
                 className="border-b hover:bg-gray-100"
               >
-                <td className="border px-4 py-2">{index + 1}</td>{" "}
+                <td className="border px-4 py-2">{index + 1}</td>
                 <td className="border px-4 py-2">{row.firstName}</td>
                 <td className="border px-4 py-2">{row.lastName}</td>
                 <td className="border px-4 py-2">{row.email}</td>
