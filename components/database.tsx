@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 // Define the User interface
 interface User {
@@ -17,22 +17,19 @@ interface User {
   about: string;
 }
 
-const data: User[] = [
-  {
-    _id: { $oid: "1234567890" },
-    firstName: "John",
-    lastName: "Doe",
-    email: "johndoe@example.com",
-    phone: "1234567890",
-    role: "Admin",
-    status: "Active",
-    institution: "ABC University",
-    portfolio: "https://example.com/portfolio",
-    about: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-  },
-];
-
 export default function DataBase() {
+  const [data, setData] = useState<User[]>([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const response = await fetch("/MockData.json");
+      const jsonData = await response.json();
+      setData(jsonData);
+    };
+
+    fetchData();
+  }, []);
+
   return (
     <div className="">
       <div className="overflow-x-auto">
@@ -54,15 +51,15 @@ export default function DataBase() {
           <tbody>
             {data.map((row, index) => (
               <tr key={index} className="border-b hover:bg-gray-100">
-                <td className="border px-4 py-2">{index + 1}</td>{" "}
-                <td className="border px-4 py-2">{row.firstName}</td>
-                <td className="border px-4 py-2">{row.lastName}</td>
-                <td className="border px-4 py-2">{row.email}</td>
-                <td className="border px-4 py-2">{row.phone}</td>
-                <td className="border px-4 py-2">{row.role}</td>
-                <td className="border px-4 py-2">{row.status}</td>
-                <td className="border px-4 py-2">{row.institution}</td>
-                <td className="border px-4 py-2">
+                <td className="border px-4 py-1">{index + 1}</td>{" "}
+                <td className="border px-4 py-1">{row.firstName}</td>
+                <td className="border px-4 py-1">{row.lastName}</td>
+                <td className="border px-4 py-1">{row.email}</td>
+                <td className="border px-4 py-1">{row.phone}</td>
+                <td className="border px-4 py-1">{row.role}</td>
+                <td className="border px-4 py-1">{row.status}</td>
+                <td className="border px-4 py-1">{row.institution}</td>
+                <td className="border px-4 py-1">
                   <a
                     href={row.portfolio}
                     className="text-blue-600 underline"
@@ -72,7 +69,7 @@ export default function DataBase() {
                     {row.portfolio}
                   </a>
                 </td>
-                <td className="border px-4 py-2">{row.about}</td>
+                <td className="border px-4 py-1">{row.about}</td>
               </tr>
             ))}
           </tbody>
