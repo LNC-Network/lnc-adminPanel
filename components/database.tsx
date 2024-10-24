@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useState } from "react";
+import React from "react";
 
 // Define the User interface
 interface User {
@@ -17,46 +17,43 @@ interface User {
   about: string;
 }
 
+const data: User[] = [
+  {
+    _id: { $oid: "1234567890" },
+    firstName: "John",
+    lastName: "Doe",
+    email: "johndoe@example.com",
+    phone: "1234567890",
+    role: "Admin",
+    status: "Active",
+    institution: "ABC University",
+    portfolio: "https://example.com/portfolio",
+    about: "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+  },
+];
+
 export default function DataBase() {
-  const [data, setData] = useState<User[]>([]); // Use the User type
-
-  //   useEffect(() => {
-  //     const fetchData = async () => {
-  //       const response = await fetch("/api");
-  //       const result = await response.json();
-  //       setData(result.reverse());
-  //     };
-
-  //     fetchData();
-  //   }, []);
-
   return (
     <div className="">
-      <div className="flex justify-center items-center h-16 text-3xl bg-slate-800 text-white">
-        <h1>Production DataBase</h1>
-      </div>
       <div className="overflow-x-auto">
         <table className="box-border w-full border border-gray-700">
           <thead>
             <tr className="bg-gray-200">
-              <th className="border px-4 py-2">ID</th>
-              <th className="border px-4 py-2">First Name</th>
-              <th className="border px-4 py-2">Last Name</th>
-              <th className="border px-4 py-2">Email</th>
-              <th className="border px-4 py-2">Phone</th>
-              <th className="border px-4 py-2">Role</th>
-              <th className="border px-4 py-2">Status</th>
-              <th className="border px-4 py-2">Institution</th>
-              <th className="border px-4 py-2">Portfolio</th>
-              <th className="border px-4 py-2">About</th>
+              <th className="border px-4 py-1">ID</th>
+              <th className="border px-4 py-1">First Name</th>
+              <th className="border px-4 py-1">Last Name</th>
+              <th className="border px-4 py-1">Email</th>
+              <th className="border px-4 py-1">Phone</th>
+              <th className="border px-4 py-1">Role</th>
+              <th className="border px-4 py-1">Status</th>
+              <th className="border px-4 py-1">Institution</th>
+              <th className="border px-4 py-1">Portfolio</th>
+              <th className="border px-4 py-1">About</th>
             </tr>
           </thead>
           <tbody>
             {data.map((row, index) => (
-              <tr
-                key={row._id.$oid || index}
-                className="border-b hover:bg-gray-100"
-              >
+              <tr key={index} className="border-b hover:bg-gray-100">
                 <td className="border px-4 py-2">{index + 1}</td>{" "}
                 <td className="border px-4 py-2">{row.firstName}</td>
                 <td className="border px-4 py-2">{row.lastName}</td>

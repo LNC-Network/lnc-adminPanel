@@ -1,26 +1,53 @@
 "use client";
 import { useState } from "react";
-import Admin from "@/components/admin";
-import DataBase from "@/components/database";
-import Analytics from "@/components/analytics";
 import { MdAdminPanelSettings } from "react-icons/md";
 import { GrDatabase, GrAnalytics } from "react-icons/gr";
+import { Top } from "@/components/ui/header";
+import dynamic from "next/dynamic";
+
+const DataBase = dynamic(() =>
+  import("@/components/database").then((mod) => mod.default)
+);
+const Analytics = dynamic(() =>
+  import("@/components/analytics").then((mod) => mod.default)
+);
+const Admin = dynamic(() =>
+  import("@/components/admin").then((mod) => mod.default)
+);
 
 export default function App() {
-  // State to track which component is active
   const [activeComponent, setActiveComponent] = useState("database");
 
-  // Function to render the selected component
   const renderComponent = () => {
     switch (activeComponent) {
       case "database":
-        return <DataBase />;
+        return (
+          <>
+            <Top heading="DataBase" />
+            <DataBase />
+          </>
+        );
       case "admin":
-        return <Admin />;
+        return (
+          <>
+            <Top heading="Admin Panel" />
+            <Admin />
+          </>
+        );
       case "analytics":
-        return <Analytics />; // Placeholder, replace with actual component
+        return (
+          <>
+            <Top heading="Analytics" />
+            <Analytics />
+          </>
+        );
       default:
-        return <DataBase />;
+        return (
+          <>
+            <Top heading="DataBase" />
+            <DataBase />
+          </>
+        );
     }
   };
 
