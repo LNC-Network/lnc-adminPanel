@@ -22,7 +22,7 @@ export default function DataBase() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const response = await fetch("/MockData.json");
+      const response = await fetch("/api/submit");
       const jsonData = await response.json();
       setData(jsonData);
     };

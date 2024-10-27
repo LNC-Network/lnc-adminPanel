@@ -5,6 +5,7 @@ import { GrDatabase, GrAnalytics } from "react-icons/gr";
 import { Top } from "@/components/ui/header";
 import dynamic from "next/dynamic";
 
+// render component with dynamic
 const DataBase = dynamic(() =>
   import("@/components/database").then((mod) => mod.default)
 );
@@ -18,6 +19,7 @@ const Admin = dynamic(() =>
 export default function App() {
   const [activeComponent, setActiveComponent] = useState("database");
 
+  // mainwindows component
   const renderComponent = () => {
     switch (activeComponent) {
       case "database":
