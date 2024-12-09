@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Administrative Panel",
+  title: "Control panel",
   description: "LNC Product [LNC 2024 All Rights Reserved]",
 };
 
