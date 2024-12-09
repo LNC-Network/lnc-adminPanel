@@ -14,9 +14,11 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { Switch } from "@/components/ui/switch";
 import React, { useEffect, useState } from "react";
+import { useTheme } from "@/hooks/setTheme";
 
-export default function Page() {
+const Page = () => {
   // toggles search box______________
   const [open, setOpen] = useState(false);
   useEffect(() => {
@@ -29,6 +31,8 @@ export default function Page() {
     document.addEventListener("keydown", down);
     return () => document.removeEventListener("keydown", down);
   }, []);
+  // theme
+  const { theme, toggleTheme } = useTheme();
 
   return (
     <SidebarProvider>
@@ -52,6 +56,7 @@ export default function Page() {
           </div>
           {/* search box */}
           <div className="relative flex justify-end items-center w-full mr-4">
+            <Switch checked={theme === "dark"} onCheckedChange={toggleTheme} />
             <Input
               placeholder="Search"
               className="max-w-sm focus-visible:ring-0 pr-4"
@@ -77,4 +82,5 @@ export default function Page() {
       </SidebarInset>
     </SidebarProvider>
   );
-}
+};
+export default Page;
