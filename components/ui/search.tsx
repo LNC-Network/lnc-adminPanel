@@ -8,9 +8,10 @@ import {
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
-import { SidebarTrigger } from "./sidebar";
 
-function Search() {
+import { Search } from "lucide-react";
+
+function SearchBar() {
   const [open, setOpen] = useState(false);
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -22,33 +23,36 @@ function Search() {
     document.addEventListener("keydown", down);
     return () => document.removeEventListener("keydown", down);
   }, []);
+
   return (
     <>
-      <SidebarTrigger className="" />
       <CommandDialog open={open} onOpenChange={setOpen}>
         <CommandInput placeholder="Type a command or search..." />
         <CommandList>
           <CommandEmpty>No results found.</CommandEmpty>
           <CommandGroup heading="Suggestions">
-            <CommandItem>Calendar</CommandItem>
-            <CommandItem>Search Emoji</CommandItem>
-            <CommandItem>Calculator</CommandItem>
+            <CommandItem>Settings</CommandItem>
+            <CommandItem>Stat</CommandItem>
+            <CommandItem>Theme</CommandItem>
           </CommandGroup>
         </CommandList>
       </CommandDialog>
-      <Input
-        placeholder="Search"
-        className="max-w-sm focus-visible:ring-0"
-        readOnly
-        onClick={() => {
-          setOpen(true);
-        }}
-      />
-      <span className="absolute right-1 text-xs font-mono w-auto bg-secondary/95 px-2 py-1 border rounded-md hidden lg:block ">
-        /
-      </span>
+      <div className="flex items-center w-full justify-end">
+        <Search className="translate-x-6 size-4" />
+        <Input
+          placeholder="     Search"
+          className="max-w-md w-full focus-visible:ring-0"
+          readOnly
+          onClick={() => {
+            setOpen(true);
+          }}
+        />
+        <span className="absolute right-6 text-xs font-mono w-auto bg-secondary/95 px-2 py-1 hidden lg:block ">
+          /
+        </span>
+      </div>
     </>
   );
 }
 
-export default Search;
+export default SearchBar;

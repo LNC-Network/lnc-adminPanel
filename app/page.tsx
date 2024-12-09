@@ -1,12 +1,11 @@
 "use client";
 import { AppSidebar } from "@/components/app-sidebar";
-
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-
+import SearchBar from "@/components/ui/search";
 import React from "react";
 
 const Page = () => {
@@ -16,8 +15,9 @@ const Page = () => {
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
           {/* sidebar trigger */}
-          <div className="flex items-center ml-4 space-x-2">
+          <div className="flex justify-between w-full items-center mx-4">
             <SidebarTrigger className="" />
+            <SearchBar />
           </div>
         </header>
         {/* main content */}
