@@ -1,8 +1,10 @@
 "use client";
 
-import { Bell, ChevronsUpDown, LogOut} from "lucide-react";
+import { Bell, ChevronsUpDown, LogOut, SunMoon } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Switch } from "@/components/ui/switch";
+import { useTheme } from "@/hooks/setTheme";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,6 +29,7 @@ export function NavUser({
   };
 }) {
   const { isMobile } = useSidebar();
+  const { theme, toggleTheme } = useTheme();
 
   return (
     <SidebarMenu>
@@ -66,10 +69,20 @@ export function NavUser({
                 </div>
               </div>
             </DropdownMenuLabel>
-              <DropdownMenuItem>
-                <Bell />
-                Notifications
-              </DropdownMenuItem>
+            <DropdownMenuItem>
+              <Bell />
+              Notifications
+            </DropdownMenuItem>
+            <DropdownMenuItem>
+              <SunMoon />
+              <div className="flex space-x-16">
+                <span>Toggle Theme</span>
+                <Switch
+                  checked={theme === "light"}
+                  onCheckedChange={toggleTheme}
+                />
+              </div>
+            </DropdownMenuItem>
             <DropdownMenuItem>
               <LogOut />
               Log out
