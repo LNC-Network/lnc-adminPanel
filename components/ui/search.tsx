@@ -40,7 +40,7 @@ function SearchBar() {
       <div className="flex items-center w-full justify-end">
         <Search className="translate-x-6 size-4" />
         <Input
-          placeholder="     Search"
+          placeholder="&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Search"
           className="max-w-md w-full focus-visible:ring-0"
           readOnly
           onClick={() => {
