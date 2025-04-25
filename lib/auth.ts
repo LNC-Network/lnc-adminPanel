@@ -12,7 +12,7 @@ const client = new Pool({
   port: 5432,
 });
 
-export default async function isUser(userProps: UserProps, secret: string): Promise<boolean> {
+export default async function isUser(userProps: UserProps): Promise<boolean> {
   const { email, password } = userProps;
   const tableName = "adminPanelUser";
 
