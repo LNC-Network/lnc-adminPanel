@@ -2,12 +2,41 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Toaster } from "@/components/ui/sonner";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
+import { useState } from "react";
+import Cookies from "js-cookie";
+import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const router = useRouter();
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const token = await res.json();
+      if (res.ok) {
+        Cookies.set("token", token);
+        router.replace("/dashboard");
+      } else {
+        toast.error("Login failed");
+      }
+    } catch (err) {
+      toast.error(`Login failed: ${err}`);
+    }
+  };
 
   return (
     <>
@@ -30,7 +59,7 @@ export default function LoginPage() {
 
           <div className="flex flex-1 items-center justify-center">
             <div className="w-full max-w-xs">
-              <form className="flex flex-col gap-6" >
+              <form className="flex flex-col gap-6" onSubmit={handleLogin}>
                 <div className="grid gap-6">
                   <div className="grid gap-2">
                     <Label htmlFor="email">Email</Label>
@@ -39,7 +68,8 @@ export default function LoginPage() {
                       type="email"
                       placeholder="m@example.com"
                       required
-                      autoComplete="current-username"
+                      autoComplete="username"
+                      onChange={(e) => setEmail(e.target.value)}
                     />
                   </div>
 
@@ -57,8 +87,8 @@ export default function LoginPage() {
                       id="password"
                       type="password"
                       required
-
                       autoComplete="current-password"
+                      onChange={(e) => setPassword(e.target.value)}
                     />
                   </div>
 
