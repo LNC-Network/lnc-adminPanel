@@ -9,25 +9,21 @@ export default function HomePage() {
 
   useEffect(() => {
     const fetchData = async () => {
-      try {
-        const token = Cookies.get("token");
+      const token = Cookies.get("token");
 
-        if (!token) {
-          router.replace("/login");
-          return;
-        }
-
-        const res = await fetch("/api/auth/verify", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ token }),
-        });
-
-        const { success } = await res.json();
-        router.replace(success ? "/dashboard" : "/login");
-      } catch (err) {
+      if (!token) {
         router.replace("/login");
+        return;
       }
+
+      const res = await fetch("/api/auth/verify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token }),
+      });
+
+      const { success } = await res.json();
+      router.replace(success ? "/dashboard" : "/login");
     };
 
     fetchData();
