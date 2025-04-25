@@ -28,12 +28,12 @@ export default function LoginPage() {
 
       const token = await res.json();
       if (res.ok) {
-        Cookies.set("token", token),
+        Cookies.set("token", token,
           {
             expires: 30, // 30 day
             sameSite: "lax",
             /* secure: true, */
-          };
+          });
         router.replace("/dashboard");
       } else {
         toast.error("Login failed");
