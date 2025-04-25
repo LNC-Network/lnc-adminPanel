@@ -1,46 +1,33 @@
-// auth.ts
 import { jwtVerify as joseVerify } from "jose";
 
 export interface JWTPayload {
-  [key: string]: any;
+  [key: string]: string; // Optional: refine this based on expected payload properties
 }
 
-export interface JWTVerifyResult {
-  payload: JWTPayload;
-  protectedHeader: {
-    alg: string;
-    [key: string]: any;
-  };
-}
-
-export async function jwtVerify(
-  token: string,
-  secret: string | Uint8Array
-): Promise<JWTVerifyResult> {
+export async function jwtVerify(token: string, secret: string | Uint8Array) {
   try {
+    // Use secret as Uint8Array
     const secretBuffer =
       typeof secret === "string" ? new TextEncoder().encode(secret) : secret;
 
     const result = await joseVerify(token, secretBuffer);
 
-    return {
-      payload: result.payload as JWTPayload,
-      protectedHeader: result.protectedHeader,
-    };
-  } catch (error) {
-    const err = error as Error;
+    return result.payload;
+  } catch (error: unknown) {
+    // Narrow the type of `error` to `Error`
+    if (error instanceof Error) {
+      // Handle specific error cases
+      if (error.name === "JWTExpired") throw new Error("Token expired");
+      if (error.name === "JWTMalformed") throw new Error("Malformed token");
+      if (error.name === "JWTInvalid")
+        throw new Error("Invalid token signature");
 
-    if (err.name === "JWTExpired") {
-      throw new Error("Token has expired");
-    } else if (err.name === "JWTMalformed") {
-      throw new Error("Token is malformed");
-    } else if (err.name === "JWTInvalid") {
-      throw new Error("Token signature is invalid");
+      throw new Error(
+        `Token verification failed: ${error.message || "Unknown error"}`
+      );
+    } else {
+      throw new Error("Unknown error occurred during token verification");
     }
-
-    throw new Error(
-      `Token verification failed: ${err.message || "Unknown error"}`
-    );
   }
 }
 
@@ -51,27 +38,21 @@ export async function isValidToken(
   try {
     await jwtVerify(token, secret);
     return true;
-  } catch (error) {
-    return false;
+  } catch {
+    return false; // Invalid token if error is thrown
   }
 }
 
 export default async function protectPath(token: string) {
+  const secret = process.env.JWT_SECRET;
+  if (!token) return { success: false, error: "No token provided" };
+  if (!secret) return { success: false, error: "JWT secret is missing" };
+
   try {
-    const secret = process.env.JWT_SECRET;
-    if (!token) return { success: false, error: "No token provided" };
-    if (!secret) return { success: false, error: "JWT secret is missing" };
-
-    const verified = await jwtVerify(token, secret);
-
-    return {
-      success: true,
-      user: verified.payload,
-    };
-  } catch (error) {
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "Invalid token",
-    };
+    const user = await jwtVerify(token, secret);
+    return { success: true, user };
+  } catch (e) {
+    const error = e as Error;
+    return { success: false, error: error.message || "Invalid token" };
   }
 }
