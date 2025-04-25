@@ -1,14 +1,37 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
+import { useEffect } from "react";
 
 export default function HomePage() {
   const router = useRouter();
-  return (
-    <>
-      <Button onClick={() => router.push("/login")}>Login</Button>
-      <Button onClick={() => router.push("/dashboard")}>Dashboard</Button>
-    </>
-  );
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const token = Cookies.get("token");
+
+        if (!token) {
+          router.replace("/login");
+          return;
+        }
+
+        const res = await fetch("/api/auth/verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token }),
+        });
+
+        const { success } = await res.json();
+        router.replace(success ? "/dashboard" : "/login");
+      } catch (err) {
+        router.replace("/login");
+      }
+    };
+
+    fetchData();
+  }, [router]);
+
+  return null;
 }
