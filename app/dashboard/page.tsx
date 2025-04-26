@@ -37,7 +37,7 @@ export default function DashboardPage() {
   }, [router]);
 
   if (loading) {
-    return <div></div>;
+    return null;
   }
 
   return <DashboardClient />;

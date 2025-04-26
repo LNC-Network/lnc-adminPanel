@@ -1,36 +1,85 @@
 "use client";
-import { Separator } from "@/components/ui/separator";
-import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/app-sidebar";
+import { useState, useRef, useEffect } from "react";
 import ThemeSwitch from "./ThemeSwitch";
-
+import Image from "next/image";
 export default function DashboardClient() {
+  const [currentTab, setCurrentTab] = useState<string>("TAB1");
+  const [indicatorStyle, setIndicatorStyle] = useState<{
+    width: number;
+    left: number;
+  }>({ width: 0, left: 0 });
+  const tabRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  const tabs = [
+    { id: "TAB1", label: "Content" },
+    { id: "TAB2", label: "Database" },
+    { id: "TAB3", label: "mmi" },
+    { id: "TAB4", label: "Settings" },
+  ];
+
+  const tabSwitcher = (tab_name: string) => {
+    if (currentTab === tab_name) return;
+    setCurrentTab(tab_name);
+  };
+
+  useEffect(() => {
+    const currentTabRef = tabRefs.current[currentTab];
+    if (currentTabRef) {
+      const rect = currentTabRef.getBoundingClientRect();
+      const parentRect = currentTabRef.parentElement?.getBoundingClientRect();
+      if (parentRect) {
+        setIndicatorStyle({
+          width: rect.width,
+          left: rect.left - parentRect.left,
+        });
+      }
+    }
+  }, [currentTab]);
+
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset>
-        <header className="flex justify-between h-16 shrink-0 items-center">
-          <div className="flex items-center gap-2 px-4">
-            <SidebarTrigger className="-ml-1" />
-            <Separator orientation="vertical" className="mr-2 h-4" />
-          </div>
-          <div className="mr-4 sm:block hidden">
-            <ThemeSwitch />
-          </div>
-        </header>
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-          <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-            <div className="aspect-video rounded-xl bg-muted/50" />
-            <div className="aspect-video rounded-xl bg-muted/50" />
-            <div className="aspect-video rounded-xl bg-muted/50" />
-          </div>
-          <div className="min-h-[100vh] flex-1 rounded-xl bg-muted/50 md:min-h-min" />
+    <>
+      <header className="flex justify-between h-16 items-center bg-secondary px-4">
+        <div className="flex items-center gap-4">
+          <Image src="/logo.jpg" alt="Logo" width={20} height={20} />
+          <p>USERNAME</p>
+          <p>Logs</p>
         </div>
-      </SidebarInset>
-    </SidebarProvider>
+        <div className="hidden sm:block">
+          <ThemeSwitch />
+        </div>
+      </header>
+
+      {/* Tabs */}
+      <div className="relative flex items-center gap-2  bg-secondary pb-2">
+        {/* Sliding active background */}
+        <div
+          className="absolute top-[0px] sm:top-[1.5px] left-0 h-8 rounded-sm bg-primary transition-all duration-200 ease-in-out"
+          style={{
+            width: `${indicatorStyle.width}px`,
+            transform: `translateX(${indicatorStyle.left}px)`,
+          }}
+        />
+
+        {/* Tab Buttons */}
+        {tabs.map((tab) => (
+          <div
+            key={tab.id}
+            ref={(el) => {
+              tabRefs.current[tab.id] = el;
+            }}
+            onClick={() => tabSwitcher(tab.id)}
+            className={`relative z-10 cursor-pointer flex items-center justify-center px-4 h-8 text-sm rounded-md transition-colors${
+              currentTab === tab.id ? "text-white" : "text-gray-400 "
+            }`}
+          >
+            {tab.label}
+          </div>
+        ))}
+      </div>
+
+      <div className="grid auto-rows-min gap-4 md:grid-cols-3 p-4">
+        {currentTab}
+      </div>
+    </>
   );
 }
