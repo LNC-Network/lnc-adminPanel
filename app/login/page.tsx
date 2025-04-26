@@ -10,6 +10,8 @@ import { useState } from "react";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 
+import ThemeSwitch from "@/components/ThemeSwitch";
+
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -28,12 +30,11 @@ export default function LoginPage() {
 
       const token = await res.json();
       if (res.ok) {
-        Cookies.set("token", token,
-          {
-            expires: 30, // 30 day
-            sameSite: "lax",
-            /* secure: true, */
-          });
+        Cookies.set("token", token, {
+          expires: 30,
+          sameSite: "lax",
+          /* secure: true, */
+        });
         router.replace("/dashboard");
       } else {
         toast.error("Login failed");
@@ -46,6 +47,10 @@ export default function LoginPage() {
   return (
     <>
       <Toaster closeButton richColors position="bottom-left" />
+      <div className="fixed bottom-5 right-5 sm:left-5 sm:right-auto z-50">
+        <ThemeSwitch />
+      </div>
+
       <div className="flex h-screen w-screen">
         <div className="flex flex-col gap-4 p-6 md:p-10 flex-1">
           <div className="flex justify-center gap-2 md:justify-start">
@@ -111,7 +116,7 @@ export default function LoginPage() {
             src="/login.webp"
             alt="Image"
             fill
-            className="absolute inset-0 h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
+            className="absolute inset-0 h-full w-full object-cover"
           />
         </div>
       </div>

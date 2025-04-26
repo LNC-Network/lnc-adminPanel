@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
+import { Providers } from "./providers";
 import "./globals.css";
+
 export const metadata: Metadata = {
   title: "Administrative Panel",
   description: "LNC Product [LNC 2024 All Rights Reserved]",
@@ -13,7 +15,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
