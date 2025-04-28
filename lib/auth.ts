@@ -1,29 +1,35 @@
-import { Pool } from "pg";
+import { createClient } from "@supabase/supabase-js";
 
 interface UserProps {
   email: string;
   password: string;
 }
 
-const client = new Pool({
-  password: "admin",
-  database: "LNC",
-  user: "postgres",
-  port: 5432,
-});
+const supabaseUrl = process.env.SUPABASE_URL!;
+const supabaseServiceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+
+const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
 
 export default async function isUser(userProps: UserProps): Promise<boolean> {
   const { email, password } = userProps;
-  const tableName = "adminPanelUser";
+  const tableName = "adminpaneluser";
 
   try {
-    const query = `SELECT * FROM ${tableName} WHERE user_email=$1 AND user_password=$2`;
+    const { data, error } = await supabase
+      .from(tableName)
+      .select("*")
+      .eq("user_email", email)
+      .eq("user_password", password)
+      .single();
 
-    const result = await client.query(query, [email, password]);
-    return (result.rowCount ?? 0) > 0;
+    if (error) {
+      console.error("Supabase query error:", error);
+      return false;
+    }
+
+    return !!data;
   } catch (error) {
-    //TODO remove console.
-    console.error("Database query error:", error);
+    console.error("Unexpected error:", error);
     return false;
   }
 }
