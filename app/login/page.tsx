@@ -1,9 +1,6 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import dynamic from "next/dynamic";
-const LoginPage = dynamic(() => import("@/components/login-page"), {
-  ssr: false,
-});
+import LoginPage from "@/components/login-page";
 
 export default async function Page() {
   const cookieStore = cookies();
