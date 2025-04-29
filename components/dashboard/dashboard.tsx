@@ -1,7 +1,15 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
-import ThemeSwitch from "./ThemeSwitch";
+import ThemeSwitch from "../ThemeSwitch";
 import Image from "next/image";
+import { Bell /* , BellDot */, Logs } from "lucide-react";
+import dynamic from "next/dynamic";
+import Content from "./content";
+import FormMaker from "./form-maker";
+
+const Settings = dynamic(() => import("./settings"));
+const Database = dynamic(() => import("./database"));
+
 export default function DashboardClient() {
   const [currentTab, setCurrentTab] = useState<string>("TAB1");
   const [indicatorStyle, setIndicatorStyle] = useState<{
@@ -11,10 +19,10 @@ export default function DashboardClient() {
   const tabRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const tabs = [
-    { id: "TAB1", label: "Content" },
-    { id: "TAB2", label: "Database" },
-    { id: "TAB3", label: "mmi" },
-    { id: "TAB4", label: "Settings" },
+    { id: "TAB1", label: "Content", component: <Content /> },
+    { id: "TAB2", label: "Database", component: <Database /> },
+    { id: "TAB3", label: "Form", component: <FormMaker /> },
+    { id: "TAB4", label: "Settings", component: <Settings /> },
   ];
 
   const tabSwitcher = (tab_name: string) => {
@@ -38,11 +46,18 @@ export default function DashboardClient() {
 
   return (
     <>
-      <header className="flex justify-between h-16 items-center bg-secondary px-4">
-        <div className="flex items-center gap-4">
-          <Image src="/logo.jpg" alt="Logo" width={20} height={20} />
-          <p>USERNAME</p>
-          <p>Logs</p>
+      <header className="flex justify-between h-16 items-center bg-secondary px-4 w-full">
+        <div className="flex items-center sm:gap-6 justify-between sm:justify-start w-full">
+          <div className="flex items-center gap-2">
+            <Image src="/logo.jpg" alt="Logo" width={20} height={20} />
+            <p>USERNAME</p>
+          </div>
+          <div className="flex items-center gap-4 sm:gap-6">
+            <Logs />
+            <Bell />
+          </div>
+
+          {/* <BellDot /> */}
         </div>
         <div className="hidden sm:block">
           <ThemeSwitch />
@@ -77,9 +92,7 @@ export default function DashboardClient() {
         ))}
       </div>
 
-      <div className="grid auto-rows-min gap-4 md:grid-cols-3 p-4">
-        {currentTab}
-      </div>
+      <div>{tabs.find((tab) => tab.id === currentTab)?.component}</div>
     </>
   );
 }

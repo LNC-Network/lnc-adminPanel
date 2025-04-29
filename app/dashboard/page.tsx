@@ -1,6 +1,6 @@
 "use client";
 
-import DashboardClient from "@/components/dashboard";
+import DashboardClient from "@/components/dashboard/dashboard";
 import { useEffect, useState } from "react";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
