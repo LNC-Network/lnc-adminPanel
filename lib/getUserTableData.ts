@@ -1,3 +1,4 @@
+import { User } from "@/types/userDataType";
 import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl = process.env.SUPABASE_URL!;
@@ -8,13 +9,13 @@ const supabase = createClient(supabaseUrl, supabaseServiceRoleKey);
 export default async function getUserTableData(
   rowStart: number,
   rowEnd: number
-): Promise<any> {
+): Promise<User[] | boolean> {
   const tableName = "adminpaneluser";
 
   try {
     const { data, error } = await supabase
       .from(tableName)
-      .select("user_email,user_password")
+      .select("user_email, user_password")
       .order("user_id", { ascending: false })
       .range(rowStart, rowEnd);
 
@@ -23,7 +24,7 @@ export default async function getUserTableData(
       return false;
     }
 
-    return data; 
+    return data;
   } catch (error) {
     console.error("Unexpected error:", error);
     return false;

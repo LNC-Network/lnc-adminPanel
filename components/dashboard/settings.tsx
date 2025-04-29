@@ -1,12 +1,13 @@
 "use client";
 import { Label } from "../ui/label";
-import { Trash, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 import { Input } from "../ui/input";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import ThemeSwitch from "../ThemeSwitch";
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { Toaster } from "../ui/sonner";
+import { User } from "@/types/userDataType";
 
 export default function Settings() {
   const [data, setData] = useState([]);
@@ -108,7 +109,7 @@ export default function Settings() {
 
         <Table className="w-full border-none">
           <TableBody>
-            {data.map((user: any, index: number) => (
+            {data.map((user: User, index: number) => (
               <TableRow key={index}>
                 <TableCell className="border">{user.user_email}</TableCell>
                 <TableCell className="border">{user.user_password}</TableCell>
