@@ -1,4 +1,4 @@
-import isUser from "@/lib/auth";
+import isUser from "@/lib/postgres/auth";
 import jwt from "jsonwebtoken";
 import { NextResponse } from "next/server";
 
@@ -16,7 +16,7 @@ export async function POST(req: Request) {
   const authenticated = await isUser({ email, password });
 
   if (authenticated) {
-    const token = jwt.sign({ email }, process.env.JWT_SECRET || "", {
+    const token = jwt.sign({ email }, process.env.JWT_SECRET!, {
       expiresIn: "24h",
     });
     return NextResponse.json(token, { status: 200 });

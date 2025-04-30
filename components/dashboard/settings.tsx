@@ -4,7 +4,7 @@ import { Plus } from "lucide-react";
 import { Input } from "../ui/input";
 import { Table, TableBody, TableCell, TableRow } from "@/components/ui/table";
 import ThemeSwitch from "../ThemeSwitch";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Toaster } from "../ui/sonner";
 import { User } from "@/types/userDataType";
@@ -13,21 +13,20 @@ export default function Settings() {
   const [data, setData] = useState([]);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const hasFetchedRef = useRef(false);
+  const audio = new Audio("/sounds/success.mp3");
 
   const fetchData = async () => {
-    if (hasFetchedRef.current) return;
     try {
       const res = await fetch("/api/users/fetch");
       const json = await res.json();
       if (res.ok) {
         setData(json.data);
-        hasFetchedRef.current = true;
       } else {
         console.error("API error:", json.error);
       }
     } catch (error) {
-      console.error("Fetch failed:", error);
+      toast.error("Fetch failed");
+      console.error(error);
     }
   };
 
@@ -54,14 +53,9 @@ export default function Settings() {
 
     if (response.ok) {
       toast.success("Added user");
-
-      // Play success sound
-      const audio = new Audio("/sounds/success.mp3");
       audio.play();
-
       clear();
-      hasFetchedRef.current = false; // allow re-fetch
-      fetchData(); // refresh updated user list
+      fetchData();
     } else {
       console.error("Error:", data.error);
     }

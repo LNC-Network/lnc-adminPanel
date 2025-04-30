@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { jwtVerify } from "@/lib/protectPath";
+import { isValidToken } from "@/lib/JWT";
 
 export async function POST(req: Request) {
   const { token } = await req.json();
@@ -13,8 +13,8 @@ export async function POST(req: Request) {
 
   try {
     const secret = process.env.JWT_SECRET!;
-    const verified = await jwtVerify(token, secret);
-    return NextResponse.json({ success: true, user: verified.payload });
+    await isValidToken(token, secret);
+    return NextResponse.json({ success: true });
   } catch (error) {
     return NextResponse.json(
       { success: false, error: (error as Error).message },

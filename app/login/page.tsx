@@ -17,7 +17,7 @@ export default async function Page() {
       }
     );
 
-    const { success } = await res.json();
+    const success = await res.json();
     if (success) {
       redirect("/dashboard");
     }

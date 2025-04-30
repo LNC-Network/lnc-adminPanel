@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import setUserTableData from "@/lib/setUserTabledata";
+import setUserTableData from "@/lib/postgres/setUserTabledata";
 
 export async function POST(req: NextRequest) {
   try {

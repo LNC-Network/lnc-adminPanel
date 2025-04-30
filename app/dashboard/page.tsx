@@ -24,7 +24,7 @@ export default function DashboardPage() {
         body: JSON.stringify({ token }),
       });
 
-      const { success } = await res.json();
+      const success = await res.json();
 
       if (!success) {
         router.replace("/login");

@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import getUserTableData from "@/lib/getUserTableData"; // Adjust import path as needed
+import getUserTableData from "@/lib/postgres/getUserTableData"; // Adjust import path as needed
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);

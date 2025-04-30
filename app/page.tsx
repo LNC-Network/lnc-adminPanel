@@ -22,7 +22,7 @@ export default function HomePage() {
         body: JSON.stringify({ token }),
       });
 
-      const { success } = await res.json();
+      const success = await res.json();
       router.replace(success ? "/dashboard" : "/login");
     };
 

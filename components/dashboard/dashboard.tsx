@@ -11,11 +11,16 @@ const Settings = dynamic(() => import("./settings"));
 const Database = dynamic(() => import("./database"));
 
 export default function DashboardClient() {
-  const [currentTab, setCurrentTab] = useState<string>("TAB1");
+  const [currentTab, setCurrentTab] = useState<string>(() => {
+    // Load from sessionStorage on initial render
+    return sessionStorage.getItem("currentTab") || "TAB1";
+  });
+
   const [indicatorStyle, setIndicatorStyle] = useState<{
     width: number;
     left: number;
   }>({ width: 0, left: 0 });
+
   const tabRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   const tabs = [
@@ -28,6 +33,7 @@ export default function DashboardClient() {
   const tabSwitcher = (tab_name: string) => {
     if (currentTab === tab_name) return;
     setCurrentTab(tab_name);
+    sessionStorage.setItem("currentTab", tab_name); // Save on switch
   };
 
   useEffect(() => {
@@ -43,6 +49,7 @@ export default function DashboardClient() {
       }
     }
   }, [currentTab]);
+
 
   return (
     <>

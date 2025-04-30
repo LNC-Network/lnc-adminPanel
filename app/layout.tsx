@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-import { Providers } from "./providers";
+import { ThemeProvider } from "next-themes";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: "Administrative Panel",
-  description: "LNC Product [LNC 2024 All Rights Reserved]",
+  description: "A LNC Product",
 };
 
 export default function RootLayout({
@@ -15,7 +15,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body>
-        <Providers>{children}</Providers>
+        <ThemeProvider attribute="class" defaultTheme="dark">
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );
