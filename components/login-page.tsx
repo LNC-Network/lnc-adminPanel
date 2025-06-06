@@ -102,9 +102,7 @@ export default function LoginPage() {
                     />
                   </div>
 
-                  <Button type="submit" className="w-full">
-                    Login
-                  </Button>
+                  <Button className="w-full bg-primary">Login</Button>
                 </div>
               </form>
             </div>

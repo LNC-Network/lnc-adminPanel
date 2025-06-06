@@ -13,7 +13,7 @@ const ThemeSwitch = () => {
   if (!mounted) return null;
 
   return (
-    <div className="relative flex items-center gap-0 rounded-full border p-1 dark:border-slate-700 w-14 h-8 bg-gray-100 dark:bg-gray-800">
+    <div className="relative flex items-center gap-0 rounded-full border p-1 dark:border-slate-700 w-14 h-8 bg-muted">
       {/* Sliding Background */}
       <div
         className={`absolute top-1 left-1 h-6 w-6 rounded-full bg-white shadow-md transition-transform duration-300 ${

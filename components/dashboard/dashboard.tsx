@@ -6,6 +6,7 @@ import { Bell /* , BellDot */, Logs } from "lucide-react";
 import dynamic from "next/dynamic";
 import Content from "./content";
 import FormMaker from "./form-maker";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Settings = dynamic(() => import("./settings"));
 const Database = dynamic(() => import("./database"));
@@ -50,19 +51,14 @@ export default function DashboardClient() {
     }
   }, [currentTab]);
 
-
   return (
-    <>
-      <header className="flex justify-between h-16 items-center bg-secondary px-4 w-full">
+    <Tabs defaultValue="account">
+      <header className="flex justify-between h-16 items-center bg-muted px-4 w-full">
         <div className="flex items-center sm:gap-6 justify-between sm:justify-start w-full">
-          <div className="flex items-center gap-2">
-            <Image src="/logo.jpg" alt="Logo" width={20} height={20} />
-            <p>USERNAME</p>
-          </div>
-          <div className="flex items-center gap-4 sm:gap-6">
-            <Logs />
-            <Bell />
-          </div>
+          <TabsList>
+            <TabsTrigger value="account">Account</TabsTrigger>
+            <TabsTrigger value="password">Password</TabsTrigger>
+          </TabsList>
 
           {/* <BellDot /> */}
         </div>
@@ -71,35 +67,10 @@ export default function DashboardClient() {
         </div>
       </header>
 
-      {/* Tabs */}
-      <div className="relative flex items-center gap-2  bg-secondary pb-2">
-        {/* Sliding active background */}
-        <div
-          className="absolute top-[0px] sm:top-[1.5px] left-0 h-8 rounded-sm bg-primary transition-all duration-200 ease-in-out"
-          style={{
-            width: `${indicatorStyle.width}px`,
-            transform: `translateX(${indicatorStyle.left}px)`,
-          }}
-        />
-
-        {/* Tab Buttons */}
-        {tabs.map((tab) => (
-          <div
-            key={tab.id}
-            ref={(el) => {
-              tabRefs.current[tab.id] = el;
-            }}
-            onClick={() => tabSwitcher(tab.id)}
-            className={`relative z-10 cursor-pointer flex items-center justify-center px-4 h-8 text-sm rounded-md transition-colors${
-              currentTab === tab.id ? "text-white" : "text-gray-400 "
-            }`}
-          >
-            {tab.label}
-          </div>
-        ))}
-      </div>
-
-      <div>{tabs.find((tab) => tab.id === currentTab)?.component}</div>
-    </>
+      <TabsContent value="account">
+        Make changes to your account here.
+      </TabsContent>
+      <TabsContent value="password">Change your password here.</TabsContent>
+    </Tabs>
   );
 }
