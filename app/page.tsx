@@ -9,21 +9,35 @@ export default function HomePage() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const token = Cookies.get("token");
+      const token = Cookies.get("access_token");
 
       if (!token) {
         router.replace("/login");
         return;
       }
 
-      const res = await fetch("/api/auth/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token }),
-      });
+      try {
+        const res = await fetch("/api/auth/verify", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token }),
+        });
 
-      const success = await res.json();
-      router.replace(success ? "/dashboard" : "/login");
+        const data = await res.json();
+
+        if (data.success) {
+          // Update user info in localStorage
+          if (typeof window !== "undefined" && data.user) {
+            localStorage.setItem("user", JSON.stringify(data.user));
+          }
+          router.replace("/dashboard");
+        } else {
+          router.replace("/login");
+        }
+      } catch (error) {
+        console.error("Verification error:", error);
+        router.replace("/login");
+      }
     };
 
     fetchData();

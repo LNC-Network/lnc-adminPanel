@@ -4,22 +4,29 @@ import LoginPage from "@/components/login-page";
 
 export default async function Page() {
   const cookieStore = cookies();
-  const token = (await cookieStore).get("token")?.value;
+  const token = (await cookieStore).get("access_token")?.value;
 
   if (token) {
-    const res = await fetch(
-      `${process.env.NEXT_PUBLIC_SITE_URL}/api/auth/verify`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token }),
-        cache: "no-store",
-      }
-    );
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_SITE_URL}/api/auth/verify`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ token }),
+          cache: "no-store",
+        }
+      );
 
-    const success = await res.json();
-    if (success) {
-      redirect("/dashboard");
+      if (res.ok) {
+        const data = await res.json();
+        if (data.success) {
+          redirect("/dashboard");
+        }
+      }
+    } catch (error) {
+      console.error("Token verification error:", error);
+      // Continue to show login page if verification fails
     }
   }
 

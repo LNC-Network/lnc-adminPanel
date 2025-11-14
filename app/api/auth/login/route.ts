@@ -1,6 +1,8 @@
-import isUser from "@/lib/postgres/auth";
-import jwt from "jsonwebtoken";
+import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 export async function POST(req: Request) {
   const body = await req.json();
@@ -13,14 +15,64 @@ export async function POST(req: Request) {
     );
   }
 
-  const authenticated = await isUser({ email, password });
+  try {
+    // Create Supabase client with service role key
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-  if (authenticated) {
-    const token = jwt.sign({ email }, process.env.JWT_SECRET!, {
-      expiresIn: "24h",
+    // Step 1: Authenticate user with Supabase Auth
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
     });
-    return NextResponse.json(token, { status: 200 });
-  } else {
-    return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+
+    if (authError) {
+      return NextResponse.json(
+        { error: authError.message || "Invalid email or password" },
+        { status: 401 }
+      );
+    }
+
+    if (!authData.session || !authData.user) {
+      return NextResponse.json(
+        { error: "Failed to create session" },
+        { status: 401 }
+      );
+    }
+
+    // Step 2: Get user role from profiles table
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('email, role')
+      .eq('id', authData.user.id)
+      .single();
+
+    // Fallback to user_metadata if profile doesn't exist
+    const userRole = profileData?.role || authData.user.user_metadata?.role || 'user';
+
+    // Step 3: Check if user has admin or editor role
+    if (userRole !== 'admin' && userRole !== 'editor') {
+      return NextResponse.json(
+        { error: "Access denied. Admin privileges required." },
+        { status: 403 }
+      );
+    }
+
+    // Step 4: Return session tokens and user info
+    return NextResponse.json({
+      access_token: authData.session.access_token,
+      refresh_token: authData.session.refresh_token,
+      user: {
+        id: authData.user.id,
+        email: authData.user.email,
+        role: userRole,
+      },
+    }, { status: 200 });
+
+  } catch (error) {
+    console.error("Login error:", error);
+    return NextResponse.json(
+      { error: "Internal server error" },
+      { status: 500 }
+    );
   }
 }

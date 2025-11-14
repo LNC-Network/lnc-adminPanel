@@ -1,5 +1,8 @@
+import { createClient } from "@supabase/supabase-js";
 import { NextResponse } from "next/server";
-import { isValidToken } from "@/lib/JWT";
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 export async function POST(req: Request) {
   const { token } = await req.json();
@@ -12,12 +15,41 @@ export async function POST(req: Request) {
   }
 
   try {
-    const secret = process.env.JWT_SECRET!;
-    await isValidToken(token, secret);
-    return NextResponse.json({ success: true });
+    // Create Supabase client
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+    // Verify the token with Supabase
+    const { data: { user }, error } = await supabase.auth.getUser(token);
+
+    if (error || !user) {
+      return NextResponse.json(
+        { success: false, error: "Invalid or expired token" },
+        { status: 401 }
+      );
+    }
+
+    // Check user role
+    const userRole = user.user_metadata?.role || 'user';
+    
+    if (userRole !== 'admin' && userRole !== 'editor') {
+      return NextResponse.json(
+        { success: false, error: "Insufficient permissions" },
+        { status: 403 }
+      );
+    }
+
+    return NextResponse.json({
+      success: true,
+      user: {
+        id: user.id,
+        email: user.email,
+        role: userRole,
+      },
+    });
   } catch (error) {
+    console.error("Token verification error:", error);
     return NextResponse.json(
-      { success: false, error: (error as Error).message },
+      { success: false, error: "Token verification failed" },
       { status: 401 }
     );
   }
