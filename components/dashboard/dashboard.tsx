@@ -10,7 +10,9 @@ import {
   FormInput,
   Settings as SettingsIcon,
   LogOut,
-  Menu
+  Menu,
+  User,
+  Shield
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import Content from "./content";
@@ -19,6 +21,14 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 
@@ -34,6 +44,8 @@ export default function DashboardClient() {
   });
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [userRoles, setUserRoles] = useState<string[]>([]);
+  const [userEmail, setUserEmail] = useState<string>("");
   const router = useRouter();
 
   const handleLogout = () => {
@@ -51,13 +63,30 @@ export default function DashboardClient() {
     }
   }, [currentTab]);
 
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const userData = localStorage.getItem("user");
+      if (userData) {
+        try {
+          const user = JSON.parse(userData);
+          setUserRoles(user.roles || []);
+          setUserEmail(user.email || "");
+        } catch (e) {
+          console.error("Failed to parse user data:", e);
+        }
+      }
+    }
+  }, []);
+
+  const isAdmin = userRoles.includes("admin");
+
   const navigationItems = [
     { id: "overview", label: "Overview", icon: LayoutDashboard },
     { id: "content", label: "Content", icon: FileText },
     { id: "database", label: "Database", icon: DatabaseIcon },
     { id: "forms", label: "Forms", icon: FormInput },
-    { id: "settings", label: "Settings", icon: SettingsIcon },
-  ];
+    { id: "settings", label: "Settings", icon: SettingsIcon, adminOnly: true },
+  ].filter(item => !item.adminOnly || isAdmin);
 
   const Sidebar = ({ mobile = false }: { mobile?: boolean }) => (
     <aside className={`${mobile ? 'w-full' : 'w-64'} bg-muted/40 border-r min-h-screen p-4 flex flex-col`}>
@@ -150,10 +179,36 @@ export default function DashboardClient() {
               <Bell className="h-5 w-5" />
               <span className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full" />
             </Button>
-            <Avatar className="h-8 w-8">
-              <AvatarImage src="/avatars/shadcn.jpg" />
-              <AvatarFallback>AD</AvatarFallback>
-            </Avatar>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage src="/avatars/shadcn.jpg" />
+                    <AvatarFallback>{userEmail.substring(0, 2).toUpperCase() || "AD"}</AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuLabel className="font-normal">
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">Account</p>
+                    <p className="text-xs leading-none text-muted-foreground">
+                      {userEmail || "user@example.com"}
+                    </p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem disabled>
+                  <Shield className="mr-2 h-4 w-4" />
+                  <span>Role: {isAdmin ? "Admin" : userRoles.join(", ") || "User"}</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleLogout}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Log out</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </header>
 
@@ -269,10 +324,12 @@ export default function DashboardClient() {
                       <DatabaseIcon className="mr-2 h-4 w-4" />
                       View Database
                     </Button>
-                    <Button className="w-full justify-start" variant="outline" onClick={() => setCurrentTab("settings")}>
-                      <SettingsIcon className="mr-2 h-4 w-4" />
-                      Manage Users
-                    </Button>
+                    {isAdmin && (
+                      <Button className="w-full justify-start" variant="outline" onClick={() => setCurrentTab("settings")}>
+                        <SettingsIcon className="mr-2 h-4 w-4" />
+                        Manage Users
+                      </Button>
+                    )}
                   </CardContent>
                 </Card>
               </div>
@@ -282,7 +339,7 @@ export default function DashboardClient() {
           {currentTab === "content" && <Content />}
           {currentTab === "database" && <Database />}
           {currentTab === "forms" && <FormMaker />}
-          {currentTab === "settings" && <Settings />}
+          {currentTab === "settings" && isAdmin && <Settings />}
         </main>
       </div>
     </div>

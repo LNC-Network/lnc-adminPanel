@@ -31,41 +31,46 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    // Update user metadata
-    const { data: authData, error: authError } = await supabase.auth.admin.updateUserById(
-      userId,
-      {
-        user_metadata: {
-          role,
-        },
-      }
-    );
+    // Get role ID
+    const { data: roleData, error: roleError } = await supabase
+      .from("roles")
+      .select("id")
+      .eq("name", role)
+      .single();
 
-    if (authError) {
-      console.error("Supabase Auth error:", authError);
+    if (roleError) {
+      console.error("Role fetch error:", roleError);
       return NextResponse.json(
-        { error: authError.message || "Failed to update user metadata" },
+        { error: "Failed to find role" },
         { status: 400 }
       );
     }
 
-    // Update profiles table
-    const { error: profileError } = await supabase
-      .from("profiles")
-      .update({ role })
-      .eq("id", userId);
+    // Delete existing role assignment
+    await supabase
+      .from("user_roles")
+      .delete()
+      .eq("user_id", userId);
 
-    if (profileError) {
-      console.error("Profile update error:", profileError);
+    // Assign new role
+    const { error: assignError } = await supabase
+      .from("user_roles")
+      .insert({
+        user_id: userId,
+        role_id: roleData.id,
+      });
+
+    if (assignError) {
+      console.error("Role assignment error:", assignError);
       return NextResponse.json(
-        { error: "Failed to update profile" },
+        { error: "Failed to update role" },
         { status: 400 }
       );
     }
 
     return NextResponse.json({
       success: true,
-      user: authData.user,
+      message: "Role updated successfully",
     });
   } catch (error) {
     console.error("Update role error:", error);

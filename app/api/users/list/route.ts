@@ -14,36 +14,41 @@ const supabase = createClient(
 
 export async function GET() {
   try {
-    // List all users using Admin API
-    const { data, error } = await supabase.auth.admin.listUsers();
+    // Get users from custom users table
+    const { data: users, error: usersError } = await supabase
+      .from("users")
+      .select("id, email, display_name, is_active, created_at")
+      .order("created_at", { ascending: false });
 
-    if (error) {
-      console.error("Supabase Auth error:", error);
+    if (usersError) {
+      console.error("Users fetch error:", usersError);
       return NextResponse.json(
-        { error: error.message || "Failed to list users" },
+        { error: usersError.message || "Failed to fetch users" },
         { status: 400 }
       );
     }
 
-    // Get additional profile data from profiles table
-    const { data: profiles, error: profileError } = await supabase
-      .from("profiles")
-      .select("id, role");
+    // Get user roles
+    const { data: userRoles, error: rolesError } = await supabase
+      .from("user_roles")
+      .select("user_id, roles(id, name)");
 
-    if (profileError) {
-      console.error("Profile fetch error:", profileError);
+    if (rolesError) {
+      console.error("Roles fetch error:", rolesError);
     }
 
-    // Merge user data with profile data
-    const usersWithRoles = data.users.map((user) => {
-      const profile = profiles?.find((p) => p.id === user.id);
+    // Merge user data with roles
+    const usersWithRoles = users.map((user) => {
+      const roleData = userRoles?.find((ur) => ur.user_id === user.id);
+      const roleName = roleData?.roles?.name || "user";
+      
       return {
         id: user.id,
         email: user.email,
         created_at: user.created_at,
-        last_sign_in_at: user.last_sign_in_at,
+        last_sign_in_at: null, // Not tracked in custom table
         user_metadata: {
-          role: profile?.role || user.user_metadata?.role || "user",
+          role: roleName,
         },
       };
     });

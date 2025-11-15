@@ -56,20 +56,28 @@ Before you begin, ensure you have the following installed:
 
 4. **Set up Supabase database:**
 
-   Create a table in your Supabase project:
+   **CRITICAL**: Run the database setup script first!
 
-   ```sql
-   CREATE TABLE adminpaneluser (
-     user_id SERIAL PRIMARY KEY,
-     user_email VARCHAR(255) UNIQUE NOT NULL,
-     user_password VARCHAR(255) NOT NULL,
-     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-   );
+   Go to your Supabase Dashboard → SQL Editor and execute the contents of:
 
-   -- Insert a default admin user (change credentials!)
-   INSERT INTO adminpaneluser (user_email, user_password)
-   VALUES ('admin@example.com', 'admin123');
+   ```bash
+   setup-profiles-table.sql
    ```
+
+   This creates:
+
+   - ✅ `profiles` table for user roles
+   - ✅ Automatic trigger to create profiles for new users
+   - ✅ Profiles for any existing users
+   - ✅ Row Level Security policies
+
+   For full database setup (optional), run `database-setup.sql` which includes:
+
+   - Custom users table for advanced auth
+   - Roles and permissions system
+   - Refresh tokens table
+
+   See `DATABASE_SETUP.md` for detailed instructions.
 
 ## 🚀 Usage
 

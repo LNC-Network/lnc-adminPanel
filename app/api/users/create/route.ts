@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import argon2 from "argon2";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -38,30 +39,56 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create user with Supabase Auth Admin API
-    const { data, error } = await supabase.auth.admin.createUser({
-      email,
-      password,
-      email_confirm: true, // Auto-confirm email
-      user_metadata: {
-        role,
-      },
-    });
+    // Hash password with argon2
+    const password_hash = await argon2.hash(password);
+
+    // Insert user into custom users table
+    const { data, error } = await supabase
+      .from("users")
+      .insert({
+        email,
+        password_hash,
+        is_active: true,
+      })
+      .select()
+      .single();
 
     if (error) {
-      console.error("Supabase Auth error:", error);
+      console.error("Database error:", error);
+      if (error.code === "23505") {
+        return NextResponse.json(
+          { error: "Email already exists" },
+          { status: 400 }
+        );
+      }
       return NextResponse.json(
         { error: error.message || "Failed to create user" },
         { status: 400 }
       );
     }
 
-    // The trigger will automatically create the profile entry
+    // Get role ID
+    const { data: roleData, error: roleError } = await supabase
+      .from("roles")
+      .select("id")
+      .eq("name", role)
+      .single();
+
+    if (roleError) {
+      console.error("Role fetch error:", roleError);
+    } else if (roleData) {
+      // Assign role to user
+      await supabase.from("user_roles").insert({
+        user_id: data.id,
+        role_id: roleData.id,
+      });
+    }
+
     return NextResponse.json({
       success: true,
       user: {
-        id: data.user.id,
-        email: data.user.email,
+        id: data.id,
+        email: data.email,
         role,
       },
     });

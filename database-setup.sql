@@ -1,4 +1,4 @@
--- USERS
+-- USERS (custom authentication table)
 CREATE TABLE users (
     id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     email           TEXT UNIQUE NOT NULL,
@@ -7,6 +7,36 @@ CREATE TABLE users (
     is_active       BOOLEAN NOT NULL DEFAULT TRUE,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
+
+-- PROFILES (for Supabase Auth users)
+CREATE TABLE profiles (
+    id              UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    role            TEXT NOT NULL DEFAULT 'user',
+    display_name    TEXT,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Trigger to create profile on user signup
+CREATE OR REPLACE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+    INSERT INTO public.profiles (id, role, created_at, updated_at)
+    VALUES (
+        NEW.id,
+        COALESCE(NEW.raw_user_meta_data->>'role', 'user'),
+        NOW(),
+        NOW()
+    );
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Trigger on auth.users table
+DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users;
+CREATE TRIGGER on_auth_user_created
+    AFTER INSERT ON auth.users
+    FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
 
 -- ROLES
 CREATE TABLE roles (
@@ -46,3 +76,26 @@ create table refresh_tokens (
   constraint refresh_tokens_pkey primary key (token),
   constraint refresh_tokens_user_id_fkey foreign KEY (user_id) references users (id) on delete CASCADE
 );
+
+-- Insert default roles
+INSERT INTO roles (name, description) VALUES
+    ('admin', 'Full access to all features'),
+    ('editor', 'Limited admin access'),
+    ('user', 'Basic user access')
+ON CONFLICT (name) DO NOTHING;
+
+-- Insert default permissions
+INSERT INTO permissions (code, description) VALUES
+    ('user.create', 'Create new users'),
+    ('user.read', 'View user information'),
+    ('user.update', 'Update user information'),
+    ('user.delete', 'Delete users'),
+    ('content.create', 'Create content'),
+    ('content.read', 'View content'),
+    ('content.update', 'Update content'),
+    ('content.delete', 'Delete content'),
+    ('database.read', 'View database'),
+    ('database.write', 'Modify database'),
+    ('settings.read', 'View settings'),
+    ('settings.write', 'Modify settings')
+ON CONFLICT (code) DO NOTHING;

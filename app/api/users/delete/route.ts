@@ -23,11 +23,14 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Delete user using Admin API (this will cascade to profiles table)
-    const { error } = await supabase.auth.admin.deleteUser(userId);
+    // Delete user (cascade will delete user_roles)
+    const { error } = await supabase
+      .from("users")
+      .delete()
+      .eq("id", userId);
 
     if (error) {
-      console.error("Supabase Auth error:", error);
+      console.error("Delete error:", error);
       return NextResponse.json(
         { error: error.message || "Failed to delete user" },
         { status: 400 }
