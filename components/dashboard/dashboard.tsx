@@ -210,8 +210,8 @@ export default function DashboardClient() {
                 if (mobile) setMobileMenuOpen(false);
               }}
               className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${currentTab === item.id
-                  ? "bg-primary text-primary-foreground"
-                  : "hover:bg-muted"
+                ? "bg-primary text-primary-foreground"
+                : "hover:bg-muted"
                 }`}
             >
               <Icon className="h-4 w-4" />
