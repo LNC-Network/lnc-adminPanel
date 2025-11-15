@@ -81,7 +81,7 @@ export default function ChatPage() {
                     const adminStatus = user.roles?.includes("admin") || false;
                     setIsAdmin(adminStatus);
                     setCurrentUserId(user.id || "");
-                    
+
                     // Fetch join requests if admin
                     if (adminStatus) {
                         fetchJoinRequests();
@@ -375,8 +375,8 @@ export default function ChatPage() {
                         <h2 className="font-semibold text-lg">Groups</h2>
                         <div className="flex gap-2">
                             {isAdmin && (
-                                <Button 
-                                    size="sm" 
+                                <Button
+                                    size="sm"
                                     variant="outline"
                                     onClick={() => {
                                         fetchJoinRequests();
