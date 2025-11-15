@@ -34,7 +34,7 @@ export default function DashboardPage() {
         console.log("Token verification failed");
         
         // Try to refresh the token if we have a refresh token
-        if (refreshToken) {
+        if (refreshToken ) {
           console.log("Attempting to refresh token...");
           const refreshRes = await fetch("/api/auth/refresh", {
             method: "POST",
@@ -44,26 +44,26 @@ export default function DashboardPage() {
 
           if (refreshRes.ok) {
             const refreshData = await refreshRes.json();
-            
+
             // Update tokens
             Cookies.set("access_token", refreshData.access_token, {
               expires: 30,
               sameSite: "lax",
               secure: process.env.NODE_ENV === "production",
             });
-            
+
             Cookies.set("refresh_token", refreshData.refresh_token, {
               expires: 30,
               sameSite: "lax",
               secure: process.env.NODE_ENV === "production",
             });
-            
+
             localStorage.setItem("user", JSON.stringify(refreshData.user));
             console.log("Token refreshed successfully");
             return true;
           }
         }
-        
+
         // If refresh failed or no refresh token, logout
         console.log("Token refresh failed, redirecting to login");
         Cookies.remove("access_token");
@@ -74,7 +74,7 @@ export default function DashboardPage() {
       }
 
       const data = await res.json();
-      
+
       if (!data.success) {
         console.log("User not authenticated, redirecting to login");
         Cookies.remove("access_token");

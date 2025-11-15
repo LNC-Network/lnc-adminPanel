@@ -49,10 +49,20 @@ export async function POST(req: Request) {
     // Fallback to user_metadata if profile doesn't exist
     const userRole = profileData?.role || authData.user.user_metadata?.role || 'user';
 
-    // Step 3: Check if user has admin or editor role
-    if (userRole !== 'admin' && userRole !== 'editor') {
+    // Debug logging
+    console.log('Login attempt:', {
+      email: authData.user.email,
+      userId: authData.user.id,
+      profileRole: profileData?.role,
+      metadataRole: authData.user.user_metadata?.role,
+      finalRole: userRole
+    });
+
+    // Step 3: Check if user has valid role (admin, editor, or user)
+    if (userRole !== 'admin' && userRole !== 'editor' && userRole !== 'user') {
+      console.log(`Access denied for user ${email} with role: ${userRole}`);
       return NextResponse.json(
-        { error: "Access denied. Admin privileges required." },
+        { error: `Access denied. Invalid role: '${userRole}'.` },
         { status: 403 }
       );
     }

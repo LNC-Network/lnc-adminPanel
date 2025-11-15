@@ -28,10 +28,17 @@ export async function POST(req: Request) {
       );
     }
 
-    // Check user role
-    const userRole = user.user_metadata?.role || 'user';
+    // Get user role from profiles table (primary source)
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    // Use role from profiles table, fallback to user_metadata
+    const userRole = profileData?.role || user.user_metadata?.role || 'user';
     
-    if (userRole !== 'admin' && userRole !== 'editor') {
+    if (userRole !== 'admin' && userRole !== 'editor' && userRole !== 'user') {
       return NextResponse.json(
         { success: false, error: "Insufficient permissions" },
         { status: 403 }
