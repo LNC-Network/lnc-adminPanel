@@ -1,15 +1,11 @@
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
-import { Pool } from "pg";
 import crypto from "crypto";
-
-const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
-});
+import { createClient } from "@supabase/supabase-js";
 
 export async function POST(req: Request) {
-  const refreshToken = req.headers
-    .get("cookie")
+  const cookie = req.headers.get("cookie");
+  const refreshToken = cookie
     ?.split("; ")
     .find((c) => c.startsWith("refresh_token="))
     ?.split("=")[1];
@@ -22,77 +18,61 @@ export async function POST(req: Request) {
   }
 
   try {
-    const client = await pool.connect();
-
-    // 1. Validate refresh token from DB
-    const tokenRes = await client.query(
-      `
-      SELECT user_id, expires_at
-      FROM refresh_tokens
-      WHERE token = $1
-      LIMIT 1
-      `,
-      [refreshToken]
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    const row = tokenRes.rows[0];
+    // 1. Validate refresh token
+    const { data: tokenRow, error: tokenErr } = await supabase
+      .from("refresh_tokens")
+      .select("user_id, expires_at")
+      .eq("token", refreshToken)
+      .single();
 
-    if (!row) {
-      client.release();
+    if (tokenErr || !tokenRow) {
       return NextResponse.json(
         { error: "Invalid refresh token" },
         { status: 401 }
       );
     }
 
-    if (new Date(row.expires_at) < new Date()) {
-      client.release();
+    if (new Date(tokenRow.expires_at) < new Date()) {
       return NextResponse.json(
         { error: "Refresh token expired" },
         { status: 401 }
       );
     }
 
-    const userId = row.user_id;
+    const userId = tokenRow.user_id;
 
     // 2. Load user
-    const userRes = await client.query(
-      `SELECT id, email, is_active FROM users WHERE id = $1 LIMIT 1`,
-      [userId]
-    );
-    const user = userRes.rows[0];
+    const { data: user, error: userErr } = await supabase
+      .from("users")
+      .select("id, email, is_active")
+      .eq("id", userId)
+      .single();
 
-    if (!user || !user.is_active) {
-      client.release();
+    if (userErr || !user || !user.is_active) {
       return NextResponse.json({ error: "User disabled" }, { status: 403 });
     }
 
     // 3. Load roles
-    const rolesRes = await client.query(
-      `
-      SELECT r.id, r.name
-      FROM roles r
-      JOIN user_roles ur ON ur.role_id = r.id
-      WHERE ur.user_id = $1
-      `,
-      [user.id]
-    );
+    const { data: rolesData } = await supabase
+      .from("user_roles")
+      .select("roles ( id, name )")
+      .eq("user_id", user.id);
 
-    const roles = rolesRes.rows.map((r) => r.name);
-    const roleIds = rolesRes.rows.map((r) => r.id);
+    const roles = rolesData?.map((r: any) => r.roles.name) ?? [];
+    const roleIds = rolesData?.map((r: any) => r.roles.id) ?? [];
 
     // 4. Load permissions
-    const permsRes = await client.query(
-      `
-      SELECT p.code
-      FROM permissions p
-      JOIN role_permissions rp ON rp.permission_id = p.id
-      WHERE rp.role_id = ANY($1::uuid[])
-      `,
-      [roleIds]
-    );
+    const { data: permsData } = await supabase
+      .from("role_permissions")
+      .select("permissions ( code )")
+      .in("role_id", roleIds);
 
-    const permissions = permsRes.rows.map((p) => p.code);
+    const permissions = permsData?.map((p: any) => p.permissions.code) ?? [];
 
     // 5. Create new access token
     const accessToken = jwt.sign(
@@ -108,24 +88,19 @@ export async function POST(req: Request) {
 
     // 6. Rotate refresh token
     const newRefreshToken = crypto.randomBytes(64).toString("hex");
-    const newExpiry = new Date(Date.now() + 1000 * 60 * 60 * 24 * 14); // 14 days
+    const newExpiry = new Date(Date.now() + 1000 * 60 * 60 * 24 * 14);
 
-    // Delete old token and insert new one
-    await client.query(`DELETE FROM refresh_tokens WHERE token = $1`, [
-      refreshToken,
-    ]);
+    // Delete old token
+    await supabase.from("refresh_tokens").delete().eq("token", refreshToken);
 
-    await client.query(
-      `
-      INSERT INTO refresh_tokens (token, user_id, expires_at)
-      VALUES ($1, $2, $3)
-      `,
-      [newRefreshToken, user.id, newExpiry]
-    );
+    // Insert new token
+    await supabase.from("refresh_tokens").insert({
+      token: newRefreshToken,
+      user_id: user.id,
+      expires_at: newExpiry.toISOString(),
+    });
 
-    client.release();
-
-    // 7. Prepare response
+    // 7. Response with updated cookies
     const response = NextResponse.json(
       {
         access_token: accessToken,
