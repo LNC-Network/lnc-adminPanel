@@ -122,67 +122,9 @@ export async function POST(req: Request) {
       expires: refreshExpiry,
     });
 
-<<<<<<< HEAD
     return response;
   } catch (err) {
     console.error("Login error:", err);
-=======
-    if (authError) {
-      return NextResponse.json(
-        { error: authError.message || "Invalid email or password" },
-        { status: 401 }
-      );
-    }
-
-    if (!authData.session || !authData.user) {
-      return NextResponse.json(
-        { error: "Failed to create session" },
-        { status: 401 }
-      );
-    }
-
-    // Step 2: Get user role from profiles table
-    const { data: profileData } = await supabase
-      .from('profiles')
-      .select('email, role')
-      .eq('id', authData.user.id)
-      .single();
-
-    // Fallback to user_metadata if profile doesn't exist
-    const userRole = profileData?.role || authData.user.user_metadata?.role || 'user';
-
-    // Debug logging
-    console.log('Login attempt:', {
-      email: authData.user.email,
-      userId: authData.user.id,
-      profileRole: profileData?.role,
-      metadataRole: authData.user.user_metadata?.role,
-      finalRole: userRole
-    });
-
-    // Step 3: Check if user has valid role (admin, editor, or user)
-    if (userRole !== 'admin' && userRole !== 'editor' && userRole !== 'user') {
-      console.log(`Access denied for user ${email} with role: ${userRole}`);
-      return NextResponse.json(
-        { error: `Access denied. Invalid role: '${userRole}'.` },
-        { status: 403 }
-      );
-    }
-
-    // Step 4: Return session tokens and user info
-    return NextResponse.json({
-      access_token: authData.session.access_token,
-      refresh_token: authData.session.refresh_token,
-      user: {
-        id: authData.user.id,
-        email: authData.user.email,
-        role: userRole,
-      },
-    }, { status: 200 });
-
-  } catch (error) {
-    console.error("Login error:", error);
->>>>>>> 2393e981e0d0e67d00f0e6a8172b3e80783a1bc1
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
