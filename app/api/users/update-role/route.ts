@@ -38,7 +38,7 @@ export async function PATCH(request: NextRequest) {
       .eq("name", role)
       .single();
 
-    if (roleError) {
+    if (roleError || !roleData) {
       console.error("Role fetch error:", roleError);
       return NextResponse.json(
         { error: "Failed to find role" },
