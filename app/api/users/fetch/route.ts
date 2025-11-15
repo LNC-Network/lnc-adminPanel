@@ -32,19 +32,29 @@ export async function GET(req: NextRequest) {
     console.error("Roles fetch error:", rolesError);
   }
 
+  // Group roles by user_id
+  const rolesMap = new Map<string, string[]>();
+  userRoles?.forEach((ur: any) => {
+    if (!rolesMap.has(ur.user_id)) {
+      rolesMap.set(ur.user_id, []);
+    }
+    rolesMap.get(ur.user_id)?.push(ur.roles.name);
+  });
+
   // Merge users with their roles
   const usersWithRoles = users.map((user) => {
-    const roleData = userRoles?.find((ur) => ur.user_id === user.id);
-    const roleName = roleData?.roles?.name || "user";
+    const roles = rolesMap.get(user.id) || [];
 
     return {
       id: user.id,
       email: user.email,
+      display_name: user.display_name,
       created_at: user.created_at,
       last_sign_in_at: null,
       user_metadata: {
-        role: roleName,
+        role: roles[0] || "user", // Keep for backward compatibility
       },
+      roles: roles, // New: array of all roles
     };
   });
 
