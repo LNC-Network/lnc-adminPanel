@@ -226,7 +226,7 @@ export default function FormMaker() {
                       </Label>
                       {field.type === "textarea" ? (
                         <textarea
-                          className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                          className="flex min-h-[80px] w-full rounded-md  border-input bg-background px-3 py-2 text-sm"
                           placeholder={field.placeholder}
                         />
                       ) : field.type === "checkbox" ? (
@@ -241,7 +241,7 @@ export default function FormMaker() {
                         </div>
                       ) : field.type === "select" ? (
                         <select
-                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                          className="flex h-10 w-full rounded-md  border-input bg-background px-3 py-2 text-sm"
                           aria-label={field.label}
                         >
                           <option value="">Select an option</option>
@@ -344,7 +344,7 @@ export default function FormMaker() {
                       key={fieldType.type}
                       onClick={() => addField(fieldType.type as FormField["type"])}
                       disabled={previewMode}
-                      className="flex flex-col items-center gap-2 p-3 rounded-lg border bg-card hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="flex flex-col items-center gap-2 p-3 rounded-lg  bg-card hover:bg-muted transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <Icon className="h-5 w-5" />
                       <span className="text-xs text-center">{fieldType.label}</span>

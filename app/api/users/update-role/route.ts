@@ -1,17 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false,
-    },
-  }
-);
-
 export async function PATCH(request: NextRequest) {
   try {
     const { userId, role } = await request.json();
@@ -23,49 +12,57 @@ export async function PATCH(request: NextRequest) {
       );
     }
 
-    // Validate role
-    if (!["user", "editor", "admin"].includes(role)) {
-      return NextResponse.json(
-        { error: "Invalid role. Must be user, editor, or admin" },
-        { status: 400 }
-      );
-    }
-
-    // Update user metadata
-    const { data: authData, error: authError } = await supabase.auth.admin.updateUserById(
-      userId,
-      {
-        user_metadata: {
-          role,
-        },
-      }
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
     );
 
-    if (authError) {
-      console.error("Supabase Auth error:", authError);
+    // Validate role exists in roles table
+    const { data: roleRow, error: roleError } = await supabase
+      .from("roles")
+      .select("id")
+      .eq("name", role)
+      .single();
+
+    if (roleError || !roleRow) {
       return NextResponse.json(
-        { error: authError.message || "Failed to update user metadata" },
+        { error: "Invalid role: role does not exist" },
         { status: 400 }
       );
     }
 
-    // Update profiles table
-    const { error: profileError } = await supabase
-      .from("profiles")
-      .update({ role })
-      .eq("id", userId);
+    const roleId = roleRow.id;
 
-    if (profileError) {
-      console.error("Profile update error:", profileError);
+    // Remove existing user roles (single-role model)
+    const { error: deleteError } = await supabase
+      .from("user_roles")
+      .delete()
+      .eq("user_id", userId);
+
+    if (deleteError) {
       return NextResponse.json(
-        { error: "Failed to update profile" },
-        { status: 400 }
+        { error: "Failed to clear existing roles" },
+        { status: 500 }
+      );
+    }
+
+    // Insert new role entry
+    const { error: insertError } = await supabase.from("user_roles").insert({
+      user_id: userId,
+      role_id: roleId,
+    });
+
+    if (insertError) {
+      return NextResponse.json(
+        { error: "Failed to assign new role" },
+        { status: 500 }
       );
     }
 
     return NextResponse.json({
       success: true,
-      user: authData.user,
+      message: "Role updated successfully",
+      role: role,
     });
   } catch (error) {
     console.error("Update role error:", error);

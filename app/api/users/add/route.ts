@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import setUserTableData from "@/lib/postgres/setUserTabledata";
+import { createClient } from "@supabase/supabase-js";
+import argon2 from "argon2";
 
 export async function POST(req: NextRequest) {
   try {
-    // Parse the request body to get email and password
     const { email, password } = await req.json();
 
-    // Validate that email and password are provided
     if (!email || !password) {
       return NextResponse.json(
         { error: "Email and password are required" },
@@ -14,14 +13,21 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Call the function to insert the user data into the database
-    const isSuccess = await setUserTableData(email, password);
+    const client = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
 
-    if (!isSuccess) {
-      return NextResponse.json(
-        { error: "Failed to save user data" },
-        { status: 500 }
-      );
+    const password_hash = await argon2.hash(password);
+
+    const { error: insertError } = await client.from("users").insert({
+      email,
+      password_hash,
+      is_active: true,
+    });
+
+    if (insertError) {
+      return NextResponse.json({ error: insertError.message }, { status: 500 });
     }
 
     return NextResponse.json({ success: true });

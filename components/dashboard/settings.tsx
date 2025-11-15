@@ -8,7 +8,7 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow
+  TableRow,
 } from "@/components/ui/table";
 import {
   Select,
@@ -18,7 +18,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Button } from "../ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../ui/card";
 import ThemeSwitch from "../ThemeSwitch";
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
@@ -40,12 +46,18 @@ export default function Settings() {
   const [role, setRole] = useState("user");
   const [loading, setLoading] = useState(false);
 
+  const clear = () => {
+    setEmail("");
+    setPassword("");
+    setRole("user");
+  };
   const fetchUsers = async () => {
     try {
-      const res = await fetch("/api/users/list");
+      const res = await fetch("/api/users/fetch?start=0&end=100");
       const json = await res.json();
+
       if (res.ok) {
-        setUsers(json.users || []);
+        setUsers(json.data || []); // CHANGE: API returns { data }
       } else {
         toast.error(json.error || "Failed to fetch users");
       }
@@ -53,12 +65,6 @@ export default function Settings() {
       toast.error("Failed to fetch users");
       console.error(error);
     }
-  };
-
-  const clear = () => {
-    setEmail("");
-    setPassword("");
-    setRole("user");
   };
 
   const addUser = async () => {
@@ -74,7 +80,7 @@ export default function Settings() {
 
     setLoading(true);
     try {
-      const response = await fetch("/api/users/create", {
+      const response = await fetch("/api/users/add", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -110,7 +116,7 @@ export default function Settings() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ userId }),
+        body: JSON.stringify({ email: userEmail }), // CHANGE: delete by email
       });
 
       const data = await response.json();
@@ -161,13 +167,17 @@ export default function Settings() {
       <div className="space-y-6">
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Settings</h2>
-          <p className="text-muted-foreground">Manage users and system settings</p>
+          <p className="text-muted-foreground">
+            Manage users and system settings
+          </p>
         </div>
 
         <Card>
           <CardHeader>
             <CardTitle>Create New User</CardTitle>
-            <CardDescription>Add a new user to the admin panel with specific role</CardDescription>
+            <CardDescription>
+              Add a new user to the admin panel with specific role
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="grid gap-4">
@@ -235,10 +245,12 @@ export default function Settings() {
         <Card>
           <CardHeader>
             <CardTitle>User Management</CardTitle>
-            <CardDescription>View and manage all users in the system</CardDescription>
+            <CardDescription>
+              View and manage all users in the system
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="border rounded-lg overflow-auto">
+            <div className="rounded-lg overflow-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
@@ -252,18 +264,25 @@ export default function Settings() {
                 <TableBody>
                   {users.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center text-muted-foreground">
+                      <TableCell
+                        colSpan={5}
+                        className="text-center text-muted-foreground"
+                      >
                         No users found
                       </TableCell>
                     </TableRow>
                   ) : (
                     users.map((user) => (
                       <TableRow key={user.id}>
-                        <TableCell className="font-medium">{user.email}</TableCell>
+                        <TableCell className="font-medium">
+                          {user.email}
+                        </TableCell>
                         <TableCell>
                           <Select
                             value={user.user_metadata?.role || "user"}
-                            onValueChange={(newRole: string) => updateUserRole(user.id, newRole)}
+                            onValueChange={(newRole: string) =>
+                              updateUserRole(user.id, newRole)
+                            }
                           >
                             <SelectTrigger className="w-32">
                               <SelectValue />
@@ -280,16 +299,19 @@ export default function Settings() {
                         </TableCell>
                         <TableCell>
                           {user.last_sign_in_at
-                            ? new Date(user.last_sign_in_at).toLocaleDateString()
-                            : "Never"
-                          }
+                            ? new Date(
+                                user.last_sign_in_at
+                              ).toLocaleDateString()
+                            : "Never"}
                         </TableCell>
                         <TableCell className="text-right">
                           <Button
                             variant="ghost"
                             size="sm"
                             className="text-destructive"
-                            onClick={() => deleteUser(user.id, user.email || "")}
+                            onClick={() =>
+                              deleteUser(user.id, user.email || "")
+                            }
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>
@@ -306,13 +328,17 @@ export default function Settings() {
         <Card>
           <CardHeader>
             <CardTitle>Appearance</CardTitle>
-            <CardDescription>Customize the look and feel of the admin panel</CardDescription>
+            <CardDescription>
+              Customize the look and feel of the admin panel
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
                 <Label>Theme</Label>
-                <p className="text-sm text-muted-foreground">Switch between light and dark mode</p>
+                <p className="text-sm text-muted-foreground">
+                  Switch between light and dark mode
+                </p>
               </div>
               <ThemeSwitch />
             </div>
