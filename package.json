@@ -52,8 +52,9 @@
     "eslint": "^9.39.1",
     "eslint-config-next": "16.0.3",
     "mini-css-extract-plugin": "^2.9.4",
+    "autoprefixer": "^10.4.20",
     "postcss": "^8.5.6",
-    "tailwindcss": "^4.1.17",
+    "tailwindcss": "^3.4.1",
     "typescript": "^5.9.3"
   }
 }
