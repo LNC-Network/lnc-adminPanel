@@ -99,3 +99,52 @@ INSERT INTO permissions (code, description) VALUES
     ('settings.read', 'View settings'),
     ('settings.write', 'Modify settings')
 ON CONFLICT (code) DO NOTHING;
+
+-- Chat Groups table
+CREATE TABLE IF NOT EXISTS chat_groups (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name TEXT NOT NULL,
+    description TEXT,
+    created_by UUID REFERENCES users(id) ON DELETE SET NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Chat Members table (junction table for group members)
+CREATE TABLE IF NOT EXISTS chat_members (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    group_id UUID NOT NULL REFERENCES chat_groups(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    joined_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    UNIQUE(group_id, user_id)
+);
+
+-- Chat Messages table
+CREATE TABLE IF NOT EXISTS chat_messages (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    group_id UUID NOT NULL REFERENCES chat_groups(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    message TEXT NOT NULL,
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Create indexes for better performance
+CREATE INDEX IF NOT EXISTS idx_chat_messages_group_id ON chat_messages(group_id);
+CREATE INDEX IF NOT EXISTS idx_chat_messages_created_at ON chat_messages(created_at);
+CREATE INDEX IF NOT EXISTS idx_chat_members_group_id ON chat_members(group_id);
+CREATE INDEX IF NOT EXISTS idx_chat_members_user_id ON chat_members(user_id);
+
+-- Chat Join Requests table
+CREATE TABLE IF NOT EXISTS chat_join_requests (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    group_id UUID NOT NULL REFERENCES chat_groups(id) ON DELETE CASCADE,
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),
+    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+-- Create indexes for join requests
+CREATE INDEX IF NOT EXISTS idx_join_requests_group_id ON chat_join_requests(group_id);
+CREATE INDEX IF NOT EXISTS idx_join_requests_user_id ON chat_join_requests(user_id);
+CREATE INDEX IF NOT EXISTS idx_join_requests_status ON chat_join_requests(status);
