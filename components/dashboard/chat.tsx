@@ -118,7 +118,12 @@ export default function ChatPage() {
 
     const fetchGroups = async () => {
         try {
-            const res = await fetch("/api/chat/groups");
+            const userData = localStorage.getItem("user");
+            if (!userData) return;
+            const user = JSON.parse(userData);
+            const userIsAdmin = user.roles?.includes("admin") || false;
+
+            const res = await fetch(`/api/chat/groups?user_id=${user.id}&is_admin=${userIsAdmin}`);
             const data = await res.json();
             if (res.ok) {
                 setGroups(data.groups || []);
@@ -133,8 +138,9 @@ export default function ChatPage() {
             const userData = localStorage.getItem("user");
             if (!userData) return;
             const user = JSON.parse(userData);
+            const userIsAdmin = user.roles?.includes("admin") || false;
 
-            const res = await fetch(`/api/chat/messages?group_id=${groupId}&user_id=${user.id}`);
+            const res = await fetch(`/api/chat/messages?group_id=${groupId}&user_id=${user.id}&is_admin=${userIsAdmin}`);
             const data = await res.json();
             if (res.ok) {
                 setMessages(data.messages || []);
@@ -237,6 +243,7 @@ export default function ChatPage() {
                 return;
             }
             const user = JSON.parse(userData);
+            const userIsAdmin = user.roles?.includes("admin") || false;
 
             const res = await fetch("/api/chat/messages", {
                 method: "POST",
@@ -245,6 +252,7 @@ export default function ChatPage() {
                     group_id: selectedGroup.id,
                     user_id: user.id,
                     message: newMessage,
+                    is_admin: userIsAdmin,
                 }),
             });
 

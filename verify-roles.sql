@@ -12,7 +12,8 @@ SELECT EXISTS (
 INSERT INTO roles (name, description) VALUES
     ('admin', 'Full access to all features'),
     ('editor', 'Limited admin access'),
-    ('user', 'Basic user access')
+    ('user', 'Basic user access'),
+    ('dev member', 'Development team member')
 ON CONFLICT (name) DO NOTHING;
 
 -- Verify roles were inserted

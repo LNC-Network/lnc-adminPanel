@@ -218,6 +218,12 @@ export default function Settings() {
                         User (No admin access)
                       </div>
                     </SelectItem>
+                    <SelectItem value="dev member">
+                      <div className="flex items-center gap-2">
+                        <UserIcon className="h-4 w-4" />
+                        Dev Member (Development team)
+                      </div>
+                    </SelectItem>
                     <SelectItem value="editor">
                       <div className="flex items-center gap-2">
                         <UserIcon className="h-4 w-4" />
@@ -289,6 +295,7 @@ export default function Settings() {
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="user">User</SelectItem>
+                              <SelectItem value="dev member">Dev Member</SelectItem>
                               <SelectItem value="editor">Editor</SelectItem>
                               <SelectItem value="admin">Admin</SelectItem>
                             </SelectContent>
@@ -300,8 +307,8 @@ export default function Settings() {
                         <TableCell>
                           {user.last_sign_in_at
                             ? new Date(
-                                user.last_sign_in_at
-                              ).toLocaleDateString()
+                              user.last_sign_in_at
+                            ).toLocaleDateString()
                             : "Never"}
                         </TableCell>
                         <TableCell className="text-right">

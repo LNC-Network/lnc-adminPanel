@@ -15,7 +15,8 @@ import {
   Shield,
   UserCircle,
   KeyRound,
-  MessageSquare
+  MessageSquare,
+  ListTodo
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import Content from "./content";
@@ -55,6 +56,7 @@ import { useRouter } from "next/navigation";
 const Settings = dynamic(() => import("./settings"));
 const Database = dynamic(() => import("./database"));
 const Chat = dynamic(() => import("./chat"));
+const Tickets = dynamic(() => import("./tickets"));
 
 export default function DashboardClient() {
   const [currentTab, setCurrentTab] = useState<string>(() => {
@@ -160,15 +162,21 @@ export default function DashboardClient() {
   }, []);
 
   const isAdmin = userRoles.includes("admin");
+  const isDevMember = userRoles.includes("dev member");
 
   const navigationItems = [
     { id: "overview", label: "Overview", icon: LayoutDashboard },
     { id: "content", label: "Content", icon: FileText },
     { id: "chat", label: "Chat", icon: MessageSquare },
+    { id: "tickets", label: "Tickets", icon: ListTodo, devOnly: true },
     { id: "database", label: "Database", icon: DatabaseIcon },
     { id: "forms", label: "Forms", icon: FormInput },
     { id: "settings", label: "Settings", icon: SettingsIcon, adminOnly: true },
-  ].filter(item => !item.adminOnly || isAdmin);
+  ].filter(item => {
+    if (item.adminOnly) return isAdmin;
+    if (item.devOnly) return isAdmin || isDevMember;
+    return true;
+  });
 
   const Sidebar = ({ mobile = false }: { mobile?: boolean }) => (
     <aside
@@ -562,6 +570,7 @@ export default function DashboardClient() {
 
             {currentTab === "content" && <Content />}
             {currentTab === "chat" && <Chat />}
+            {currentTab === "tickets" && (isAdmin || isDevMember) && <Tickets />}
             {currentTab === "database" && <Database />}
             {currentTab === "forms" && <FormMaker />}
             {currentTab === "settings" && isAdmin && <Settings />}

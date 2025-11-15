@@ -8,11 +8,50 @@ const supabase = createClient(
 
 export async function GET(request: NextRequest) {
   try {
-    // Return all groups so users can see them
-    const { data: groups, error } = await supabase
-      .from("chat_groups")
-      .select("*")
-      .order("created_at", { ascending: false });
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get("user_id");
+    const isAdmin = searchParams.get("is_admin") === "true";
+
+    if (!userId) {
+      return NextResponse.json(
+        { error: "User ID is required" },
+        { status: 400 }
+      );
+    }
+
+    // If admin, return all groups
+    if (isAdmin) {
+      const { data: groups, error } = await supabase
+        .from("chat_groups")
+        .select("*")
+        .order("created_at", { ascending: false });
+
+      if (error) {
+        console.error("Fetch groups error:", error);
+        return NextResponse.json(
+          { error: error.message },
+          { status: 500 }
+        );
+      }
+
+      return NextResponse.json({ groups });
+    }
+
+    // For non-admins, only return groups they're members of
+    const { data: memberGroups, error } = await supabase
+      .from("chat_members")
+      .select(`
+        group_id,
+        chat_groups(
+          id,
+          name,
+          description,
+          created_by,
+          created_at,
+          updated_at
+        )
+      `)
+      .eq("user_id", userId);
 
     if (error) {
       console.error("Fetch groups error:", error);
@@ -21,6 +60,14 @@ export async function GET(request: NextRequest) {
         { status: 500 }
       );
     }
+
+    // Extract and format groups
+    const groups = memberGroups
+      .map((item: any) => item.chat_groups)
+      .filter((group: any) => group !== null)
+      .sort((a: any, b: any) => 
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
 
     return NextResponse.json({ groups });
   } catch (error) {

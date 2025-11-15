@@ -11,6 +11,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const groupId = searchParams.get("group_id");
     const userId = searchParams.get("user_id");
+    const isAdmin = searchParams.get("is_admin") === "true";
 
     if (!groupId || !userId) {
       return NextResponse.json(
@@ -19,19 +20,22 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Check if user is a member of the group
-    const { data: membership, error: memberError } = await supabase
-      .from("chat_members")
-      .select("id")
-      .eq("group_id", groupId)
-      .eq("user_id", userId)
-      .single();
+    // Skip membership check for admins
+    if (!isAdmin) {
+      // Check if user is a member of the group
+      const { data: membership, error: memberError } = await supabase
+        .from("chat_members")
+        .select("id")
+        .eq("group_id", groupId)
+        .eq("user_id", userId)
+        .single();
 
-    if (memberError || !membership) {
-      return NextResponse.json(
-        { error: "Access denied: You are not a member of this group" },
-        { status: 403 }
-      );
+      if (memberError || !membership) {
+        return NextResponse.json(
+          { error: "Access denied: You are not a member of this group" },
+          { status: 403 }
+        );
+      }
     }
 
     const { data: messages, error } = await supabase
@@ -70,7 +74,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { group_id, user_id, message } = await request.json();
+    const { group_id, user_id, message, is_admin } = await request.json();
 
     if (!group_id || !message || !user_id) {
       return NextResponse.json(
@@ -79,19 +83,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if user is a member of the group
-    const { data: membership, error: memberError } = await supabase
-      .from("chat_members")
-      .select("id")
-      .eq("group_id", group_id)
-      .eq("user_id", user_id)
-      .single();
+    // Skip membership check for admins
+    if (!is_admin) {
+      // Check if user is a member of the group
+      const { data: membership, error: memberError } = await supabase
+        .from("chat_members")
+        .select("id")
+        .eq("group_id", group_id)
+        .eq("user_id", user_id)
+        .single();
 
-    if (memberError || !membership) {
-      return NextResponse.json(
-        { error: "Access denied: You are not a member of this group" },
-        { status: 403 }
-      );
+      if (memberError || !membership) {
+        return NextResponse.json(
+          { error: "Access denied: You are not a member of this group" },
+          { status: 403 }
+        );
+      }
     }
 
     const { data, error } = await supabase

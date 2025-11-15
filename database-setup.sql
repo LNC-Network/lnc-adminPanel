@@ -81,7 +81,8 @@ create table refresh_tokens (
 INSERT INTO roles (name, description) VALUES
     ('admin', 'Full access to all features'),
     ('editor', 'Limited admin access'),
-    ('user', 'Basic user access')
+    ('user', 'Basic user access'),
+    ('dev member', 'Development team member')
 ON CONFLICT (name) DO NOTHING;
 
 -- Insert default permissions
