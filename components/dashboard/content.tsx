@@ -76,12 +76,12 @@ export default function Content() {
         try {
           const user = JSON.parse(userData);
           const userRoles = user.roles || [];
-          
+
           // Super Admin has full access
-          const isSuperAdmin = userRoles.some((role: string) => 
+          const isSuperAdmin = userRoles.some((role: string) =>
             role.toLowerCase() === 'super admin'
           );
-          
+
           // Allow access for Social Media, Design team members/admins, and Admistater
           const allowedRoles = [
             'social media team admin',
@@ -90,13 +90,13 @@ export default function Content() {
             'design member',
             'admistater'
           ];
-          
-          const hasPermission = isSuperAdmin || userRoles.some((role: string) => 
-            allowedRoles.some(allowedRole => 
+
+          const hasPermission = isSuperAdmin || userRoles.some((role: string) =>
+            allowedRoles.some(allowedRole =>
               role.toLowerCase() === allowedRole.toLowerCase()
             )
           );
-          
+
           setHasAccess(hasPermission);
         } catch (e) {
           console.error("Failed to parse user data:", e);
