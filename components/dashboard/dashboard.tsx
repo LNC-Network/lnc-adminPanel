@@ -21,6 +21,14 @@ import {
 import dynamic from "next/dynamic";
 import Content from "./content";
 import FormMaker from "./form-maker";
+import {
+  isSuperAdmin,
+  isAdmistater,
+  canAccessDatabase,
+  canAccessSettings,
+  canAccessTickets,
+  canViewAll,
+} from "@/lib/permissions";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Card,
@@ -161,20 +169,20 @@ export default function DashboardClient() {
     }
   }, []);
 
-  const isAdmin = userRoles.includes("admin");
-  const isDevMember = userRoles.includes("dev member");
+  const isSuperAdminUser = isSuperAdmin(userRoles);
+  const isAdmistaterUser = isAdmistater(userRoles);
+  const canViewAllContent = canViewAll(userRoles);
 
   const navigationItems = [
     { id: "overview", label: "Overview", icon: LayoutDashboard },
     { id: "content", label: "Content", icon: FileText },
     { id: "chat", label: "Chat", icon: MessageSquare },
-    { id: "tickets", label: "Tickets", icon: ListTodo, devOnly: true },
-    { id: "database", label: "Database", icon: DatabaseIcon },
+    { id: "tickets", label: "Tickets", icon: ListTodo, requiresPermission: () => canAccessTickets(userRoles) },
+    { id: "database", label: "Database", icon: DatabaseIcon, requiresPermission: () => canAccessDatabase(userRoles) },
     { id: "forms", label: "Forms", icon: FormInput },
-    { id: "settings", label: "Settings", icon: SettingsIcon, adminOnly: true },
+    { id: "settings", label: "Settings", icon: SettingsIcon, requiresPermission: () => canAccessSettings(userRoles) },
   ].filter(item => {
-    if (item.adminOnly) return isAdmin;
-    if (item.devOnly) return isAdmin || isDevMember;
+    if (item.requiresPermission) return item.requiresPermission();
     return true;
   });
 
@@ -300,7 +308,7 @@ export default function DashboardClient() {
                   </DropdownMenuItem>
                   <DropdownMenuItem disabled>
                     <Shield className="mr-2 h-4 w-4" />
-                    <span>Role: {isAdmin ? "Admin" : userRoles.join(", ") || "User"}</span>
+                    <span>Role: {userRoles.join(", ") || "No role assigned"}</span>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout}>
@@ -552,7 +560,7 @@ export default function DashboardClient() {
                         <DatabaseIcon className="mr-2 h-4 w-4" />
                         View Database
                       </Button>
-                      {isAdmin && (
+                      {isSuperAdminUser && (
                         <Button
                           className="w-full justify-start"
                           variant="outline"
@@ -570,10 +578,10 @@ export default function DashboardClient() {
 
             {currentTab === "content" && <Content />}
             {currentTab === "chat" && <Chat />}
-            {currentTab === "tickets" && (isAdmin || isDevMember) && <Tickets />}
-            {currentTab === "database" && <Database />}
+            {currentTab === "tickets" && canAccessTickets(userRoles) && <Tickets />}
+            {currentTab === "database" && canAccessDatabase(userRoles) && <Database />}
             {currentTab === "forms" && <FormMaker />}
-            {currentTab === "settings" && isAdmin && <Settings />}
+            {currentTab === "settings" && canAccessSettings(userRoles) && <Settings />}
           </main>
         </div>
       </div>

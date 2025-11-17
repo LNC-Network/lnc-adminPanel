@@ -9,7 +9,13 @@ import {
   XCircle,
   Clock,
   UserPlus,
+  Users,
+  Code,
+  MessageSquare,
+  Megaphone,
+  Palette,
 } from "lucide-react";
+import { isSuperAdmin, isAdmistater } from "@/lib/permissions";
 import { Input } from "../ui/input";
 import {
   Table,
@@ -79,9 +85,10 @@ export default function Settings() {
   const [pendingUsers, setPendingUsers] = useState<PendingUser[]>([]);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("user");
+  const [role, setRole] = useState("dev member");
   const [loading, setLoading] = useState(false);
   const [currentUserId, setCurrentUserId] = useState("");
+  const [currentUserRoles, setCurrentUserRoles] = useState<string[]>([]);
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
   const [selectedPending, setSelectedPending] = useState<PendingUser | null>(
     null
@@ -91,6 +98,9 @@ export default function Settings() {
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
   const [showRoleDialog, setShowRoleDialog] = useState(false);
+
+  const canEdit = !isAdmistater(currentUserRoles);
+  const canCreateUser = isSuperAdmin(currentUserRoles);
 
   const clear = () => {
     setEmail("");
@@ -105,6 +115,7 @@ export default function Settings() {
         try {
           const user = JSON.parse(userData);
           setCurrentUserId(user.id || "");
+          setCurrentUserRoles(user.roles || []);
         } catch (e) {
           console.error("Failed to parse user data:", e);
         }
@@ -386,10 +397,10 @@ export default function Settings() {
               Pending Registrations
               {pendingUsers.filter((u) => u.status === "pending").length >
                 0 && (
-                <Badge variant="destructive" className="ml-2">
-                  {pendingUsers.filter((u) => u.status === "pending").length}
-                </Badge>
-              )}
+                  <Badge variant="destructive" className="ml-2">
+                    {pendingUsers.filter((u) => u.status === "pending").length}
+                  </Badge>
+                )}
             </TabsTrigger>
             <TabsTrigger value="appearance">Appearance</TabsTrigger>
           </TabsList>
@@ -402,7 +413,9 @@ export default function Settings() {
                 <CardHeader>
                   <CardTitle>Create New User</CardTitle>
                   <CardDescription>
-                    Add a new user to the admin panel with specific role
+                    {canCreateUser
+                      ? "Add a new user to the admin panel with specific role"
+                      : "Only Super Admin can create new users"}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -415,7 +428,7 @@ export default function Settings() {
                         placeholder="user@example.com"
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
-                        disabled={loading}
+                        disabled={loading || !canCreateUser}
                       />
                     </div>
 
@@ -427,7 +440,7 @@ export default function Settings() {
                         placeholder="Minimum 6 characters"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
-                        disabled={loading}
+                        disabled={loading || !canCreateUser}
                       />
                     </div>
 
@@ -436,34 +449,70 @@ export default function Settings() {
                       <Select
                         value={role}
                         onValueChange={setRole}
-                        disabled={loading}
+                        disabled={loading || !canCreateUser}
                       >
                         <SelectTrigger id="role">
                           <SelectValue placeholder="Select role" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="user">
+                          <SelectItem value="super admin">
                             <div className="flex items-center gap-2">
-                              <User className="h-4 w-4" />
-                              User (No admin access)
+                              <Shield className="h-4 w-4 text-red-500" />
+                              Super Admin (Full control)
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="admistater">
+                            <div className="flex items-center gap-2">
+                              <Shield className="h-4 w-4 text-blue-500" />
+                              Admistater (View-only oversight)
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="dev team admin">
+                            <div className="flex items-center gap-2">
+                              <Code className="h-4 w-4 text-green-500" />
+                              Dev Team Admin
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="social media team admin">
+                            <div className="flex items-center gap-2">
+                              <MessageSquare className="h-4 w-4 text-purple-500" />
+                              Social Media Team Admin
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="pr & outreach team admin">
+                            <div className="flex items-center gap-2">
+                              <Megaphone className="h-4 w-4 text-orange-500" />
+                              PR & Outreach Team Admin
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="design team admin">
+                            <div className="flex items-center gap-2">
+                              <Palette className="h-4 w-4 text-pink-500" />
+                              Design Team Admin
                             </div>
                           </SelectItem>
                           <SelectItem value="dev member">
                             <div className="flex items-center gap-2">
-                              <User className="h-4 w-4" />
-                              Dev Member (Development team)
+                              <Code className="h-4 w-4" />
+                              Dev Member
                             </div>
                           </SelectItem>
-                          <SelectItem value="editor">
+                          <SelectItem value="social media member">
                             <div className="flex items-center gap-2">
-                              <User className="h-4 w-4" />
-                              Editor (Limited admin access)
+                              <MessageSquare className="h-4 w-4" />
+                              Social Media Member
                             </div>
                           </SelectItem>
-                          <SelectItem value="admin">
+                          <SelectItem value="pr & outreach member">
                             <div className="flex items-center gap-2">
-                              <Shield className="h-4 w-4" />
-                              Admin (Full access)
+                              <Megaphone className="h-4 w-4" />
+                              PR & Outreach Member
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="design member">
+                            <div className="flex items-center gap-2">
+                              <Palette className="h-4 w-4" />
+                              Design Member
                             </div>
                           </SelectItem>
                         </SelectContent>
@@ -472,7 +521,7 @@ export default function Settings() {
 
                     <Button
                       onClick={addUser}
-                      disabled={loading}
+                      disabled={loading || !canCreateUser}
                       className="w-full"
                     >
                       <Plus className="mr-2 h-4 w-4" />
@@ -543,8 +592,8 @@ export default function Settings() {
                               <TableCell>
                                 {user.last_sign_in_at
                                   ? new Date(
-                                      user.last_sign_in_at
-                                    ).toLocaleDateString()
+                                    user.last_sign_in_at
+                                  ).toLocaleDateString()
                                   : "Never"}
                               </TableCell>
                               <TableCell className="text-right">
@@ -553,6 +602,7 @@ export default function Settings() {
                                     variant="outline"
                                     size="sm"
                                     onClick={() => handleOpenRoleDialog(user)}
+                                    disabled={!canEdit}
                                   >
                                     Edit Roles
                                   </Button>
@@ -563,6 +613,7 @@ export default function Settings() {
                                     onClick={() =>
                                       deleteUser(user.id, user.email || "")
                                     }
+                                    disabled={!canEdit}
                                   >
                                     <Trash2 className="h-4 w-4" />
                                   </Button>
@@ -651,7 +702,7 @@ export default function Settings() {
                               {pending.status === "pending" && (
                                 <div className="flex justify-end gap-2">
                                   <Select
-                                    disabled={approvingId === pending.id}
+                                    disabled={approvingId === pending.id || !canEdit}
                                     onValueChange={(role) =>
                                       handleApprove(pending, role)
                                     }
@@ -661,22 +712,42 @@ export default function Settings() {
                                         placeholder={
                                           approvingId === pending.id
                                             ? "Approving..."
-                                            : "Approve as..."
+                                            : canEdit
+                                              ? "Approve as..."
+                                              : "View only"
                                         }
                                       />
                                     </SelectTrigger>
                                     <SelectContent>
-                                      <SelectItem value="user">
-                                        As User
-                                      </SelectItem>
                                       <SelectItem value="dev member">
                                         As Dev Member
                                       </SelectItem>
-                                      <SelectItem value="editor">
-                                        As Editor
+                                      <SelectItem value="social media member">
+                                        As Social Media Member
                                       </SelectItem>
-                                      <SelectItem value="admin">
-                                        As Admin
+                                      <SelectItem value="pr & outreach member">
+                                        As PR & Outreach Member
+                                      </SelectItem>
+                                      <SelectItem value="design member">
+                                        As Design Member
+                                      </SelectItem>
+                                      <SelectItem value="dev team admin">
+                                        As Dev Team Admin
+                                      </SelectItem>
+                                      <SelectItem value="social media team admin">
+                                        As Social Media Team Admin
+                                      </SelectItem>
+                                      <SelectItem value="pr & outreach team admin">
+                                        As PR & Outreach Team Admin
+                                      </SelectItem>
+                                      <SelectItem value="design team admin">
+                                        As Design Team Admin
+                                      </SelectItem>
+                                      <SelectItem value="admistater">
+                                        As Admistater
+                                      </SelectItem>
+                                      <SelectItem value="super admin">
+                                        As Super Admin
                                       </SelectItem>
                                     </SelectContent>
                                   </Select>
@@ -685,7 +756,7 @@ export default function Settings() {
                                     size="sm"
                                     className="text-destructive"
                                     onClick={() => openRejectDialog(pending)}
-                                    disabled={approvingId === pending.id}
+                                    disabled={approvingId === pending.id || !canEdit}
                                   >
                                     <XCircle className="h-4 w-4" />
                                   </Button>
@@ -781,30 +852,88 @@ export default function Settings() {
                 Select one or more roles for this user
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4 py-4">
-              {["admin", "editor", "user", "dev member"].map((role) => (
-                <div key={role} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={role}
-                    checked={selectedRoles.includes(role)}
-                    onCheckedChange={(checked) => {
-                      if (checked) {
-                        setSelectedRoles([...selectedRoles, role]);
-                      } else {
-                        setSelectedRoles(
-                          selectedRoles.filter((r) => r !== role)
-                        );
-                      }
-                    }}
-                  />
-                  <Label
-                    htmlFor={role}
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 capitalize cursor-pointer"
-                  >
-                    {role}
-                  </Label>
-                </div>
-              ))}
+            <div className="space-y-4 py-4 max-h-[400px] overflow-y-auto">
+              <div className="space-y-3">
+                <div className="text-sm font-semibold text-muted-foreground">Administration</div>
+                {["super admin", "admistater"].map((role) => (
+                  <div key={role} className="flex items-center space-x-2 pl-2">
+                    <Checkbox
+                      id={role}
+                      checked={selectedRoles.includes(role)}
+                      disabled={!canEdit}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setSelectedRoles([...selectedRoles, role]);
+                        } else {
+                          setSelectedRoles(
+                            selectedRoles.filter((r) => r !== role)
+                          );
+                        }
+                      }}
+                    />
+                    <Label
+                      htmlFor={role}
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 capitalize cursor-pointer"
+                    >
+                      {role}
+                    </Label>
+                  </div>
+                ))}
+              </div>
+              <div className="space-y-3">
+                <div className="text-sm font-semibold text-muted-foreground">Team Admins</div>
+                {["dev team admin", "social media team admin", "pr & outreach team admin", "design team admin"].map((role) => (
+                  <div key={role} className="flex items-center space-x-2 pl-2">
+                    <Checkbox
+                      id={role}
+                      checked={selectedRoles.includes(role)}
+                      disabled={!canEdit}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setSelectedRoles([...selectedRoles, role]);
+                        } else {
+                          setSelectedRoles(
+                            selectedRoles.filter((r) => r !== role)
+                          );
+                        }
+                      }}
+                    />
+                    <Label
+                      htmlFor={role}
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 capitalize cursor-pointer"
+                    >
+                      {role}
+                    </Label>
+                  </div>
+                ))}
+              </div>
+              <div className="space-y-3">
+                <div className="text-sm font-semibold text-muted-foreground">Team Members</div>
+                {["dev member", "social media member", "pr & outreach member", "design member"].map((role) => (
+                  <div key={role} className="flex items-center space-x-2 pl-2">
+                    <Checkbox
+                      id={role}
+                      checked={selectedRoles.includes(role)}
+                      disabled={!canEdit}
+                      onCheckedChange={(checked) => {
+                        if (checked) {
+                          setSelectedRoles([...selectedRoles, role]);
+                        } else {
+                          setSelectedRoles(
+                            selectedRoles.filter((r) => r !== role)
+                          );
+                        }
+                      }}
+                    />
+                    <Label
+                      htmlFor={role}
+                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 capitalize cursor-pointer"
+                    >
+                      {role}
+                    </Label>
+                  </div>
+                ))}
+              </div>
             </div>
             <div className="flex justify-end gap-3">
               <Button
@@ -817,7 +946,9 @@ export default function Settings() {
               >
                 Cancel
               </Button>
-              <Button onClick={handleUpdateRoles}>Save Roles</Button>
+              <Button onClick={handleUpdateRoles} disabled={!canEdit}>
+                Save Roles
+              </Button>
             </div>
           </DialogContent>
         </Dialog>
