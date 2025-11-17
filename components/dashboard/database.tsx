@@ -1,6 +1,12 @@
 "use client";
-import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import React, { useEffect, useMemo, useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -9,17 +15,15 @@ import {
   TableCell,
   TableHead,
   TableHeader,
-  TableRow
+  TableRow,
 } from "@/components/ui/table";
 import {
   Database as DatabaseIcon,
   RefreshCw,
   Download,
-  Upload,
   Search,
   Plus,
-  Trash2,
-  Edit
+  Edit,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
@@ -53,426 +57,596 @@ interface ChatMessage {
 
 export default function Database() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedTable, setSelectedTable] = useState("users");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
+  const [selectedTable, setSelectedTable] = useState<
+    "users" | "groups" | "messages"
+  >("users");
   const [userData, setUserData] = useState<User[]>([]);
   const [groupsData, setGroupsData] = useState<ChatGroup[]>([]);
   const [messagesData, setMessagesData] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(false);
-  const [totalRecords, setTotalRecords] = useState(0);
+
+  // debounce search for snappy UX
+  useEffect(() => {
+    const t = setTimeout(
+      () => setDebouncedQuery(searchQuery.trim().toLowerCase()),
+      300
+    );
+    return () => clearTimeout(t);
+  }, [searchQuery]);
 
   useEffect(() => {
     fetchAllData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const fetchAllData = async () => {
+  async function fetchAllData() {
     setLoading(true);
     try {
-      await Promise.all([
-        fetchUsers(),
-        fetchGroups(),
-        fetchMessages()
-      ]);
-    } catch (error) {
-      console.error("Error fetching data:", error);
+      await Promise.all([fetchUsers(), fetchGroups(), fetchMessages()]);
+    } catch (e) {
+      console.error(e);
       toast.error("Failed to load database");
     } finally {
       setLoading(false);
     }
-  };
+  }
 
-  const fetchUsers = async () => {
+  async function fetchUsers() {
     try {
       const res = await fetch("/api/users/list");
+      if (!res.ok) return setUserData([]);
       const data = await res.json();
-      if (res.ok) {
-        setUserData(data.users || []);
-      }
-    } catch (error) {
-      console.error("Failed to fetch users:", error);
+      setUserData(data.users || []);
+    } catch (e) {
+      console.error(e);
+      setUserData([]);
     }
-  };
+  }
 
-  const fetchGroups = async () => {
+  async function fetchGroups() {
     try {
       const res = await fetch("/api/chat/groups");
+      if (!res.ok) return setGroupsData([]);
       const data = await res.json();
-      if (res.ok) {
-        setGroupsData(data.groups || []);
-      }
-    } catch (error) {
-      console.error("Failed to fetch groups:", error);
+      setGroupsData(data.groups || []);
+    } catch (e) {
+      console.error(e);
+      setGroupsData([]);
     }
-  };
+  }
 
-  const fetchMessages = async () => {
+  async function fetchMessages() {
     try {
-      // Fetch messages for all groups
       const userData = localStorage.getItem("user");
-      if (!userData) return;
+      if (!userData) return setMessagesData([]);
       const user = JSON.parse(userData);
 
       const res = await fetch("/api/chat/groups");
+      if (!res.ok) return setMessagesData([]);
       const groupsRes = await res.json();
 
       if (groupsRes.groups && groupsRes.groups.length > 0) {
         const allMessages: ChatMessage[] = [];
-
         for (const group of groupsRes.groups) {
-          const msgRes = await fetch(`/api/chat/messages?group_id=${group.id}&user_id=${user.id}`);
-          if (msgRes.ok) {
-            const msgData = await msgRes.json();
-            const messagesWithGroup = (msgData.messages || []).map((msg: any) => ({
-              ...msg,
-              group_name: group.name
-            }));
-            allMessages.push(...messagesWithGroup);
-          }
+          const msgRes = await fetch(
+            `/api/chat/messages?group_id=${group.id}&user_id=${user.id}`
+          );
+          if (!msgRes.ok) continue;
+          const msgData = await msgRes.json();
+          const messagesWithGroup = (msgData.messages || []).map(
+            (msg: any) => ({ ...msg, group_name: group.name })
+          );
+          allMessages.push(...messagesWithGroup);
         }
-
         setMessagesData(allMessages);
+      } else {
+        setMessagesData([]);
       }
-    } catch (error) {
-      console.error("Failed to fetch messages:", error);
+    } catch (e) {
+      console.error(e);
+      setMessagesData([]);
     }
-  };
+  }
 
-  useEffect(() => {
-    setTotalRecords(userData.length + groupsData.length + messagesData.length);
-  }, [userData, groupsData, messagesData]);
+  const totals = useMemo(
+    () => ({
+      totalRecords: userData.length + groupsData.length + messagesData.length,
+      users: userData.length,
+      groups: groupsData.length,
+      messages: messagesData.length,
+    }),
+    [userData.length, groupsData.length, messagesData.length]
+  );
 
-  const handleRefresh = () => {
-    fetchAllData();
-    toast.success("Database refreshed");
-  };
+  const filteredUsers = useMemo(() => {
+    if (!debouncedQuery) return userData;
+    return userData.filter(
+      (u) =>
+        (u.email || "").toLowerCase().includes(debouncedQuery) ||
+        (u.display_name || "").toLowerCase().includes(debouncedQuery) ||
+        (u.role || "").toLowerCase().includes(debouncedQuery)
+    );
+  }, [userData, debouncedQuery]);
 
-  const handleExport = () => {
+  const filteredGroups = useMemo(() => {
+    if (!debouncedQuery) return groupsData;
+    return groupsData.filter(
+      (g) =>
+        (g.name || "").toLowerCase().includes(debouncedQuery) ||
+        (g.description || "").toLowerCase().includes(debouncedQuery)
+    );
+  }, [groupsData, debouncedQuery]);
+
+  const filteredMessages = useMemo(() => {
+    if (!debouncedQuery) return messagesData;
+    return messagesData.filter(
+      (m) =>
+        (m.message || "").toLowerCase().includes(debouncedQuery) ||
+        (m.group_name || "").toLowerCase().includes(debouncedQuery)
+    );
+  }, [messagesData, debouncedQuery]);
+
+  function isoDate(d?: string) {
+    try {
+      return d ? new Date(d).toLocaleString() : "-";
+    } catch (e) {
+      return d || "-";
+    }
+  }
+
+  function downloadCSV(table: "users" | "groups" | "messages") {
     let data: any[] = [];
     let headers: string[] = [];
 
-    switch (selectedTable) {
-      case "users":
-        data = userData;
-        headers = ["ID", "Email", "Display Name", "Role", "Created At"];
-        break;
-      case "groups":
-        data = groupsData;
-        headers = ["ID", "Name", "Description", "Created At"];
-        break;
-      case "messages":
-        data = messagesData;
-        headers = ["ID", "Group", "Message", "Created At"];
-        break;
+    if (table === "users") {
+      data = userData;
+      headers = ["ID", "Email", "Display Name", "Role", "Created At"];
+    } else if (table === "groups") {
+      data = groupsData;
+      headers = ["ID", "Name", "Description", "Created At"];
+    } else {
+      data = messagesData;
+      headers = ["ID", "Group", "Message", "Created At"];
     }
 
-    if (data.length === 0) {
-      toast.error("No data to export");
-      return;
-    }
+    if (!data.length) return toast.error("No data to export");
 
     const csv = [
       headers.join(","),
-      ...data.map(row => {
-        if (selectedTable === "users") {
-          return [row.id, row.email, row.display_name || "", row.role || "user", row.created_at].join(",");
-        } else if (selectedTable === "groups") {
-          return [row.id, row.name, row.description || "", row.created_at].join(",");
-        } else {
-          return [row.id, (row as ChatMessage).group_name || "", row.message?.replace(/,/g, ";"), row.created_at].join(",");
-        }
-      })
+      ...data.map((row) => {
+        if (table === "users")
+          return [
+            row.id,
+            row.email,
+            row.display_name || "",
+            row.role || "user",
+            row.created_at,
+          ].join(",");
+        if (table === "groups")
+          return [row.id, row.name, row.description || "", row.created_at].join(
+            ","
+          );
+        return [
+          row.id,
+          (row as ChatMessage).group_name || "",
+          (row as ChatMessage).message?.replace(/,/g, ";"),
+          row.created_at,
+        ].join(",");
+      }),
     ].join("\n");
 
     const blob = new Blob([csv], { type: "text/csv" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${selectedTable}_export_${new Date().toISOString().split('T')[0]}.csv`;
+    a.download = `${table}_export_${
+      new Date().toISOString().split("T")[0]
+    }.csv`;
     a.click();
     URL.revokeObjectURL(url);
-    toast.success("Data exported successfully");
-  };
-
-  const filteredUsers = userData.filter(user =>
-    user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.display_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    user.role?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const filteredGroups = groupsData.filter(group =>
-    group.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    group.description?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const filteredMessages = messagesData.filter(msg =>
-    msg.message?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (msg as ChatMessage).group_name?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+    toast.success("Exported CSV");
+  }
 
   return (
     <>
       <Toaster position="top-center" richColors closeButton />
+
       <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row justify-between gap-4">
+        <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h2 className="text-2xl font-bold tracking-tight">Database Management</h2>
-            <p className="text-muted-foreground">View and manage your database tables</p>
+            <h1 className="text-2xl font-semibold">Database Management</h1>
+            <p className="text-sm text-muted-foreground">
+              Browse, search and export tables — improved layout and
+              performance.
+            </p>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={handleRefresh} disabled={loading}>
-              <RefreshCw className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`} />
-              Refresh
-            </Button>
-            <Button variant="outline" onClick={handleExport}>
-              <Download className="mr-2 h-4 w-4" />
-              Export
-            </Button>
+
+          <div className="flex items-center gap-2">
+            <div className="hidden sm:flex items-center gap-2">
+              <Card className="px-3 py-2">
+                <div className="flex items-center gap-3">
+                  <DatabaseIcon className="h-4 w-4 text-muted-foreground" />
+                  <div className="text-sm">
+                    <div className="text-lg font-bold">
+                      {totals.totalRecords}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      Total records
+                    </div>
+                  </div>
+                </div>
+              </Card>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  fetchAllData();
+                  toast.success("Refreshed");
+                }}
+                disabled={loading}
+              >
+                <RefreshCw
+                  className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`}
+                />
+                Refresh
+              </Button>
+
+              <Button onClick={() => downloadCSV(selectedTable)}>
+                <Download className="mr-2 h-4 w-4" />
+                Export
+              </Button>
+            </div>
           </div>
-        </div>
+        </header>
 
-        <div className="grid gap-4 md:grid-cols-3">
+        <section className="grid gap-4 md:grid-cols-3">
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Records</CardTitle>
-              <DatabaseIcon className="h-4 w-4 text-muted-foreground" />
+            <CardHeader className="flex items-center justify-between pb-2">
+              <CardTitle className="text-sm">Users</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{totalRecords}</div>
-              <p className="text-xs text-muted-foreground">Across all tables</p>
+              <div className="text-2xl font-bold">{totals.users}</div>
+              <div className="text-xs text-muted-foreground">Total users</div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Users</CardTitle>
-              <DatabaseIcon className="h-4 w-4 text-muted-foreground" />
+            <CardHeader className="flex items-center justify-between pb-2">
+              <CardTitle className="text-sm">Chat Groups</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{userData.length}</div>
-              <p className="text-xs text-muted-foreground">Total users</p>
+              <div className="text-2xl font-bold">{totals.groups}</div>
+              <div className="text-xs text-muted-foreground">Active groups</div>
             </CardContent>
           </Card>
 
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Chat Groups</CardTitle>
-              <RefreshCw className="h-4 w-4 text-muted-foreground" />
+            <CardHeader className="flex items-center justify-between pb-2">
+              <CardTitle className="text-sm">Messages</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{groupsData.length}</div>
-              <p className="text-xs text-muted-foreground">Active groups</p>
+              <div className="text-2xl font-bold">{totals.messages}</div>
+              <div className="text-xs text-muted-foreground">
+                Total messages
+              </div>
             </CardContent>
           </Card>
-        </div>
+        </section>
 
         <Card>
           <CardHeader>
-            <CardTitle>Database Tables</CardTitle>
-            <CardDescription>Browse and query your database tables</CardDescription>
+            <CardTitle>Tables</CardTitle>
+            <CardDescription>
+              Search across tables and inspect rows. Tip: press Esc to clear
+              search.
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs value={selectedTable} onValueChange={setSelectedTable}>
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="users">Users ({userData.length})</TabsTrigger>
-                <TabsTrigger value="groups">Groups ({groupsData.length})</TabsTrigger>
-                <TabsTrigger value="messages">Messages ({messagesData.length})</TabsTrigger>
-              </TabsList>
+            <div className="flex flex-col md:flex-row gap-3 md:items-center md:justify-between mb-4">
+              <div className="flex-1 flex items-center gap-2">
+                <div className="relative flex-1 max-w-2xl">
+                  <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search records, emails, group names..."
+                    className="pl-10"
+                  />
+                </div>
 
-              <div className="mt-4 space-y-4">
-                <div className="flex flex-col sm:flex-row gap-2">
-                  <div className="relative flex-1">
-                    <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      placeholder="Search records..."
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-8"
-                    />
-                  </div>
-                  <Button>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      setSearchQuery("");
+                      setDebouncedQuery("");
+                    }}
+                  >
+                    Clear
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      /* create record flow */
+                    }}
+                  >
                     <Plus className="mr-2 h-4 w-4" />
                     Add Record
                   </Button>
                 </div>
-
-                <TabsContent value="users" className="mt-0">
-                  <div className="border rounded-lg overflow-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>ID</TableHead>
-                          <TableHead>Name</TableHead>
-                          <TableHead>Email</TableHead>
-                          <TableHead>Role</TableHead>
-                          <TableHead>Status</TableHead>
-                          <TableHead className="text-right">Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {loading ? (
-                          <TableRow>
-                            <TableCell colSpan={6} className="text-center text-muted-foreground">
-                              Loading...
-                            </TableCell>
-                          </TableRow>
-                        ) : filteredUsers.length === 0 ? (
-                          <TableRow>
-                            <TableCell colSpan={6} className="text-center text-muted-foreground">
-                              No records found
-                            </TableCell>
-                          </TableRow>
-                        ) : (
-                          filteredUsers.map((user) => (
-                            <TableRow key={user.id}>
-                              <TableCell className="font-mono text-xs">{user.id.substring(0, 8)}...</TableCell>
-                              <TableCell className="font-medium">{user.display_name || "N/A"}</TableCell>
-                              <TableCell>{user.email}</TableCell>
-                              <TableCell>
-                                <span className="capitalize">{user.role || "user"}</span>
-                              </TableCell>
-                              <TableCell>
-                                <span className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-100">
-                                  Active
-                                </span>
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <div className="flex justify-end gap-2">
-                                  <Button variant="ghost" size="sm" title="View user details">
-                                    <Edit className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          ))
-                        )}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="groups" className="mt-0">
-                  <div className="border rounded-lg overflow-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>ID</TableHead>
-                          <TableHead>Name</TableHead>
-                          <TableHead>Description</TableHead>
-                          <TableHead>Created At</TableHead>
-                          <TableHead className="text-right">Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {loading ? (
-                          <TableRow>
-                            <TableCell colSpan={5} className="text-center text-muted-foreground">
-                              Loading...
-                            </TableCell>
-                          </TableRow>
-                        ) : filteredGroups.length === 0 ? (
-                          <TableRow>
-                            <TableCell colSpan={5} className="text-center text-muted-foreground">
-                              No groups found
-                            </TableCell>
-                          </TableRow>
-                        ) : (
-                          filteredGroups.map((group) => (
-                            <TableRow key={group.id}>
-                              <TableCell className="font-mono text-xs">{group.id.substring(0, 8)}...</TableCell>
-                              <TableCell className="font-medium">{group.name}</TableCell>
-                              <TableCell>{group.description || "No description"}</TableCell>
-                              <TableCell className="text-sm">
-                                {new Date(group.created_at).toLocaleDateString()}
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <div className="flex justify-end gap-2">
-                                  <Button variant="ghost" size="sm" title="View group">
-                                    <Edit className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          ))
-                        )}
-                      </TableBody>
-                    </Table>
-                  </div>
-                </TabsContent>
-
-                <TabsContent value="messages" className="mt-0">
-                  <div className="border rounded-lg overflow-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>ID</TableHead>
-                          <TableHead>Group</TableHead>
-                          <TableHead>Message</TableHead>
-                          <TableHead>Created At</TableHead>
-                          <TableHead className="text-right">Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {loading ? (
-                          <TableRow>
-                            <TableCell colSpan={5} className="text-center text-muted-foreground">
-                              Loading...
-                            </TableCell>
-                          </TableRow>
-                        ) : filteredMessages.length === 0 ? (
-                          <TableRow>
-                            <TableCell colSpan={5} className="text-center text-muted-foreground">
-                              No messages found
-                            </TableCell>
-                          </TableRow>
-                        ) : (
-                          filteredMessages.slice(0, 50).map((msg) => (
-                            <TableRow key={msg.id}>
-                              <TableCell className="font-mono text-xs">{msg.id.substring(0, 8)}...</TableCell>
-                              <TableCell className="font-medium">{(msg as ChatMessage).group_name}</TableCell>
-                              <TableCell className="max-w-md truncate">
-                                {msg.message}
-                              </TableCell>
-                              <TableCell className="text-sm">
-                                {new Date(msg.created_at).toLocaleString()}
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <div className="flex justify-end gap-2">
-                                  <Button variant="ghost" size="sm" title="View message">
-                                    <Edit className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          ))
-                        )}
-                      </TableBody>
-                    </Table>
-                    {filteredMessages.length > 50 && (
-                      <div className="p-4 text-center text-sm text-muted-foreground border-t">
-                        Showing first 50 of {filteredMessages.length} messages
-                      </div>
-                    )}
-                  </div>
-                </TabsContent>
               </div>
-            </Tabs>
+
+              <div className="w-full md:w-auto">
+                <Tabs
+                  value={selectedTable}
+                  onValueChange={(v) => setSelectedTable(v as any)}
+                >
+                  <TabsList className="grid grid-cols-3 w-full">
+                    <TabsTrigger value="users">
+                      Users ({totals.users})
+                    </TabsTrigger>
+                    <TabsTrigger value="groups">
+                      Groups ({totals.groups})
+                    </TabsTrigger>
+                    <TabsTrigger value="messages">
+                      Messages ({totals.messages})
+                    </TabsTrigger>
+                  </TabsList>
+                </Tabs>
+              </div>
+            </div>
+
+            {/* Table container */}
+            <div className=" overflow-auto">
+              {selectedTable === "users" && (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>UUID</TableHead>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Role</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+
+                  <TableBody>
+                    {loading ? (
+                      Array.from({ length: 6 }).map((_, i) => (
+                        <TableRow key={i} className="animate-pulse">
+                          <TableCell className="font-mono text-xs">
+                            &nbsp;
+                          </TableCell>
+                          <TableCell className="font-medium">&nbsp;</TableCell>
+                          <TableCell>&nbsp;</TableCell>
+                          <TableCell>&nbsp;</TableCell>
+                          <TableCell>&nbsp;</TableCell>
+                          <TableCell>&nbsp;</TableCell>
+                        </TableRow>
+                      ))
+                    ) : filteredUsers.length === 0 ? (
+                      <TableRow>
+                        <TableCell
+                          colSpan={6}
+                          className="text-center text-muted-foreground"
+                        >
+                          No users found
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      filteredUsers.map((u) => (
+                        <TableRow key={u.id} className="hover:bg-muted/50">
+                          <TableCell className="font-mono text-xs">
+                            {u.id.substring(0, 8)}...
+                          </TableCell>
+                          <TableCell className="font-medium">
+                            {u.display_name || "—"}
+                          </TableCell>
+                          <TableCell className="text-sm">{u.email}</TableCell>
+                          <TableCell>
+                            <span className="capitalize text-sm font-medium">
+                              {u.role || "user"}
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            <span className="inline-flex items-center rounded-full px-2 py-1 text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-100">
+                              Active
+                            </span>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                title="Edit user"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              )}
+
+              {selectedTable === "groups" && (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>ID</TableHead>
+                      <TableHead>Name</TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead>Created At</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {loading ? (
+                      Array.from({ length: 6 }).map((_, i) => (
+                        <TableRow key={i} className="animate-pulse">
+                          <TableCell>&nbsp;</TableCell>
+                          <TableCell>&nbsp;</TableCell>
+                          <TableCell>&nbsp;</TableCell>
+                          <TableCell>&nbsp;</TableCell>
+                          <TableCell>&nbsp;</TableCell>
+                        </TableRow>
+                      ))
+                    ) : filteredGroups.length === 0 ? (
+                      <TableRow>
+                        <TableCell
+                          colSpan={5}
+                          className="text-center text-muted-foreground"
+                        >
+                          No groups found
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      filteredGroups.map((g) => (
+                        <TableRow key={g.id} className="hover:bg-muted/50">
+                          <TableCell className="font-mono text-xs">
+                            {g.id.substring(0, 8)}...
+                          </TableCell>
+                          <TableCell className="font-medium">
+                            {g.name}
+                          </TableCell>
+                          <TableCell className="text-sm truncate max-w-xl">
+                            {g.description || "No description"}
+                          </TableCell>
+                          <TableCell className="text-sm">
+                            {isoDate(g.created_at)}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                title="Edit group"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              )}
+
+              {selectedTable === "messages" && (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>ID</TableHead>
+                      <TableHead>Group</TableHead>
+                      <TableHead>Message</TableHead>
+                      <TableHead>Created At</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {loading ? (
+                      Array.from({ length: 6 }).map((_, i) => (
+                        <TableRow key={i} className="animate-pulse">
+                          <TableCell>&nbsp;</TableCell>
+                          <TableCell>&nbsp;</TableCell>
+                          <TableCell>&nbsp;</TableCell>
+                          <TableCell>&nbsp;</TableCell>
+                          <TableCell>&nbsp;</TableCell>
+                        </TableRow>
+                      ))
+                    ) : filteredMessages.length === 0 ? (
+                      <TableRow>
+                        <TableCell
+                          colSpan={5}
+                          className="text-center text-muted-foreground"
+                        >
+                          No messages found
+                        </TableCell>
+                      </TableRow>
+                    ) : (
+                      filteredMessages.slice(0, 50).map((m) => (
+                        <TableRow key={m.id} className="hover:bg-muted/50">
+                          <TableCell className="font-mono text-xs">
+                            {m.id.substring(0, 8)}...
+                          </TableCell>
+                          <TableCell className="font-medium">
+                            {m.group_name}
+                          </TableCell>
+                          <TableCell className="max-w-md truncate">
+                            {m.message}
+                          </TableCell>
+                          <TableCell className="text-sm">
+                            {isoDate(m.created_at)}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-2">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                title="View message"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    )}
+                  </TableBody>
+                </Table>
+              )}
+
+              {/* small footer when messages trimmed */}
+              {selectedTable === "messages" && filteredMessages.length > 50 && (
+                <div className="p-4 text-center text-sm text-muted-foreground border-t">
+                  Showing first 50 of {filteredMessages.length} messages
+                </div>
+              )}
+            </div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
             <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>Common database operations</CardDescription>
+            <CardDescription>Utilities for common operations</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-            <Button variant="outline" className="justify-start" onClick={handleExport}>
+            <Button
+              variant="outline"
+              className="justify-start"
+              onClick={() => downloadCSV(selectedTable)}
+            >
               <Download className="mr-2 h-4 w-4" />
               Export CSV
             </Button>
-            <Button variant="outline" className="justify-start" onClick={handleRefresh} disabled={loading}>
-              <RefreshCw className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`} />
+
+            <Button
+              variant="outline"
+              className="justify-start"
+              onClick={() => {
+                fetchAllData();
+                toast.success("Refreshed");
+              }}
+              disabled={loading}
+            >
+              <RefreshCw
+                className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`}
+              />
               Refresh Data
             </Button>
-            <Button variant="outline" className="justify-start" onClick={() => toast.info("Connected to Supabase")}>
+
+            <Button
+              variant="outline"
+              className="justify-start"
+              onClick={() => toast.info("Connected")}
+            >
               <DatabaseIcon className="mr-2 h-4 w-4" />
               Database Info
             </Button>

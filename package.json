@@ -2,7 +2,6 @@
   "name": "admin-panel",
   "version": "1.0.0",
   "private": true,
-  "packageManager": "bun@latest",
   "scripts": {
     "dev": "bun --bun next dev --turbopack",
     "build": "bun --bun next build",
