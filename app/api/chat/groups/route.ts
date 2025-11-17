@@ -19,25 +19,7 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // If admin, return all groups
-    if (isAdmin) {
-      const { data: groups, error } = await supabase
-        .from("chat_groups")
-        .select("*")
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        console.error("Fetch groups error:", error);
-        return NextResponse.json(
-          { error: error.message },
-          { status: 500 }
-        );
-      }
-
-      return NextResponse.json({ groups });
-    }
-
-    // For non-admins, only return groups they're members of
+    // For all users (including admins), return only groups they're members of
     const { data: memberGroups, error } = await supabase
       .from("chat_members")
       .select(`
@@ -113,9 +95,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Add members to group
-    if (member_ids && member_ids.length > 0) {
-      const members = member_ids.map((user_id: string) => ({
+    // Add creator and selected members to group
+    const memberIds = member_ids && member_ids.length > 0 ? member_ids : [];
+    
+    // Ensure creator is always a member (add if not already in the list)
+    if (userId && !memberIds.includes(userId)) {
+      memberIds.push(userId);
+    }
+
+    if (memberIds.length > 0) {
+      const members = memberIds.map((user_id: string) => ({
         group_id: group.id,
         user_id,
       }));

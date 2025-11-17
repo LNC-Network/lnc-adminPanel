@@ -106,7 +106,7 @@ export default function Database() {
 
   async function fetchGroups() {
     try {
-      const res = await fetch("/api/chat/groups");
+      const res = await fetch("/api/chat/groups/all");
       if (!res.ok) return setGroupsData([]);
       const data = await res.json();
       setGroupsData(data.groups || []);
@@ -122,7 +122,7 @@ export default function Database() {
       if (!userData) return setMessagesData([]);
       const user = JSON.parse(userData);
 
-      const res = await fetch("/api/chat/groups");
+      const res = await fetch("/api/chat/groups/all");
       if (!res.ok) return setMessagesData([]);
       const groupsRes = await res.json();
 
@@ -240,9 +240,8 @@ export default function Database() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `${table}_export_${
-      new Date().toISOString().split("T")[0]
-    }.csv`;
+    a.download = `${table}_export_${new Date().toISOString().split("T")[0]
+      }.csv`;
     a.click();
     URL.revokeObjectURL(url);
     toast.success("Exported CSV");

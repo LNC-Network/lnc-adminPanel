@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -59,6 +59,7 @@ interface ContentItem {
 }
 
 export default function Content() {
+  const [hasAccess, setHasAccess] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -66,6 +67,44 @@ export default function Content() {
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const [selectedItem, setSelectedItem] = useState<ContentItem | null>(null);
+
+  // Check if user has access to Content section
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const userData = localStorage.getItem("user");
+      if (userData) {
+        try {
+          const user = JSON.parse(userData);
+          const userRoles = user.roles || [];
+          
+          // Super Admin has full access
+          const isSuperAdmin = userRoles.some((role: string) => 
+            role.toLowerCase() === 'super admin'
+          );
+          
+          // Allow access for Social Media, Design team members/admins, and Admistater
+          const allowedRoles = [
+            'social media team admin',
+            'social media member',
+            'design team admin',
+            'design member',
+            'admistater'
+          ];
+          
+          const hasPermission = isSuperAdmin || userRoles.some((role: string) => 
+            allowedRoles.some(allowedRole => 
+              role.toLowerCase() === allowedRole.toLowerCase()
+            )
+          );
+          
+          setHasAccess(hasPermission);
+        } catch (e) {
+          console.error("Failed to parse user data:", e);
+          setHasAccess(false);
+        }
+      }
+    }
+  }, []);
 
   // Upload form state
   const [uploadForm, setUploadForm] = useState<{
@@ -219,6 +258,36 @@ export default function Content() {
     };
     return icons[category];
   };
+
+  // Access control check
+  if (!hasAccess) {
+    return (
+      <>
+        <Toaster position="top-center" richColors closeButton />
+        <div className="flex items-center justify-center min-h-[400px]">
+          <Card className="max-w-md w-full">
+            <CardHeader>
+              <CardTitle className="text-center">Access Restricted</CardTitle>
+              <CardDescription className="text-center">
+                This section is only available for authorized team members.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="text-center text-sm text-muted-foreground">
+              <p>Allowed roles:</p>
+              <ul className="mt-2 space-y-1">
+                <li>• Super Admin (Full Access)</li>
+                <li>• Admistater</li>
+                <li>• Social Media Team Admin</li>
+                <li>• Social Media Member</li>
+                <li>• Design Team Admin</li>
+                <li>• Design Member</li>
+              </ul>
+            </CardContent>
+          </Card>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
