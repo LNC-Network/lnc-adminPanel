@@ -65,7 +65,7 @@ export async function sendTemplateEmail(
       
       // Handle arrays in HTML
       if (Array.isArray(value)) {
-        htmlBody = htmlBody.replace(arrayPlaceholder, (match, template) => {
+        htmlBody = htmlBody.replace(arrayPlaceholder, (_match: string, template: string) => {
           return value.map(item => template.replace('{{this}}', item)).join('');
         });
       } else {
@@ -76,7 +76,7 @@ export async function sendTemplateEmail(
     });
 
     // Handle conditional blocks {{#if variable}}...{{/if}}
-    htmlBody = htmlBody.replace(/{{#if (\w+)}}([\s\S]*?){{\/if}}/g, (match, key, content) => {
+    htmlBody = htmlBody.replace(/{{#if (\w+)}}([\s\S]*?){{\/if}}/g, (_match: string, key: string, content: string) => {
       return variables[key] ? content : '';
     });
 

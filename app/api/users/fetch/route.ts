@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
   // Fetch users from the database
   const { data: users, error: usersError } = await supabase
     .from("users")
-    .select("id, email, display_name, is_active, created_at")
+    .select("id, email, display_name, is_active, created_at, last_sign_in_at")
     .range(start, end)
     .order("created_at", { ascending: false });
 

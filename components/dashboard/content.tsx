@@ -68,8 +68,15 @@ export default function Content() {
   const [selectedItem, setSelectedItem] = useState<ContentItem | null>(null);
 
   // Upload form state
-  const [uploadForm, setUploadForm] = useState({
-    category: "design" as const,
+  const [uploadForm, setUploadForm] = useState<{
+    category: "design" | "social-media" | "video" | "graphics";
+    description: string;
+    tags: string;
+    scheduledDate: string;
+    platform: string;
+    assignedTo: string;
+  }>({
+    category: "design",
     description: "",
     tags: "",
     scheduledDate: "",

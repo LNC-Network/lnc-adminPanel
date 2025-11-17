@@ -17,7 +17,7 @@ export async function GET() {
     // Get users from custom users table
     const { data: users, error: usersError } = await supabase
       .from("users")
-      .select("id, email, display_name, is_active, created_at")
+      .select("id, email, display_name, is_active, created_at, last_sign_in_at")
       .order("created_at", { ascending: false });
 
     if (usersError) {
