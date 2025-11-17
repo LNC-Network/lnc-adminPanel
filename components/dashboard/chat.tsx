@@ -52,6 +52,12 @@ interface JoinRequest {
     created_at: string;
 }
 
+interface GroupMember {
+    user_id: string;
+    email: string;
+    joined_at: string;
+}
+
 export default function ChatPage() {
     const [groups, setGroups] = useState<Group[]>([]);
     const [selectedGroup, setSelectedGroup] = useState<Group | null>(null);
@@ -69,6 +75,8 @@ export default function ChatPage() {
     const [currentUserId, setCurrentUserId] = useState("");
     const [joinRequests, setJoinRequests] = useState<JoinRequest[]>([]);
     const [hasAccess, setHasAccess] = useState(true);
+    const [viewMembersOpen, setViewMembersOpen] = useState(false);
+    const [groupMembers, setGroupMembers] = useState<GroupMember[]>([]);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -78,7 +86,7 @@ export default function ChatPage() {
             if (userData) {
                 try {
                     const user = JSON.parse(userData);
-                    const adminStatus = user.roles?.includes("admin") || false;
+                    const adminStatus = user.roles?.some((role: string) => role.toLowerCase().includes('admin')) || false;
                     setIsAdmin(adminStatus);
                     setCurrentUserId(user.id || "");
 
@@ -121,7 +129,7 @@ export default function ChatPage() {
             const userData = localStorage.getItem("user");
             if (!userData) return;
             const user = JSON.parse(userData);
-            const userIsAdmin = user.roles?.includes("admin") || false;
+            const userIsAdmin = user.roles?.some((role: string) => role.toLowerCase().includes('admin')) || false;
 
             const res = await fetch(`/api/chat/groups?user_id=${user.id}&is_admin=${userIsAdmin}`);
             const data = await res.json();
@@ -138,7 +146,7 @@ export default function ChatPage() {
             const userData = localStorage.getItem("user");
             if (!userData) return;
             const user = JSON.parse(userData);
-            const userIsAdmin = user.roles?.includes("admin") || false;
+            const userIsAdmin = user.roles?.some((role: string) => role.toLowerCase().includes('admin')) || false;
 
             const res = await fetch(`/api/chat/messages?group_id=${groupId}&user_id=${user.id}&is_admin=${userIsAdmin}`);
             const data = await res.json();
@@ -232,6 +240,57 @@ export default function ChatPage() {
         }
     };
 
+    const fetchGroupMembers = async (groupId: string) => {
+        try {
+            const res = await fetch(`/api/chat/members?group_id=${groupId}`);
+            if (res.ok) {
+                const data = await res.json();
+                setGroupMembers(data.members || []);
+            } else {
+                toast.error("Failed to fetch members");
+            }
+        } catch (error) {
+            toast.error("Failed to fetch members");
+            console.error(error);
+        }
+    };
+
+    const handleRemoveMember = async (userId: string, userEmail: string) => {
+        if (!selectedGroup) return;
+
+        const confirmed = window.confirm(`Are you sure you want to remove ${userEmail} from this group?`);
+        if (!confirmed) return;
+
+        try {
+            const res = await fetch("/api/chat/members", {
+                method: "DELETE",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    group_id: selectedGroup.id,
+                    user_id: userId,
+                }),
+            });
+
+            if (res.ok) {
+                toast.success("Member removed successfully");
+                fetchGroupMembers(selectedGroup.id);
+            } else {
+                const data = await res.json();
+                toast.error(data.error || "Failed to remove member");
+            }
+        } catch (error) {
+            toast.error("Failed to remove member");
+            console.error(error);
+        }
+    };
+
+    const openViewMembersDialog = () => {
+        if (selectedGroup) {
+            fetchGroupMembers(selectedGroup.id);
+            setViewMembersOpen(true);
+        }
+    };
+
     const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
         if (!newMessage.trim() || !selectedGroup) return;
@@ -243,7 +302,7 @@ export default function ChatPage() {
                 return;
             }
             const user = JSON.parse(userData);
-            const userIsAdmin = user.roles?.includes("admin") || false;
+            const userIsAdmin = user.roles?.some((role: string) => role.toLowerCase().includes('admin')) || false;
 
             const res = await fetch("/api/chat/messages", {
                 method: "POST",
@@ -459,14 +518,24 @@ export default function ChatPage() {
                                 </div>
                                 <div className="flex gap-2">
                                     {isAdmin && (
-                                        <Button
-                                            variant="ghost"
-                                            size="sm"
-                                            onClick={openAddMembersDialog}
-                                        >
-                                            <Plus className="h-4 w-4 mr-1" />
-                                            Add Members
-                                        </Button>
+                                        <>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={openViewMembersDialog}
+                                            >
+                                                <Users className="h-4 w-4 mr-1" />
+                                                View Members
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="sm"
+                                                onClick={openAddMembersDialog}
+                                            >
+                                                <Plus className="h-4 w-4 mr-1" />
+                                                Add Members
+                                            </Button>
+                                        </>
                                     )}
                                     <Button variant="ghost" size="icon">
                                         <Phone className="h-4 w-4" />
@@ -721,6 +790,47 @@ export default function ChatPage() {
                                                 Reject
                                             </Button>
                                         </div>
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </DialogContent>
+                </Dialog>
+
+                {/* View Members Dialog */}
+                <Dialog open={viewMembersOpen} onOpenChange={setViewMembersOpen}>
+                    <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+                        <DialogHeader>
+                            <DialogTitle>Group Members</DialogTitle>
+                            <DialogDescription>
+                                {selectedGroup?.name} - Manage group members
+                            </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-3 py-4">
+                            {groupMembers.length === 0 ? (
+                                <div className="text-center py-8 text-muted-foreground">
+                                    No members in this group
+                                </div>
+                            ) : (
+                                groupMembers.map((member) => (
+                                    <div
+                                        key={member.user_id}
+                                        className="border rounded-lg p-4 flex items-center justify-between hover:bg-muted/50"
+                                    >
+                                        <div className="flex-1">
+                                            <p className="font-semibold">{member.email}</p>
+                                            <p className="text-xs text-muted-foreground">
+                                                Joined {new Date(member.joined_at).toLocaleDateString()}
+                                            </p>
+                                        </div>
+                                        <Button
+                                            size="sm"
+                                            variant="destructive"
+                                            onClick={() => handleRemoveMember(member.user_id, member.email)}
+                                        >
+                                            <XCircle className="h-4 w-4 mr-1" />
+                                            Remove
+                                        </Button>
                                     </div>
                                 ))
                             )}

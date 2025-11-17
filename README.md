@@ -7,6 +7,7 @@ A modern, full-featured admin panel built with Next.js 16, TypeScript, and Tailw
 - **Role-Based Permission System**: 10-role organizational hierarchy with granular permissions
 - **Authentication System**: Secure JWT-based login with Supabase backend and argon2 hashing
 - **User Management**: Multi-role assignment, pending registration approval system
+- **Email Notifications**: Automated emails for user events (welcome, approval, role changes) with Resend
 - **Ticket System**: GitHub-style issue tracking with assignments and comments (Dev team only)
 - **Content Management**: Upload and organize media files with grid/list views
 - **Database Viewer**: Browse and manage database tables (Super Admin only)
@@ -283,12 +284,14 @@ Comprehensive documentation is available:
 - **[PERMISSION-ARCHITECTURE.md](PERMISSION-ARCHITECTURE.md)** - Visual architecture diagrams
 - **[ADMIN-GUIDE.md](ADMIN-GUIDE.md)** - Step-by-step administrator guide
 - **[SETTINGS-UPDATE.md](SETTINGS-UPDATE.md)** - Settings page update details
+- **[EMAIL-SYSTEM.md](EMAIL-SYSTEM.md)** - Email notification system documentation
 
 ### SQL Scripts
 
 - `database-setup.sql` - Complete database schema
 - `setup-new-roles.sql` - Creates 10 organizational roles
 - `setup-role-permissions.sql` - Assigns permissions to roles
+- `setup-email-system.sql` - Email notification system setup
 - `migrate-roles.sql` - Helper for migrating from old role system
 - `setup-tickets-tables.sql` - Ticket system schema
 - `setup-pending-users-table.sql` - Registration approval schema
@@ -319,13 +322,16 @@ Recent updates:
 - ✅ User registration approval workflow
 - ✅ GitHub-style ticket system
 - ✅ Team-based chat system
+- ✅ Email notification system with Resend integration
+- ✅ Automated emails for user events (welcome, approval, rejection, role changes)
+- ✅ Email queue with retry logic
 
 Planned features:
 
 - [ ] Team-specific content filtering
 - [ ] Chat group management by team admins
 - [ ] Advanced analytics dashboard
-- [ ] Email notifications
+- [ ] Email click/open tracking
 - [ ] File storage integration with team scoping
 - [ ] API documentation
 - [ ] Audit logs

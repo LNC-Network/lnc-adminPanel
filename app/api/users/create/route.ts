@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import argon2 from "argon2";
+import { sendWelcomeEmail } from "@/lib/email-service";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -82,6 +83,15 @@ export async function POST(request: NextRequest) {
         user_id: data.id,
         role_id: roleData.id,
       });
+    }
+
+    // Send welcome email
+    try {
+      await sendWelcomeEmail(data.email, data.display_name || data.email, role);
+      console.log("Welcome email sent to:", data.email);
+    } catch (emailError) {
+      console.error("Failed to send welcome email:", emailError);
+      // Don't fail user creation if email fails
     }
 
     return NextResponse.json({

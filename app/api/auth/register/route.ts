@@ -9,10 +9,10 @@ const supabase = createClient(
 
 export async function POST(request: Request) {
   try {
-    const { display_name, email, password, team } = await request.json();
+    const { display_name, email, personal_email, password, team } = await request.json();
 
     // Validate required fields
-    if (!display_name || !email || !password || !team) {
+    if (!display_name || !email || !personal_email || !password || !team) {
       return NextResponse.json(
         { error: "All fields are required" },
         { status: 400 }
@@ -79,6 +79,7 @@ export async function POST(request: Request) {
       .insert({
         display_name,
         email,
+        personal_email,
         password_hash,
         team,
         status: "pending",

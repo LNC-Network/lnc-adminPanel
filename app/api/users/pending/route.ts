@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { sendRegistrationApprovedEmail, sendRegistrationRejectedEmail } from "@/lib/email-service-gmail";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -160,6 +161,21 @@ export async function PATCH(request: Request) {
 
       console.log("Approval complete for:", pendingUser.email);
 
+      // Send approval email
+      try {
+        const emailTo = pendingUser.personal_email || pendingUser.email;
+        await sendRegistrationApprovedEmail(
+          emailTo,
+          pendingUser.display_name,
+          assignedRole,
+          pendingUser.team || "General"
+        );
+        console.log("Approval email sent to:", emailTo);
+      } catch (emailError) {
+        console.error("Failed to send approval email:", emailError);
+        // Don't fail the approval if email fails
+      }
+
       return NextResponse.json({
         success: true,
         message: "User approved and account created",
@@ -183,6 +199,20 @@ export async function PATCH(request: Request) {
           { error: "Failed to reject registration" },
           { status: 500 }
         );
+      }
+
+      // Send rejection email
+      try {
+        const emailTo = pendingUser.personal_email || pendingUser.email;
+        await sendRegistrationRejectedEmail(
+          emailTo,
+          pendingUser.display_name,
+          rejection_reason
+        );
+        console.log("Rejection email sent to:", emailTo);
+      } catch (emailError) {
+        console.error("Failed to send rejection email:", emailError);
+        // Don't fail the rejection if email fails
       }
 
       return NextResponse.json({

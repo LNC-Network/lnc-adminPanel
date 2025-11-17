@@ -138,13 +138,13 @@ U.D = user.delete    C.D = content.delete
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                      CLIENT SIDE (UI)                        │
+│                      CLIENT SIDE (UI)                       │
 │  ┌────────────────────────────────────────────────────────┐ │
-│  │  lib/permissions.ts                                     │ │
-│  │  - isSuperAdmin(roles)                                  │ │
-│  │  - canEdit(roles)                                       │ │
-│  │  - canAccessDatabase(roles)                             │ │
-│  │  Used for: Hide/disable UI elements                     │ │
+│  │  lib/permissions.ts                                    │ │
+│  │  - isSuperAdmin(roles)                                 │ │
+│  │  - canEdit(roles)                                      │ │
+│  │  - canAccessDatabase(roles)                            │ │
+│  │  Used for: Hide/disable UI elements                    │ │
 │  └────────────────────────────────────────────────────────┘ │
 └─────────────────────────────────────────────────────────────┘
                               │

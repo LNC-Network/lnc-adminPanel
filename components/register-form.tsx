@@ -16,6 +16,7 @@ export default function RegisterForm({ onBack }: RegisterFormProps) {
     const [formData, setFormData] = useState({
         display_name: "",
         email: "",
+        personal_email: "",
         password: "",
         confirmPassword: "",
         team: "",
@@ -26,7 +27,7 @@ export default function RegisterForm({ onBack }: RegisterFormProps) {
         e.preventDefault();
 
         // Validation
-        if (!formData.display_name || !formData.email || !formData.password || !formData.team) {
+        if (!formData.display_name || !formData.email || !formData.personal_email || !formData.password || !formData.team) {
             toast.error("Please fill in all fields");
             return;
         }
@@ -54,6 +55,7 @@ export default function RegisterForm({ onBack }: RegisterFormProps) {
                 body: JSON.stringify({
                     display_name: formData.display_name,
                     email: formData.email,
+                    personal_email: formData.personal_email,
                     password: formData.password,
                     team: formData.team,
                 }),
@@ -67,6 +69,7 @@ export default function RegisterForm({ onBack }: RegisterFormProps) {
                 setFormData({
                     display_name: "",
                     email: "",
+                    personal_email: "",
                     password: "",
                     confirmPassword: "",
                     team: "",
@@ -141,6 +144,26 @@ export default function RegisterForm({ onBack }: RegisterFormProps) {
                         />
                         <p className="text-xs text-muted-foreground">
                             Must use your @lnc.com email address
+                        </p>
+                    </div>
+
+                    <div className="space-y-2">
+                        <Label htmlFor="personal_email">
+                            <Mail className="inline h-4 w-4 mr-1" />
+                            Personal Email
+                        </Label>
+                        <Input
+                            id="personal_email"
+                            type="email"
+                            placeholder="yourname@gmail.com"
+                            value={formData.personal_email}
+                            onChange={(e) =>
+                                setFormData({ ...formData, personal_email: e.target.value })
+                            }
+                            required
+                        />
+                        <p className="text-xs text-muted-foreground">
+                            We'll send notifications to this email address
                         </p>
                     </div>
 

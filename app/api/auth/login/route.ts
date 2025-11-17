@@ -145,7 +145,13 @@ export async function POST(req: Request) {
         .filter(Boolean);
     }
 
-    // 5) create access token
+    // 5) update last sign in timestamp
+    await supabase
+      .from("users")
+      .update({ last_sign_in_at: new Date().toISOString() })
+      .eq("id", user.id);
+
+    // 6) create access token
     const accessToken = jwt.sign(
       {
         sub: user.id,
@@ -157,7 +163,7 @@ export async function POST(req: Request) {
       { expiresIn: "10m" }
     );
 
-    // 6) create refresh token & store
+    // 7) create refresh token & store
     const refreshToken = crypto.randomBytes(64).toString("hex");
     const refreshExpiry = new Date(Date.now() + 1000 * 60 * 60 * 24 * 14); // 14 days
 
@@ -175,7 +181,7 @@ export async function POST(req: Request) {
       );
     }
 
-    // 7) prepare response and set cookies (access_token cookie readable by client for middleware)
+    // 8) prepare response and set cookies (access_token cookie readable by client for middleware)
     const response = NextResponse.json(
       {
         access_token: accessToken,

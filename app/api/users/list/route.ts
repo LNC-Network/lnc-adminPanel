@@ -55,7 +55,7 @@ export async function GET() {
         email: user.email,
         display_name: user.display_name,
         created_at: user.created_at,
-        last_sign_in_at: null, // Not tracked in custom table
+        last_sign_in_at: user.last_sign_in_at || null,
         user_metadata: {
           role: roles[0] || "user", // Keep for backward compatibility
         },

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { sendRoleChangedEmail } from "@/lib/email-service";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -50,8 +51,14 @@ export async function PATCH(request: Request) {
 
     if (roleError || !roleData || roleData.length === 0) {
       console.error("Failed to fetch roles:", roleError);
+      console.error("Requested roles:", roles);
+      console.error("Found roles:", roleData);
       return NextResponse.json(
-        { error: "One or more roles not found. Please run verify-roles.sql" },
+        { 
+          error: "Roles not found in database. Please run INSERT-ROLES-NOW.sql in Supabase SQL Editor first.",
+          requestedRoles: roles,
+          foundRoles: roleData?.map(r => r.name) || []
+        },
         { status: 404 }
       );
     }
@@ -77,6 +84,28 @@ export async function PATCH(request: Request) {
     }
 
     console.log("Roles assigned successfully:", roles);
+
+    // Get user email and name for notification
+    const { data: userData } = await supabase
+      .from("users")
+      .select("email, display_name")
+      .eq("id", userId)
+      .single();
+
+    // Send role changed email
+    if (userData) {
+      try {
+        await sendRoleChangedEmail(
+          userData.email,
+          userData.display_name || userData.email,
+          roles
+        );
+        console.log("Role change email sent to:", userData.email);
+      } catch (emailError) {
+        console.error("Failed to send role change email:", emailError);
+        // Don't fail the update if email fails
+      }
+    }
 
     return NextResponse.json({
       success: true,
