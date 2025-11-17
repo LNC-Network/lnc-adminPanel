@@ -103,7 +103,7 @@
         --destructive-foreground: 0 0% 100%;
 
         /* Borders / inputs */
-        --border: 220 10% 25%;
+        --border: 0 0% 25%;
         --input: 220 12% 18%;
         --ring: 203 70% 60%;
 
