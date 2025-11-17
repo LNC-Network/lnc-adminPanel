@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { sendNewGroupNotification } from "@/lib/chat-email-service";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -115,6 +116,35 @@ export async function POST(request: NextRequest) {
 
       if (membersError) {
         console.error("Add members error:", membersError);
+      }
+
+      // Send email notifications to all members
+      const { data: memberUsers } = await supabase
+        .from("users")
+        .select("id, email, personal_email, display_name")
+        .in("id", memberIds);
+
+      const { data: creator } = await supabase
+        .from("users")
+        .select("email")
+        .eq("id", userId)
+        .single();
+
+      if (memberUsers && creator) {
+        // Send notifications asynchronously (don't wait for them)
+        memberUsers.forEach(async (member) => {
+          try {
+            await sendNewGroupNotification({
+              recipientEmail: member.personal_email || member.email,
+              recipientName: member.display_name || member.email,
+              groupName: name,
+              groupDescription: description,
+              createdBy: creator.email,
+            });
+          } catch (error) {
+            console.error(`Failed to send notification to ${member.email}:`, error);
+          }
+        });
       }
     }
 

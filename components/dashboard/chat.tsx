@@ -127,14 +127,23 @@ export default function ChatPage() {
     const fetchGroups = async () => {
         try {
             const userData = localStorage.getItem("user");
-            if (!userData) return;
+            if (!userData) {
+                console.log("No user data in localStorage");
+                return;
+            }
             const user = JSON.parse(userData);
+            console.log("Current user:", user.id, user.email);
             const userIsAdmin = user.roles?.some((role: string) => role.toLowerCase().includes('admin')) || false;
 
-            const res = await fetch(`/api/chat/groups?user_id=${user.id}&is_admin=${userIsAdmin}`);
+            const url = `/api/chat/groups?user_id=${user.id}&is_admin=${userIsAdmin}`;
+            console.log("Fetching groups from:", url);
+            const res = await fetch(url);
             const data = await res.json();
+            console.log("Groups response:", { status: res.status, data });
             if (res.ok) {
                 setGroups(data.groups || []);
+            } else {
+                console.error("Failed to fetch groups:", data);
             }
         } catch (error) {
             console.error("Failed to fetch groups:", error);
