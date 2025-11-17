@@ -9,7 +9,7 @@ import {
   Mail,
   Lock,
   Calendar,
-  Check,
+  CheckSquare,
   FileText,
   List,
   Hash,
@@ -84,9 +84,9 @@ export default function FormMaker() {
     { type: "email", icon: Mail, label: "Email" },
     { type: "password", icon: Lock, label: "Password" },
     { type: "number", icon: Hash, label: "Number" },
-    { type: "textarea", icon: FileText, label: "Text Area" },
+    { type: "textarea", icon: FileText, label: "Textarea" },
     { type: "date", icon: Calendar, label: "Date" },
-    { type: "checkbox", icon: Check, label: "Checkbox" },
+    { type: "checkbox", icon: CheckSquare, label: "Checkbox" },
     { type: "select", icon: List, label: "Select" },
   ];
 
@@ -153,59 +153,66 @@ export default function FormMaker() {
     const ft = fieldTypes.find((x) => x.type === type);
     if (!ft) return null;
     const Icon = ft.icon;
-    return <Icon className="w-4 h-4 text-gray-500" />;
+    return <Icon className="w-4 h-4" />;
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-4 md:p-8">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white rounded-xl p-6 shadow-sm border border-slate-200">
-          <div>
-            <h1 className="text-3xl font-bold text-slate-900">Form Builder</h1>
-            <p className="text-slate-600 mt-1">
-              Create and customize forms with ease
-            </p>
-          </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => setPreviewMode(!previewMode)}
-              className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-colors"
-            >
-              {previewMode ? (
-                <Edit2 className="w-4 h-4" />
-              ) : (
-                <Eye className="w-4 h-4" />
-              )}
-              {previewMode ? "Edit" : "Preview"}
-            </button>
-            <button
-              onClick={saveForm}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors shadow-sm"
-            >
-              <Save className="w-4 h-4" />
-              Save Form
-            </button>
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <div className="bg-card border-b border-border">
+        <div className="max-w-7xl mx-auto px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-semibold text-foreground">
+                Form Builder
+              </h1>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                Create and manage forms
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setPreviewMode(!previewMode)}
+                className="px-4 py-2 text-sm font-medium text-foreground bg-card border border-border rounded-lg hover:bg-accent transition flex items-center gap-2"
+              >
+                {previewMode ? (
+                  <Edit2 className="w-4 h-4" />
+                ) : (
+                  <Eye className="w-4 h-4" />
+                )}
+                {previewMode ? "Edit" : "Preview"}
+              </button>
+              <button
+                onClick={saveForm}
+                className="px-4 py-2 text-sm font-medium text-primary-foreground bg-primary rounded-lg hover:opacity-90 transition flex items-center gap-2"
+              >
+                <Save className="w-4 h-4" />
+                Save
+              </button>
+            </div>
           </div>
         </div>
+      </div>
 
-        <div className="grid gap-6 lg:grid-cols-12">
-          {/* Sidebar - Form List */}
-          <div className="lg:col-span-3">
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-              <div className="p-4 border-b border-slate-200">
-                <h2 className="font-semibold text-slate-900 mb-3">
-                  Your Forms
-                </h2>
-                <button
-                  onClick={createNewForm}
-                  className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors text-sm"
-                >
-                  <Plus className="w-4 h-4" />
-                  New Form
-                </button>
+      <div className="max-w-7xl mx-auto px-6 py-6">
+        <div className="grid grid-cols-12 gap-6">
+          {/* Sidebar */}
+          <div className="col-span-3">
+            <div className="bg-card rounded-lg border border-border">
+              <div className="p-4 border-b border-border">
+                <div className="flex items-center justify-between mb-3">
+                  <h2 className="text-sm font-semibold text-card-foreground">
+                    Forms
+                  </h2>
+                  <button
+                    onClick={createNewForm}
+                    className="p-1.5 text-primary hover:bg-accent rounded transition"
+                  >
+                    <Plus className="w-4 h-4" />
+                  </button>
+                </div>
               </div>
-              <div className="p-2 space-y-1">
+              <div className="p-2">
                 {forms.map((form) => (
                   <button
                     key={form.id}
@@ -214,70 +221,100 @@ export default function FormMaker() {
                       setFormName(form.name);
                       setFormDescription(form.description);
                     }}
-                    className={`w-full text-left p-3 rounded-lg text-sm transition-all ${
+                    className={`w-full text-left px-3 py-2 rounded-md text-sm transition ${
                       currentForm?.id === form.id
-                        ? "bg-blue-50 text-blue-700 border border-blue-200"
-                        : "hover:bg-slate-50 text-slate-700"
+                        ? "bg-accent text-accent-foreground"
+                        : "text-card-foreground hover:bg-muted"
                     }`}
                   >
-                    <p className="font-medium truncate">{form.name}</p>
-                    <p className="text-xs opacity-70 mt-1">
+                    <div className="font-medium">{form.name}</div>
+                    <div className="text-xs text-muted-foreground mt-0.5">
                       {form.fields.length} fields
-                    </p>
+                    </div>
                   </button>
                 ))}
+              </div>
+            </div>
+
+            {/* Field Types */}
+            <div className="bg-card rounded-lg border border-border mt-4">
+              <div className="p-4 border-b border-border">
+                <h2 className="text-sm font-semibold text-card-foreground">
+                  Field Types
+                </h2>
+              </div>
+              <div className="p-3 grid grid-cols-2 gap-2">
+                {fieldTypes.map((ft) => {
+                  const Icon = ft.icon;
+                  return (
+                    <button
+                      key={ft.type}
+                      onClick={() => addField(ft.type as FormField["type"])}
+                      disabled={previewMode}
+                      className="flex flex-col items-center justify-center gap-2 p-3 rounded-md border border-border hover:border-primary hover:bg-accent transition disabled:opacity-40 disabled:cursor-not-allowed"
+                    >
+                      <Icon className="w-5 h-5 text-muted-foreground" />
+                      <span className="text-xs font-medium text-card-foreground">
+                        {ft.label}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           </div>
 
           {/* Main Editor */}
-          <div className="lg:col-span-6">
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-              <div className="p-6 border-b border-slate-200 space-y-3">
+          <div className="col-span-9">
+            <div className="bg-card rounded-lg border border-border">
+              <div className="p-6 border-b border-border">
                 <input
                   value={formName}
                   onChange={(e) => setFormName(e.target.value)}
-                  className="w-full text-xl font-semibold text-slate-900 border-b-2 border-transparent hover:border-slate-200 focus:border-blue-500 outline-none px-2 py-1 transition-colors"
+                  className="w-full text-2xl font-semibold text-foreground bg-transparent border-0 outline-none focus:ring-0 p-0 mb-2 placeholder:text-muted-foreground"
                   disabled={previewMode}
                   placeholder="Form Name"
                 />
                 <input
                   value={formDescription}
                   onChange={(e) => setFormDescription(e.target.value)}
-                  className="w-full text-slate-600 border-b-2 border-transparent hover:border-slate-200 focus:border-blue-500 outline-none px-2 py-1 transition-colors"
+                  className="w-full text-sm text-muted-foreground bg-transparent border-0 outline-none focus:ring-0 p-0 placeholder:text-muted-foreground"
                   disabled={previewMode}
-                  placeholder="Form Description"
+                  placeholder="Add a description"
                 />
               </div>
 
               <div className="p-6">
                 {previewMode ? (
-                  <div className="space-y-5">
+                  <div className="max-w-2xl mx-auto space-y-6">
                     {currentForm?.fields.map((field) => (
-                      <div key={field.id} className="space-y-2">
-                        <label className="block text-sm font-medium text-slate-700">
+                      <div key={field.id}>
+                        <label className="block text-sm font-medium text-foreground mb-2">
                           {field.label}
                           {field.required && (
-                            <span className="text-red-500 ml-1">*</span>
+                            <span className="text-destructive ml-1">*</span>
                           )}
                         </label>
 
                         {field.type === "textarea" ? (
                           <textarea
-                            className="w-full min-h-[100px] rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 px-3 py-2 text-sm outline-none transition-all"
+                            className="w-full px-3 py-2 bg-input border border-border rounded-lg focus:ring-2 focus:ring-ring focus:border-transparent outline-none resize-none text-foreground placeholder:text-muted-foreground"
+                            rows={4}
                             placeholder={field.placeholder}
                           />
                         ) : field.type === "checkbox" ? (
-                          <label className="flex items-center gap-2 text-sm text-slate-700">
+                          <div className="flex items-center gap-2">
                             <input
                               type="checkbox"
-                              className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                              className="w-4 h-4 text-primary border-border rounded focus:ring-ring"
                             />
-                            {field.placeholder}
-                          </label>
+                            <span className="text-sm text-foreground">
+                              {field.placeholder}
+                            </span>
+                          </div>
                         ) : field.type === "select" ? (
-                          <select className="w-full h-10 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 px-3 text-sm outline-none transition-all">
-                            <option value="">Select an option...</option>
+                          <select className="w-full px-3 py-2 bg-input border border-border rounded-lg focus:ring-2 focus:ring-ring focus:border-transparent outline-none text-foreground">
+                            <option value="">Select...</option>
                             {field.options?.map((o, i) => (
                               <option value={o} key={i}>
                                 {o}
@@ -288,24 +325,21 @@ export default function FormMaker() {
                           <input
                             type={field.type}
                             placeholder={field.placeholder}
-                            className="w-full h-10 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 px-3 text-sm outline-none transition-all"
+                            className="w-full px-3 py-2 bg-input border border-border rounded-lg focus:ring-2 focus:ring-ring focus:border-transparent outline-none text-foreground placeholder:text-muted-foreground"
                           />
                         )}
                       </div>
                     ))}
 
                     {!currentForm?.fields.length && (
-                      <div className="text-center py-12">
-                        <p className="text-slate-400">No fields added yet</p>
-                        <p className="text-sm text-slate-400 mt-1">
-                          Exit preview mode to add fields
-                        </p>
+                      <div className="text-center py-12 text-muted-foreground">
+                        No fields added yet
                       </div>
                     )}
 
                     {currentForm?.fields.length ? (
-                      <button className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium transition-colors mt-6">
-                        Submit Form
+                      <button className="w-full py-2.5 bg-primary hover:opacity-90 text-primary-foreground font-medium rounded-lg transition">
+                        Submit
                       </button>
                     ) : null}
                   </div>
@@ -314,10 +348,11 @@ export default function FormMaker() {
                     {currentForm?.fields.map((field) => (
                       <div
                         key={field.id}
-                        className="bg-slate-50 rounded-lg p-4 border border-slate-200 hover:border-slate-300 transition-colors"
+                        className="p-4 bg-muted border border-border rounded-lg hover:border-primary/50 transition"
                       >
-                        <div className="flex items-start gap-3">
-                          <GripVertical className="w-5 h-5 text-slate-400 mt-2 cursor-move" />
+                        <div className="flex gap-3">
+                          <GripVertical className="w-5 h-5 text-muted-foreground flex-shrink-0 mt-0.5 cursor-move" />
+
                           <div className="flex-1 space-y-3">
                             <div className="flex items-center gap-2">
                               {renderFieldIcon(field.type)}
@@ -328,8 +363,8 @@ export default function FormMaker() {
                                     label: e.target.value,
                                   })
                                 }
-                                className="flex-1 h-9 px-3 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none text-sm"
-                                placeholder="Field Label"
+                                className="flex-1 px-3 py-1.5 text-sm bg-input border border-border rounded-md focus:ring-2 focus:ring-ring focus:border-transparent outline-none text-foreground placeholder:text-muted-foreground"
+                                placeholder="Label"
                               />
                             </div>
 
@@ -343,7 +378,7 @@ export default function FormMaker() {
                                       .map((s) => s.trim()),
                                   })
                                 }
-                                className="w-full h-9 px-3 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none text-sm"
+                                className="w-full px-3 py-1.5 text-sm bg-input border border-border rounded-md focus:ring-2 focus:ring-ring focus:border-transparent outline-none text-foreground placeholder:text-muted-foreground"
                                 placeholder="Options (comma separated)"
                               />
                             )}
@@ -355,11 +390,11 @@ export default function FormMaker() {
                                   placeholder: e.target.value,
                                 })
                               }
-                              className="w-full h-9 px-3 rounded-lg border border-slate-300 focus:border-blue-500 focus:ring-2 focus:ring-blue-200 outline-none text-sm"
-                              placeholder="Placeholder text"
+                              className="w-full px-3 py-1.5 text-sm bg-input border border-border rounded-md focus:ring-2 focus:ring-ring focus:border-transparent outline-none text-foreground placeholder:text-muted-foreground"
+                              placeholder="Placeholder"
                             />
 
-                            <label className="flex items-center gap-2 text-sm text-slate-700">
+                            <label className="flex items-center gap-2 text-sm text-foreground">
                               <input
                                 type="checkbox"
                                 checked={field.required}
@@ -368,15 +403,15 @@ export default function FormMaker() {
                                     required: e.target.checked,
                                   })
                                 }
-                                className="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
+                                className="w-4 h-4 text-primary border-border rounded focus:ring-ring"
                               />
-                              Required field
+                              Required
                             </label>
                           </div>
 
                           <button
                             onClick={() => removeField(field.id)}
-                            className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                            className="p-2 text-destructive hover:bg-destructive/10 rounded-md transition flex-shrink-0"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
@@ -385,10 +420,10 @@ export default function FormMaker() {
                     ))}
 
                     {!currentForm?.fields.length && (
-                      <div className="text-center py-12 border-2 border-dashed border-slate-300 rounded-lg">
-                        <p className="text-slate-400">No fields yet</p>
-                        <p className="text-sm text-slate-400 mt-1">
-                          Add fields from the panel on the right
+                      <div className="text-center py-12 border-2 border-dashed border-border rounded-lg">
+                        <p className="text-muted-foreground">No fields yet</p>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Add fields from the left panel
                         </p>
                       </div>
                     )}
@@ -396,56 +431,21 @@ export default function FormMaker() {
                 )}
               </div>
             </div>
-          </div>
 
-          {/* Field Types Panel */}
-          <div className="lg:col-span-3">
-            <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-              <div className="p-4 border-b border-slate-200">
-                <h2 className="font-semibold text-slate-900">Add Fields</h2>
-                <p className="text-xs text-slate-500 mt-1">
-                  Click to add to form
+            {/* Submissions */}
+            <div className="bg-card rounded-lg border border-border mt-6">
+              <div className="p-6 border-b border-border">
+                <h2 className="text-base font-semibold text-card-foreground">
+                  Submissions
+                </h2>
+                <p className="text-sm text-muted-foreground mt-0.5">
+                  View form responses
                 </p>
               </div>
-              <div className="p-3">
-                <div className="grid grid-cols-2 gap-2">
-                  {fieldTypes.map((ft) => {
-                    const Icon = ft.icon;
-                    return (
-                      <button
-                        key={ft.type}
-                        onClick={() => addField(ft.type as FormField["type"])}
-                        disabled={previewMode}
-                        className="flex flex-col items-center gap-2 p-4 rounded-lg bg-slate-50 hover:bg-blue-50 hover:border-blue-200 border border-slate-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                      >
-                        <Icon className="w-5 h-5 text-slate-600" />
-                        <span className="text-xs text-slate-700 text-center font-medium">
-                          {ft.label}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
+              <div className="p-12 text-center text-muted-foreground">
+                No submissions yet
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* Submissions Section */}
-        <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-          <div className="p-6 border-b border-slate-200">
-            <h2 className="text-lg font-semibold text-slate-900">
-              Form Submissions
-            </h2>
-            <p className="text-sm text-slate-500 mt-1">
-              View and manage form responses
-            </p>
-          </div>
-          <div className="p-12 text-center">
-            <p className="text-slate-400">No submissions yet</p>
-            <p className="text-sm text-slate-400 mt-1">
-              Submissions will appear here once users fill out your form
-            </p>
           </div>
         </div>
       </div>
