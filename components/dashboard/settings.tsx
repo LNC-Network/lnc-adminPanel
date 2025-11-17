@@ -1,6 +1,15 @@
 "use client";
 import { Label } from "../ui/label";
-import { Plus, Trash2, Shield, User as UserIcon, CheckCircle, XCircle, Clock, UserPlus } from "lucide-react";
+import {
+  Plus,
+  Trash2,
+  Shield,
+  User,
+  CheckCircle,
+  XCircle,
+  Clock,
+  UserPlus,
+} from "lucide-react";
 import { Input } from "../ui/input";
 import {
   Table,
@@ -40,6 +49,7 @@ import { useState, useEffect } from "react";
 import { toast } from "sonner";
 import { Toaster } from "../ui/sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
+
 interface AuthUser {
   id: string;
   email: string;
@@ -73,7 +83,9 @@ export default function Settings() {
   const [loading, setLoading] = useState(false);
   const [currentUserId, setCurrentUserId] = useState("");
   const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
-  const [selectedPending, setSelectedPending] = useState<PendingUser | null>(null);
+  const [selectedPending, setSelectedPending] = useState<PendingUser | null>(
+    null
+  );
   const [rejectionReason, setRejectionReason] = useState("");
   const [approvingId, setApprovingId] = useState<string | null>(null);
   const [editingUserId, setEditingUserId] = useState<string | null>(null);
@@ -108,7 +120,7 @@ export default function Settings() {
       const json = await res.json();
 
       if (res.ok) {
-        setUsers(json.data || []); // CHANGE: API returns { data }
+        setUsers(json.data || []);
       } else {
         toast.error(json.error || "Failed to fetch users");
       }
@@ -134,7 +146,10 @@ export default function Settings() {
     }
   };
 
-  const handleApprove = async (pendingUser: PendingUser, assignedRole: string) => {
+  const handleApprove = async (
+    pendingUser: PendingUser,
+    assignedRole: string
+  ) => {
     console.log("Approving user:", pendingUser.email, "as role:", assignedRole);
     console.log("Current user ID:", currentUserId);
 
@@ -224,7 +239,12 @@ export default function Settings() {
   const handleUpdateRoles = async () => {
     if (!editingUserId) return;
 
-    console.log("Updating roles for user:", editingUserId, "to:", selectedRoles);
+    console.log(
+      "Updating roles for user:",
+      editingUserId,
+      "to:",
+      selectedRoles
+    );
 
     try {
       const response = await fetch("/api/users/update-roles", {
@@ -305,7 +325,7 @@ export default function Settings() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ userId }), // Send userId instead of email
+        body: JSON.stringify({ userId }),
       });
 
       const data = await response.json();
@@ -348,10 +368,6 @@ export default function Settings() {
     }
   };
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
-
   return (
     <>
       <Toaster position="top-center" richColors closeButton />
@@ -368,9 +384,10 @@ export default function Settings() {
             <TabsTrigger value="users">User Management</TabsTrigger>
             <TabsTrigger value="pending">
               Pending Registrations
-              {pendingUsers.filter(u => u.status === "pending").length > 0 && (
+              {pendingUsers.filter((u) => u.status === "pending").length >
+                0 && (
                 <Badge variant="destructive" className="ml-2">
-                  {pendingUsers.filter(u => u.status === "pending").length}
+                  {pendingUsers.filter((u) => u.status === "pending").length}
                 </Badge>
               )}
             </TabsTrigger>
@@ -379,169 +396,187 @@ export default function Settings() {
 
           {/* User Management Tab */}
           <TabsContent value="users" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>Create New User</CardTitle>
-                <CardDescription>
-                  Add a new user to the admin panel with specific role
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid gap-4">
-                  <div className="grid gap-2">
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      placeholder="user@example.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
+            <div className="grid gap-4 md:grid-cols-[350px_1fr] lg:grid-cols-[400px_1fr]">
+              {/* Create User Form - Left Side */}
+              <Card className="h-fit">
+                <CardHeader>
+                  <CardTitle>Create New User</CardTitle>
+                  <CardDescription>
+                    Add a new user to the admin panel with specific role
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="email">Email</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="user@example.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        disabled={loading}
+                      />
+                    </div>
+
+                    <div className="grid gap-2">
+                      <Label htmlFor="password">Password</Label>
+                      <Input
+                        id="password"
+                        type="password"
+                        placeholder="Minimum 6 characters"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        disabled={loading}
+                      />
+                    </div>
+
+                    <div className="grid gap-2">
+                      <Label htmlFor="role">Role</Label>
+                      <Select
+                        value={role}
+                        onValueChange={setRole}
+                        disabled={loading}
+                      >
+                        <SelectTrigger id="role">
+                          <SelectValue placeholder="Select role" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="user">
+                            <div className="flex items-center gap-2">
+                              <User className="h-4 w-4" />
+                              User (No admin access)
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="dev member">
+                            <div className="flex items-center gap-2">
+                              <User className="h-4 w-4" />
+                              Dev Member (Development team)
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="editor">
+                            <div className="flex items-center gap-2">
+                              <User className="h-4 w-4" />
+                              Editor (Limited admin access)
+                            </div>
+                          </SelectItem>
+                          <SelectItem value="admin">
+                            <div className="flex items-center gap-2">
+                              <Shield className="h-4 w-4" />
+                              Admin (Full access)
+                            </div>
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <Button
+                      onClick={addUser}
                       disabled={loading}
-                    />
+                      className="w-full"
+                    >
+                      <Plus className="mr-2 h-4 w-4" />
+                      {loading ? "Creating..." : "Create User"}
+                    </Button>
                   </div>
+                </CardContent>
+              </Card>
 
-                  <div className="grid gap-2">
-                    <Label htmlFor="password">Password</Label>
-                    <Input
-                      id="password"
-                      type="password"
-                      placeholder="Minimum 6 characters"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      disabled={loading}
-                    />
-                  </div>
-
-                  <div className="grid gap-2">
-                    <Label htmlFor="role">Role</Label>
-                    <Select value={role} onValueChange={setRole} disabled={loading}>
-                      <SelectTrigger id="role">
-                        <SelectValue placeholder="Select role" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="user">
-                          <div className="flex items-center gap-2">
-                            <UserIcon className="h-4 w-4" />
-                            User (No admin access)
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="dev member">
-                          <div className="flex items-center gap-2">
-                            <UserIcon className="h-4 w-4" />
-                            Dev Member (Development team)
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="editor">
-                          <div className="flex items-center gap-2">
-                            <UserIcon className="h-4 w-4" />
-                            Editor (Limited admin access)
-                          </div>
-                        </SelectItem>
-                        <SelectItem value="admin">
-                          <div className="flex items-center gap-2">
-                            <Shield className="h-4 w-4" />
-                            Admin (Full access)
-                          </div>
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <Button onClick={addUser} disabled={loading} className="w-full">
-                    <Plus className="mr-2 h-4 w-4" />
-                    {loading ? "Creating..." : "Create User"}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>User Management</CardTitle>
-                <CardDescription>
-                  View and manage all users in the system
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="rounded-lg overflow-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Roles</TableHead>
-                        <TableHead>Created</TableHead>
-                        <TableHead>Last Sign In</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {users.length === 0 ? (
+              {/* User Table - Right Side */}
+              <Card>
+                <CardHeader>
+                  <CardTitle>User Management</CardTitle>
+                  <CardDescription>
+                    View and manage all users in the system
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="rounded-lg overflow-auto">
+                    <Table>
+                      <TableHeader>
                         <TableRow>
-                          <TableCell
-                            colSpan={5}
-                            className="text-center text-muted-foreground"
-                          >
-                            No users found
-                          </TableCell>
+                          <TableHead>Email</TableHead>
+                          <TableHead>Roles</TableHead>
+                          <TableHead>Created</TableHead>
+                          <TableHead>Last Sign In</TableHead>
+                          <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
-                      ) : (
-                        users.map((user) => (
-                          <TableRow key={user.id}>
-                            <TableCell className="font-medium">
-                              {user.email}
-                            </TableCell>
-                            <TableCell>
-                              <div className="flex flex-wrap gap-1">
-                                {user.roles && user.roles.length > 0 ? (
-                                  user.roles.map((role, idx) => (
-                                    <Badge key={idx} variant="secondary" className="capitalize">
-                                      {role}
-                                    </Badge>
-                                  ))
-                                ) : (
-                                  <span className="text-sm text-muted-foreground">No role</span>
-                                )}
-                              </div>
-                            </TableCell>
-                            <TableCell>
-                              {new Date(user.created_at).toLocaleDateString()}
-                            </TableCell>
-                            <TableCell>
-                              {user.last_sign_in_at
-                                ? new Date(
-                                  user.last_sign_in_at
-                                ).toLocaleDateString()
-                                : "Never"}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              <div className="flex justify-end gap-2">
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  onClick={() => handleOpenRoleDialog(user)}
-                                >
-                                  Edit Roles
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="text-destructive"
-                                  onClick={() =>
-                                    deleteUser(user.id, user.email || "")
-                                  }
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </div>
+                      </TableHeader>
+                      <TableBody>
+                        {users.length === 0 ? (
+                          <TableRow>
+                            <TableCell
+                              colSpan={5}
+                              className="text-center text-muted-foreground"
+                            >
+                              No users found
                             </TableCell>
                           </TableRow>
-                        ))
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              </CardContent>
-            </Card>
+                        ) : (
+                          users.map((user) => (
+                            <TableRow key={user.id}>
+                              <TableCell className="font-medium">
+                                {user.email}
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex flex-wrap gap-1">
+                                  {user.roles && user.roles.length > 0 ? (
+                                    user.roles.map((role, idx) => (
+                                      <Badge
+                                        key={idx}
+                                        variant="secondary"
+                                        className="capitalize"
+                                      >
+                                        {role}
+                                      </Badge>
+                                    ))
+                                  ) : (
+                                    <span className="text-sm text-muted-foreground">
+                                      No role
+                                    </span>
+                                  )}
+                                </div>
+                              </TableCell>
+                              <TableCell>
+                                {new Date(user.created_at).toLocaleDateString()}
+                              </TableCell>
+                              <TableCell>
+                                {user.last_sign_in_at
+                                  ? new Date(
+                                      user.last_sign_in_at
+                                    ).toLocaleDateString()
+                                  : "Never"}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                <div className="flex justify-end gap-2">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    onClick={() => handleOpenRoleDialog(user)}
+                                  >
+                                    Edit Roles
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    className="text-destructive"
+                                    onClick={() =>
+                                      deleteUser(user.id, user.email || "")
+                                    }
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </TabsContent>
 
           {/* Pending Registrations Tab */}
@@ -588,7 +623,9 @@ export default function Settings() {
                             <TableCell>{pending.email}</TableCell>
                             <TableCell>{pending.team}</TableCell>
                             <TableCell>
-                              {new Date(pending.submitted_at).toLocaleDateString()}
+                              {new Date(
+                                pending.submitted_at
+                              ).toLocaleDateString()}
                             </TableCell>
                             <TableCell>
                               {pending.status === "pending" && (
@@ -620,13 +657,27 @@ export default function Settings() {
                                     }
                                   >
                                     <SelectTrigger className="w-32">
-                                      <SelectValue placeholder={approvingId === pending.id ? "Approving..." : "Approve as..."} />
+                                      <SelectValue
+                                        placeholder={
+                                          approvingId === pending.id
+                                            ? "Approving..."
+                                            : "Approve as..."
+                                        }
+                                      />
                                     </SelectTrigger>
                                     <SelectContent>
-                                      <SelectItem value="user">As User</SelectItem>
-                                      <SelectItem value="dev member">As Dev Member</SelectItem>
-                                      <SelectItem value="editor">As Editor</SelectItem>
-                                      <SelectItem value="admin">As Admin</SelectItem>
+                                      <SelectItem value="user">
+                                        As User
+                                      </SelectItem>
+                                      <SelectItem value="dev member">
+                                        As Dev Member
+                                      </SelectItem>
+                                      <SelectItem value="editor">
+                                        As Editor
+                                      </SelectItem>
+                                      <SelectItem value="admin">
+                                        As Admin
+                                      </SelectItem>
                                     </SelectContent>
                                   </Select>
                                   <Button
@@ -642,7 +693,9 @@ export default function Settings() {
                               )}
                               {pending.status !== "pending" && (
                                 <span className="text-sm text-muted-foreground">
-                                  {new Date(pending.reviewed_at || "").toLocaleDateString()}
+                                  {new Date(
+                                    pending.reviewed_at || ""
+                                  ).toLocaleDateString()}
                                 </span>
                               )}
                             </TableCell>
@@ -738,7 +791,9 @@ export default function Settings() {
                       if (checked) {
                         setSelectedRoles([...selectedRoles, role]);
                       } else {
-                        setSelectedRoles(selectedRoles.filter((r) => r !== role));
+                        setSelectedRoles(
+                          selectedRoles.filter((r) => r !== role)
+                        );
                       }
                     }}
                   />
