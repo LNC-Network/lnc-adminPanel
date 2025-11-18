@@ -81,7 +81,7 @@ async function step1_fetchUser() {
     console.log('📋 Step 1: Fetching user...');
     try {
         const res = await makeRequest(`${API_BASE}/api/users/list`);
-        
+
         if (!res.ok) {
             throw new Error(`HTTP ${res.status}: ${await res.text()}`);
         }
@@ -100,7 +100,7 @@ async function step1_fetchUser() {
         console.log(`   - Display Name: ${user.display_name || 'Not set'}`);
         console.log(`   - Personal Email: ${user.personal_email || 'Not set'}`);
         console.log(`   - Current Roles: ${user.roles?.join(', ') || 'None'}`);
-        
+
         return user;
     } catch (error) {
         console.error('❌ Failed to fetch users:', error.message);
@@ -148,7 +148,7 @@ async function step3_verifyUpdate() {
         }
 
         console.log(`✅ Current roles: ${user.roles?.join(', ') || 'None'}`);
-        
+
         if (user.roles?.includes(NEW_ROLE)) {
             console.log(`✅ Role "${NEW_ROLE}" confirmed!`);
             return user;
@@ -205,13 +205,13 @@ async function runTest() {
         console.log(`   All Roles: ${verifiedUser.roles?.join(', ') || 'None'}`);
         console.log(`   Display Name: ${verifiedUser.display_name || 'Not set'}`);
         console.log(`   Personal Email: ${verifiedUser.personal_email || 'Not set'}`);
-        
+
         const emailTarget = verifiedUser.personal_email || verifiedUser.email;
         console.log(`\n📧 Email Notification Details:`);
         console.log(`   Sent to: ${emailTarget}`);
         console.log(`   Subject: 🔄 Your LNC Admin Roles Have Been Updated`);
         console.log(`   Content: Role change notification with current roles`);
-        
+
         console.log(`\n📬 Check inbox: ${emailTarget}`);
         console.log('   Look for role change notification email!');
         console.log('========================================\n');

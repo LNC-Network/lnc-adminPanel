@@ -9,42 +9,54 @@ const emailTarget = user.personal_email || user.email;
 ```
 
 This means:
+
 - **First Priority**: Send to `personal_email` if it exists
 - **Fallback**: Send to `email` if `personal_email` is not set
 
 ## Updated Endpoints
 
 ### 1. Role Change Notifications
+
 **File**: `app/api/users/update-roles/route.ts`
+
 - Fetches `email, personal_email, display_name`
 - Sends to `personal_email || email`
 - ✅ **DONE**
 
-### 2. Chat Group Notifications  
+### 2. Chat Group Notifications
+
 **File**: `app/api/chat/groups/route.ts`
+
 - Fetches `email, personal_email, display_name`
 - Sends to `personal_email || email`
 - ✅ **ALREADY IMPLEMENTED**
 
 ### 3. Chat Message Notifications
+
 **File**: `app/api/chat/messages/route.ts`
+
 - Fetches `email, personal_email, display_name`
 - Sends to `personal_email || email`
 - ✅ **ALREADY IMPLEMENTED**
 
 ### 4. Registration Approval
+
 **File**: `app/api/users/pending/route.ts`
+
 - Uses `pendingUser.personal_email || pendingUser.email`
 - ✅ **ALREADY IMPLEMENTED**
 
 ### 5. Registration Rejection
+
 **File**: `app/api/users/pending/route.ts`
+
 - Uses `pendingUser.personal_email || pendingUser.email`
 - ✅ **ALREADY IMPLEMENTED**
 
 ## Database Structure
 
 ### users table
+
 ```sql
 - id: UUID
 - email: TEXT (Login email, e.g., rohit@lnc.com)
@@ -56,6 +68,7 @@ This means:
 ```
 
 ### pending_users table
+
 ```sql
 - id: UUID
 - email: TEXT (Login email)
@@ -70,6 +83,7 @@ This means:
 ## Email Flow Examples
 
 ### Example 1: User with Personal Email
+
 ```
 Login Email: rohit@lnc.com
 Personal Email: kundurohit53@gmail.com
@@ -77,6 +91,7 @@ Personal Email: kundurohit53@gmail.com
 ```
 
 ### Example 2: User without Personal Email
+
 ```
 Login Email: admin@lnc.com
 Personal Email: (not set)
@@ -84,6 +99,7 @@ Personal Email: (not set)
 ```
 
 ### Example 3: User with Real Email (Legacy)
+
 ```
 Login Email: john@gmail.com
 Personal Email: (not set)
@@ -93,12 +109,14 @@ Personal Email: (not set)
 ## Test Case: Role Change for rohit@lnc.com
 
 ### Setup
+
 1. User: `rohit@lnc.com`
 2. Personal Email: `kundurohit53@gmail.com`
 3. Current Role: `Super Admin`
 4. New Role: `Admistater`
 
 ### Expected Behavior
+
 1. Admin changes role from `Super Admin` to `Admistater`
 2. System calls `/api/users/update-roles`
 3. API fetches user data including `personal_email`
@@ -107,6 +125,7 @@ Personal Email: (not set)
 6. Email contains: New role badge with "Admistater"
 
 ### Test Command
+
 ```bash
 node testing/test-role-change-email.js
 ```
@@ -135,16 +154,17 @@ node testing/test-role-change-email.js
 
 ## All Email Types Covered
 
-| Email Type | Recipient Field | Status |
-|-----------|----------------|--------|
-| Registration Approved | `personal_email ││ email` | ✅ |
-| Registration Rejected | `personal_email ││ email` | ✅ |
-| Role Changed | `personal_email ││ email` | ✅ |
-| New Group Created | `personal_email ││ email` | ✅ |
-| New Message Posted | `personal_email ││ email` | ✅ |
+| Email Type            | Recipient Field           | Status |
+| --------------------- | ------------------------- | ------ |
+| Registration Approved | `personal_email ││ email` | ✅     |
+| Registration Rejected | `personal_email ││ email` | ✅     |
+| Role Changed          | `personal_email ││ email` | ✅     |
+| New Group Created     | `personal_email ││ email` | ✅     |
+| New Message Posted    | `personal_email ││ email` | ✅     |
 
 ## Gmail Configuration
 
 Current SMTP: `latenighthacker6@gmail.com`
+
 - All emails sent from this address
 - All users receive at their `personal_email` or `email`
