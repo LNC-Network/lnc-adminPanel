@@ -15,7 +15,7 @@ const supabase = createClient(
 
 export async function PATCH(request: NextRequest) {
   try {
-    const { userId, display_name, email, password } = await request.json();
+    const { userId, display_name, email, personal_email, password } = await request.json();
 
     if (!userId) {
       return NextResponse.json(
@@ -29,6 +29,11 @@ export async function PATCH(request: NextRequest) {
     // Update email if provided
     if (email !== undefined) {
       updateData.email = email;
+    }
+
+    // Update personal_email if provided
+    if (personal_email !== undefined) {
+      updateData.personal_email = personal_email;
     }
 
     // Update display name if provided

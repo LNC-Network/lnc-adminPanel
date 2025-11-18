@@ -43,6 +43,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 interface User {
   id: string;
   email: string;
+  personal_email?: string | null;
   display_name: string | null;
   created_at: string;
   role?: string;
@@ -87,6 +88,7 @@ export default function Database() {
   const [selectedMessage, setSelectedMessage] = useState<ChatMessage | null>(null);
   const [editDisplayName, setEditDisplayName] = useState("");
   const [editEmail, setEditEmail] = useState("");
+  const [editPersonalEmail, setEditPersonalEmail] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
   const [availableRoles, setAvailableRoles] = useState<string[]>([]);
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
@@ -247,6 +249,7 @@ export default function Database() {
           userId: selectedUser.id,
           display_name: editDisplayName,
           email: editEmail,
+          personal_email: editPersonalEmail,
         }),
       });
 
@@ -645,6 +648,7 @@ export default function Database() {
                                   setSelectedUser(u);
                                   setEditDisplayName(u.display_name || "");
                                   setEditEmail(u.email);
+                                  setEditPersonalEmail(u.personal_email || "");
                                   setSelectedRoles(u.roles || []);
                                   setEditUserOpen(true);
                                 }}
@@ -873,13 +877,29 @@ export default function Database() {
           {selectedUser && (
             <div className="space-y-4">
               <div>
-                <Label>Email</Label>
+                <Label>Login Email (@lnc.com)</Label>
                 <Input
                   value={editEmail}
                   onChange={(e) => setEditEmail(e.target.value)}
                   className="mt-1"
                   type="email"
                 />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Email used for login (usually @lnc.com)
+                </p>
+              </div>
+              <div>
+                <Label>Personal Email (for notifications)</Label>
+                <Input
+                  value={editPersonalEmail}
+                  onChange={(e) => setEditPersonalEmail(e.target.value)}
+                  className="mt-1"
+                  type="email"
+                  placeholder="real.email@example.com"
+                />
+                <p className="text-xs text-muted-foreground mt-1">
+                  Real email address where notifications will be sent
+                </p>
               </div>
               <div>
                 <Label>Display Name</Label>

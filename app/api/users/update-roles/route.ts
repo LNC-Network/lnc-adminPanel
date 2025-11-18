@@ -88,19 +88,21 @@ export async function PATCH(request: Request) {
     // Get user email and name for notification
     const { data: userData } = await supabase
       .from("users")
-      .select("email, display_name")
+      .select("email, personal_email, display_name")
       .eq("id", userId)
       .single();
 
     // Send role changed email
     if (userData) {
       try {
+        // Use personal_email if set, otherwise fall back to email
+        const emailTarget = userData.personal_email || userData.email;
         await sendRoleChangedEmail(
-          userData.email,
+          emailTarget,
           userData.display_name || userData.email,
           roles
         );
-        console.log("Role change email sent to:", userData.email);
+        console.log("Role change email sent to:", emailTarget);
       } catch (emailError) {
         console.error("Failed to send role change email:", emailError);
         // Don't fail the update if email fails
