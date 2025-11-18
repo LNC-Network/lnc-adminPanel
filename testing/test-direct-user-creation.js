@@ -14,7 +14,7 @@ const testUser = {
     email: "testdirect@lnc.com",
     personal_email: "testdirect@gmail.com",
     password: "test123456",
-    team: "Development",
+    team: "Dev Team",
     roles: ["Dev Team Admin", "Dev Member"],
 };
 

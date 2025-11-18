@@ -182,15 +182,11 @@ export default function RegisterForm({ onBack }: RegisterFormProps) {
                                 <SelectValue placeholder="Select your team" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="Development">Development</SelectItem>
-                                <SelectItem value="Design">Design</SelectItem>
-                                <SelectItem value="Marketing">Marketing</SelectItem>
-                                <SelectItem value="Sales">Sales</SelectItem>
-                                <SelectItem value="Support">Support</SelectItem>
-                                <SelectItem value="Operations">Operations</SelectItem>
-                                <SelectItem value="HR">Human Resources</SelectItem>
-                                <SelectItem value="Finance">Finance</SelectItem>
-                                <SelectItem value="Other">Other</SelectItem>
+                                <SelectItem value="Dev Team">Dev Team</SelectItem>
+                                <SelectItem value="Design Team">Design Team</SelectItem>
+                                <SelectItem value="Social Media Team">Social Media Team</SelectItem>
+                                <SelectItem value="PR & Outreach Team">PR & Outreach Team</SelectItem>
+                                <SelectItem value="Contant Team">Contant Team</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
