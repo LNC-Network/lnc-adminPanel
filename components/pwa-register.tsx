@@ -23,22 +23,28 @@ export function PWARegister() {
         }
 
         // Handle install prompt
-        let deferredPrompt: any;
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
-            deferredPrompt = e;
+            // Store the event globally so InstallPrompt can access it
+            (window as any).deferredPrompt = e;
 
             // Show install button or banner
             const installBanner = document.getElementById('install-banner');
             if (installBanner) {
-                installBanner.style.display = 'block';
+                installBanner.style.display = 'flex';
             }
         });
 
         // Handle app installed
         window.addEventListener('appinstalled', () => {
             console.log('PWA installed successfully');
-            deferredPrompt = null;
+            (window as any).deferredPrompt = null;
+
+            // Hide the install banner
+            const installBanner = document.getElementById('install-banner');
+            if (installBanner) {
+                installBanner.style.display = 'none';
+            }
         });
 
         // Request notification permission
