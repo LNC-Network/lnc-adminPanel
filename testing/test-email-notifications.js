@@ -1,5 +1,5 @@
 // Test email notifications
-import { sendNewGroupNotification, sendNewMessageNotification } from './lib/chat-email-service.js';
+import { sendNewGroupNotification, sendNewMessageNotification } from '../lib/chat-email-service.js';
 
 async function testEmails() {
     console.log('Testing email notifications...\n');

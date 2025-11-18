@@ -24,10 +24,21 @@ import {
   Search,
   Plus,
   Edit,
+  Trash2,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Toaster } from "@/components/ui/sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface User {
   id: string;
@@ -35,6 +46,8 @@ interface User {
   display_name: string | null;
   created_at: string;
   role?: string;
+  roles?: string[];
+  is_active?: boolean;
 }
 
 interface ChatGroup {
@@ -65,6 +78,18 @@ export default function Database() {
   const [groupsData, setGroupsData] = useState<ChatGroup[]>([]);
   const [messagesData, setMessagesData] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState(false);
+  const [editUserOpen, setEditUserOpen] = useState(false);
+  const [editGroupOpen, setEditGroupOpen] = useState(false);
+  const [deleteGroupOpen, setDeleteGroupOpen] = useState(false);
+  const [deleteMessageOpen, setDeleteMessageOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [selectedGroup, setSelectedGroup] = useState<ChatGroup | null>(null);
+  const [selectedMessage, setSelectedMessage] = useState<ChatMessage | null>(null);
+  const [editDisplayName, setEditDisplayName] = useState("");
+  const [editEmail, setEditEmail] = useState("");
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [availableRoles, setAvailableRoles] = useState<string[]>([]);
+  const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
 
   // debounce search for snappy UX
   useEffect(() => {
@@ -77,6 +102,7 @@ export default function Database() {
 
   useEffect(() => {
     fetchAllData();
+    fetchAvailableRoles();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -101,6 +127,18 @@ export default function Database() {
     } catch (e) {
       console.error(e);
       setUserData([]);
+    }
+  }
+
+  async function fetchAvailableRoles() {
+    try {
+      const res = await fetch("/api/roles");
+      if (res.ok) {
+        const data = await res.json();
+        setAvailableRoles(data.roles || []);
+      }
+    } catch (e) {
+      console.error("Failed to fetch roles:", e);
     }
   }
 
@@ -146,6 +184,146 @@ export default function Database() {
     } catch (e) {
       console.error(e);
       setMessagesData([]);
+    }
+  }
+
+  async function handleDeleteGroup() {
+    if (!selectedGroup) return;
+
+    try {
+      const res = await fetch(`/api/chat/groups/${selectedGroup.id}`, {
+        method: 'DELETE',
+      });
+
+      if (res.ok) {
+        toast.success(`Group "${selectedGroup.name}" deleted successfully`);
+        setDeleteGroupOpen(false);
+        setSelectedGroup(null);
+        await fetchGroups();
+        await fetchMessages(); // Refresh messages as they depend on groups
+      } else {
+        const data = await res.json();
+        toast.error(data.error || 'Failed to delete group');
+      }
+    } catch (error) {
+      console.error('Delete group error:', error);
+      toast.error('Failed to delete group');
+    }
+  }
+
+  async function handleDeleteMessage() {
+    if (!selectedMessage) return;
+
+    try {
+      const res = await fetch(`/api/chat/messages/${selectedMessage.id}`, {
+        method: 'DELETE',
+      });
+
+      if (res.ok) {
+        toast.success('Message deleted successfully');
+        setDeleteMessageOpen(false);
+        setSelectedMessage(null);
+        await fetchMessages();
+      } else {
+        const data = await res.json();
+        toast.error(data.error || 'Failed to delete message');
+      }
+    } catch (error) {
+      console.error('Delete message error:', error);
+      toast.error('Failed to delete message');
+    }
+  }
+
+  async function handleUpdateUser() {
+    if (!selectedUser) return;
+
+    setIsUpdating(true);
+    try {
+      // Update profile
+      const profileRes = await fetch('/api/users/update-profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: selectedUser.id,
+          display_name: editDisplayName,
+          email: editEmail,
+        }),
+      });
+
+      if (!profileRes.ok) {
+        const contentType = profileRes.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          const data = await profileRes.json();
+          toast.error(data.error || 'Failed to update user');
+        } else {
+          const text = await profileRes.text();
+          console.error('Profile update error (non-JSON):', text);
+          toast.error('Failed to update user profile');
+        }
+        setIsUpdating(false);
+        return;
+      }
+
+      // Update roles
+      const rolesRes = await fetch('/api/users/update-roles', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: selectedUser.id,
+          roles: selectedRoles,
+        }),
+      });
+
+      if (rolesRes.ok) {
+        toast.success('User updated successfully');
+        setEditUserOpen(false);
+        await fetchUsers();
+      } else {
+        const contentType = rolesRes.headers.get('content-type');
+        if (contentType && contentType.includes('application/json')) {
+          const data = await rolesRes.json();
+          toast.error(data.error || 'Failed to update roles');
+        } else {
+          const text = await rolesRes.text();
+          console.error('Roles update error (non-JSON):', text);
+          toast.error('Failed to update roles');
+        }
+      }
+    } catch (error) {
+      console.error('Update user error:', error);
+      toast.error('Failed to update user');
+    } finally {
+      setIsUpdating(false);
+    }
+  }
+
+  async function handleDeactivateUser() {
+    if (!selectedUser) return;
+
+    setIsUpdating(true);
+    try {
+      const res = await fetch('/api/users/delete', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId: selectedUser.id,
+        }),
+      });
+
+      if (res.ok) {
+        toast.success('User deactivated successfully');
+        setEditUserOpen(false);
+        setSelectedUser(null);
+        await fetchUsers();
+      } else {
+        const data = await res.json();
+        toast.error(data.error || 'Failed to deactivate user');
+      }
+    } catch (error) {
+      console.error('Deactivate user error:', error);
+      toast.error('Failed to deactivate user');
+    } finally {
+      setIsUpdating(false);
     }
   }
 
@@ -447,7 +625,9 @@ export default function Database() {
                           <TableCell className="text-sm">{u.email}</TableCell>
                           <TableCell>
                             <span className="capitalize text-sm font-medium">
-                              {u.role || "user"}
+                              {u.roles && u.roles.length > 0
+                                ? u.roles.join(", ")
+                                : u.role || "No role"}
                             </span>
                           </TableCell>
                           <TableCell>
@@ -461,6 +641,13 @@ export default function Database() {
                                 variant="ghost"
                                 size="sm"
                                 title="Edit user"
+                                onClick={() => {
+                                  setSelectedUser(u);
+                                  setEditDisplayName(u.display_name || "");
+                                  setEditEmail(u.email);
+                                  setSelectedRoles(u.roles || []);
+                                  setEditUserOpen(true);
+                                }}
                               >
                                 <Edit className="h-4 w-4" />
                               </Button>
@@ -525,8 +712,24 @@ export default function Database() {
                                 variant="ghost"
                                 size="sm"
                                 title="Edit group"
+                                onClick={() => {
+                                  setSelectedGroup(g);
+                                  setEditGroupOpen(true);
+                                }}
                               >
                                 <Edit className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                title="Delete group"
+                                onClick={() => {
+                                  setSelectedGroup(g);
+                                  setDeleteGroupOpen(true);
+                                }}
+                                className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
+                              >
+                                <Trash2 className="h-4 w-4" />
                               </Button>
                             </div>
                           </TableCell>
@@ -588,9 +791,14 @@ export default function Database() {
                               <Button
                                 variant="ghost"
                                 size="sm"
-                                title="View message"
+                                title="Delete message"
+                                onClick={() => {
+                                  setSelectedMessage(m);
+                                  setDeleteMessageOpen(true);
+                                }}
+                                className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
                               >
-                                <Edit className="h-4 w-4" />
+                                <Trash2 className="h-4 w-4" />
                               </Button>
                             </div>
                           </TableCell>
@@ -652,6 +860,225 @@ export default function Database() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Edit User Dialog */}
+      <Dialog open={editUserOpen} onOpenChange={setEditUserOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit User</DialogTitle>
+            <DialogDescription>
+              Update user details, assign roles, or deactivate the account.
+            </DialogDescription>
+          </DialogHeader>
+          {selectedUser && (
+            <div className="space-y-4">
+              <div>
+                <Label>Email</Label>
+                <Input
+                  value={editEmail}
+                  onChange={(e) => setEditEmail(e.target.value)}
+                  className="mt-1"
+                  type="email"
+                />
+              </div>
+              <div>
+                <Label>Display Name</Label>
+                <Input
+                  value={editDisplayName}
+                  onChange={(e) => setEditDisplayName(e.target.value)}
+                  className="mt-1"
+                  placeholder="Enter display name"
+                />
+              </div>
+              <div>
+                <Label>Roles</Label>
+                <div className="mt-2 space-y-2 max-h-48 overflow-y-auto border rounded-md p-3">
+                  {availableRoles.length === 0 ? (
+                    <p className="text-sm text-muted-foreground">Loading roles...</p>
+                  ) : (
+                    availableRoles.map((role) => (
+                      <div key={role} className="flex items-center space-x-2">
+                        <Checkbox
+                          id={`role-${role}`}
+                          checked={selectedRoles.includes(role)}
+                          onCheckedChange={(checked: boolean) => {
+                            if (checked) {
+                              setSelectedRoles([...selectedRoles, role]);
+                            } else {
+                              setSelectedRoles(selectedRoles.filter((r) => r !== role));
+                            }
+                          }}
+                        />
+                        <label
+                          htmlFor={`role-${role}`}
+                          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer"
+                        >
+                          {role}
+                        </label>
+                      </div>
+                    ))
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Select one or more roles for this user
+                </p>
+              </div>
+              <div>
+                <Label>User ID</Label>
+                <Input value={selectedUser.id} disabled className="mt-1 font-mono text-xs" />
+              </div>
+              <div>
+                <Label>Account Status</Label>
+                <div className="mt-1">
+                  <span className="inline-flex items-center rounded-full px-3 py-1 text-xs font-medium bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-100">
+                    {selectedUser.is_active !== false ? 'Active' : 'Inactive'}
+                  </span>
+                </div>
+              </div>
+              <div>
+                <Label>Created At</Label>
+                <Input value={isoDate(selectedUser.created_at)} disabled className="mt-1" />
+              </div>
+              <div className="flex justify-between gap-2 mt-6 pt-4 border-t">
+                <Button
+                  variant="destructive"
+                  onClick={handleDeactivateUser}
+                  disabled={isUpdating}
+                >
+                  Deactivate User
+                </Button>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setEditUserOpen(false)}
+                    disabled={isUpdating}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={handleUpdateUser}
+                    disabled={isUpdating}
+                  >
+                    {isUpdating ? 'Saving...' : 'Save Changes'}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Group Dialog */}
+      <Dialog open={editGroupOpen} onOpenChange={setEditGroupOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Group</DialogTitle>
+            <DialogDescription>
+              View group details. To manage members, use the Chat section.
+            </DialogDescription>
+          </DialogHeader>
+          {selectedGroup && (
+            <div className="space-y-4">
+              <div>
+                <Label>Group Name</Label>
+                <Input value={selectedGroup.name} disabled className="mt-1" />
+              </div>
+              <div>
+                <Label>Description</Label>
+                <Textarea
+                  value={selectedGroup.description || "No description"}
+                  disabled
+                  className="mt-1"
+                  rows={3}
+                />
+              </div>
+              <div>
+                <Label>Group ID</Label>
+                <Input value={selectedGroup.id} disabled className="mt-1 font-mono text-xs" />
+              </div>
+              <div>
+                <Label>Created At</Label>
+                <Input value={isoDate(selectedGroup.created_at)} disabled className="mt-1" />
+              </div>
+              <div className="flex justify-end gap-2 mt-4">
+                <Button variant="outline" onClick={() => setEditGroupOpen(false)}>
+                  Close
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Group Confirmation Dialog */}
+      <Dialog open={deleteGroupOpen} onOpenChange={setDeleteGroupOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Group</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this group? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          {selectedGroup && (
+            <div className="space-y-4">
+              <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                <p className="text-sm font-medium text-red-900 dark:text-red-100">
+                  Group: <span className="font-bold">{selectedGroup.name}</span>
+                </p>
+                <p className="text-xs text-red-700 dark:text-red-300 mt-1">
+                  All messages in this group will also be deleted.
+                </p>
+              </div>
+              <div className="flex justify-end gap-2 mt-4">
+                <Button variant="outline" onClick={() => setDeleteGroupOpen(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={handleDeleteGroup}
+                >
+                  Delete Group
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Message Confirmation Dialog */}
+      <Dialog open={deleteMessageOpen} onOpenChange={setDeleteMessageOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Message</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this message? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          {selectedMessage && (
+            <div className="space-y-4">
+              <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                <p className="text-sm font-medium text-red-900 dark:text-red-100">
+                  Message: <span className="font-normal">{selectedMessage.message.substring(0, 100)}{selectedMessage.message.length > 100 ? '...' : ''}</span>
+                </p>
+                <p className="text-xs text-red-700 dark:text-red-300 mt-1">
+                  From group: {selectedMessage.group_name}
+                </p>
+              </div>
+              <div className="flex justify-end gap-2 mt-4">
+                <Button variant="outline" onClick={() => setDeleteMessageOpen(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  variant="destructive"
+                  onClick={handleDeleteMessage}
+                >
+                  Delete Message
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 }

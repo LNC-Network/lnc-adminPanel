@@ -83,6 +83,10 @@ export default function DashboardClient() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [updating, setUpdating] = useState(false);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
+  const [pendingUsers, setPendingUsers] = useState<any[]>([]);
+  const [joinRequests, setJoinRequests] = useState<any[]>([]);
+  const [notificationCount, setNotificationCount] = useState(0);
   const router = useRouter();
 
   const handleLogout = () => {
@@ -162,12 +166,51 @@ export default function DashboardClient() {
           setUserEmail(user.email || "");
           setUserId(user.id || "");
           setDisplayName(user.display_name || "");
+
+          // Fetch notifications if admin
+          const isAdmin = user.roles?.some((role: string) => role.toLowerCase().includes('admin'));
+          if (isAdmin) {
+            fetchNotifications();
+            // Poll for notifications every 30 seconds
+            const interval = setInterval(fetchNotifications, 30000);
+            return () => clearInterval(interval);
+          }
         } catch (e) {
           console.error("Failed to parse user data:", e);
         }
       }
     }
   }, []);
+
+  const fetchNotifications = async () => {
+    try {
+      let usersCount = 0;
+      let requestsCount = 0;
+
+      // Fetch pending user approvals
+      const usersRes = await fetch('/api/users/pending');
+      if (usersRes.ok) {
+        const usersData = await usersRes.json();
+        const users = usersData.users || [];
+        setPendingUsers(users);
+        usersCount = users.length;
+      }
+
+      // Fetch chat join requests
+      const joinRes = await fetch('/api/chat/join-requests');
+      if (joinRes.ok) {
+        const joinData = await joinRes.json();
+        const requests = joinData.requests || [];
+        setJoinRequests(requests);
+        requestsCount = requests.length;
+      }
+
+      // Update notification count
+      setNotificationCount(usersCount + requestsCount);
+    } catch (error) {
+      console.error('Failed to fetch notifications:', error);
+    }
+  };
 
   const isSuperAdminUser = isSuperAdmin(userRoles);
   const isAdmistaterUser = isAdmistater(userRoles);
@@ -279,10 +322,79 @@ export default function DashboardClient() {
 
             <div className="flex items-center gap-4">
               <ThemeSwitch />
-              <Button variant="ghost" size="icon" className="relative">
-                <Bell className="h-5 w-5" />
-                <span className="absolute top-1 right-1 h-2 w-2 bg-red-500 rounded-full" />
-              </Button>
+              <DropdownMenu open={notificationsOpen} onOpenChange={setNotificationsOpen}>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="relative">
+                    <Bell className="h-5 w-5" />
+                    {notificationCount > 0 && (
+                      <span className="absolute top-1 right-1 h-5 w-5 bg-red-500 rounded-full text-[10px] text-white flex items-center justify-center">
+                        {notificationCount > 9 ? '9+' : notificationCount}
+                      </span>
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-80" align="end">
+                  <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  {notificationCount === 0 ? (
+                    <div className="p-4 text-center text-sm text-muted-foreground">
+                      No new notifications
+                    </div>
+                  ) : (
+                    <div className="max-h-96 overflow-y-auto">
+                      {pendingUsers.length > 0 && (
+                        <div>
+                          <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+                            Pending User Approvals ({pendingUsers.length})
+                          </div>
+                          {pendingUsers.map((user: any) => (
+                            <DropdownMenuItem
+                              key={user.id}
+                              onClick={() => {
+                                setCurrentTab('overview');
+                                setNotificationsOpen(false);
+                              }}
+                              className="cursor-pointer"
+                            >
+                              <div className="flex flex-col gap-1">
+                                <div className="text-sm font-medium">{user.email}</div>
+                                <div className="text-xs text-muted-foreground">
+                                  Requested: {new Date(user.created_at).toLocaleDateString()}
+                                </div>
+                              </div>
+                            </DropdownMenuItem>
+                          ))}
+                        </div>
+                      )}
+                      {joinRequests.length > 0 && (
+                        <div>
+                          {pendingUsers.length > 0 && <DropdownMenuSeparator />}
+                          <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+                            Chat Join Requests ({joinRequests.length})
+                          </div>
+                          {joinRequests.map((req: any) => (
+                            <DropdownMenuItem
+                              key={req.id}
+                              onClick={() => {
+                                setCurrentTab('chat');
+                                setNotificationsOpen(false);
+                              }}
+                              className="cursor-pointer"
+                            >
+                              <div className="flex flex-col gap-1">
+                                <div className="text-sm font-medium">{req.user_email}</div>
+                                <div className="text-xs text-muted-foreground">
+                                  Wants to join: {req.group_name}
+                                </div>
+                              </div>
+                            </DropdownMenuItem>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </DropdownMenuContent>
+              </DropdownMenu>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="relative h-8 w-8 rounded-full">

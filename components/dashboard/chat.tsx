@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
-import { Send, Plus, Users, MoreVertical, Search, Phone, Video, Bell, CheckCircle, XCircle } from "lucide-react";
+import { Send, Plus, Users, MoreVertical, Search, Phone, Video, Bell, CheckCircle, XCircle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
@@ -450,6 +450,17 @@ export default function ChatPage() {
                     <div className="p-4 border-b flex justify-between items-center">
                         <h2 className="font-semibold text-lg">Groups</h2>
                         <div className="flex gap-2">
+                            <Button
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => {
+                                    fetchGroups();
+                                    toast.success('Groups refreshed');
+                                }}
+                                title="Refresh groups"
+                            >
+                                <RefreshCw className="h-4 w-4" />
+                            </Button>
                             {isAdmin && (
                                 <Button
                                     size="sm"

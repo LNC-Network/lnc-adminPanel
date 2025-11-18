@@ -1,12 +1,12 @@
 // Test approval email using Gmail
-import { sendRegistrationApprovedEmail } from './lib/email-service-gmail.ts';
+import { sendRegistrationApprovedEmail } from '../lib/email-service-gmail.ts';
 
 async function testApprovalEmail() {
     try {
         console.log('🚀 Sending test approval email via Gmail SMTP...\n');
 
         const result = await sendRegistrationApprovedEmail(
-            'ipshitagorai@gmail.com',      // Email to send to (any email works with Gmail)
+            'latenighthacker6@gmail.com',      // Email to send to (any email works with Gmail)
             'Test User',                    // User's name
             'User',                         // Role assigned
             'Development'                   // Team

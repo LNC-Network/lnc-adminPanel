@@ -1,13 +1,23 @@
-// Email service using Resend (https://resend.com)
-// Install: bun add resend
+// Email service using Gmail SMTP and Resend
+// Install: bun add resend nodemailer
 
 import { Resend } from 'resend';
 import { createClient } from '@supabase/supabase-js';
+import nodemailer from 'nodemailer';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+// Gmail SMTP transporter
+const gmailTransporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.GMAIL_USER,
+    pass: process.env.GMAIL_APP_PASSWORD,
+  },
+});
 
 interface EmailOptions {
   to: string;
@@ -177,6 +187,20 @@ async function sendQueuedEmail(queueId: string): Promise<{
       .eq('id', queueId);
 
     await logEmailEvent(queueId, 'sending', {});
+
+    // Check if Resend is configured
+    if (!resend) {
+      await supabase
+        .from('email_queue')
+        .update({
+          status: 'failed',
+          error_message: 'Resend API key not configured',
+        })
+        .eq('id', queueId);
+
+      await logEmailEvent(queueId, 'failed', { error: 'Resend API key not configured' });
+      return { success: false, error: 'Resend API key not configured' };
+    }
 
     // Send via Resend
     const { data, error } = await resend.emails.send({
@@ -355,9 +379,9 @@ export async function sendRegistrationApprovedEmail(
   try {
     console.log(`📧 Attempting to send approval email to: ${email}`);
     
-    // Send directly via Resend without database dependency
-    const { data, error } = await resend.emails.send({
-      from: `${process.env.EMAIL_FROM_NAME || 'LNC Admin'} <${process.env.EMAIL_FROM || 'onboarding@resend.dev'}>`,
+    // Send via Gmail SMTP
+    await gmailTransporter.sendMail({
+      from: `${process.env.EMAIL_FROM_NAME || 'LNC Admin'} <${process.env.GMAIL_USER}>`,
       to: email,
       subject: '✅ Your LNC Admin Account Has Been Approved!',
       html: `
@@ -449,12 +473,7 @@ export async function sendRegistrationApprovedEmail(
       `,
     });
 
-    if (error) {
-      console.error('❌ Failed to send approval email:', error);
-      return { success: false, error: error.message };
-    }
-
-    console.log(`✅ Approval email sent successfully! Email ID: ${data?.id}`);
+    console.log(`✅ Approval email sent successfully via Gmail!`);
     return { success: true };
   } catch (error: any) {
     console.error('❌ Error sending approval email:', error);
@@ -470,9 +489,9 @@ export async function sendRegistrationRejectedEmail(
   try {
     console.log(`📧 Attempting to send rejection email to: ${email}`);
     
-    // Send directly via Resend without database dependency
-    const { data, error } = await resend.emails.send({
-      from: `${process.env.EMAIL_FROM_NAME || 'LNC Admin'} <${process.env.EMAIL_FROM || 'onboarding@resend.dev'}>`,
+    // Send via Gmail SMTP
+    await gmailTransporter.sendMail({
+      from: `${process.env.EMAIL_FROM_NAME || 'LNC Admin'} <${process.env.GMAIL_USER}>`,
       to: email,
       subject: 'LNC Admin Registration Update',
       html: `
@@ -539,12 +558,7 @@ export async function sendRegistrationRejectedEmail(
       `,
     });
 
-    if (error) {
-      console.error('❌ Failed to send rejection email:', error);
-      return { success: false, error: error.message };
-    }
-
-    console.log(`✅ Rejection email sent successfully! Email ID: ${data?.id}`);
+    console.log(`✅ Rejection email sent successfully via Gmail!`);
     return { success: true };
   } catch (error: any) {
     console.error('❌ Error sending rejection email:', error);
@@ -587,9 +601,104 @@ export async function sendRoleChangedEmail(
   name: string,
   roles: string[]
 ): Promise<{ success: boolean; error?: string }> {
-  return await sendTemplateEmail('role_changed', email, {
-    name,
-    roles,
-    loginUrl: `${process.env.NEXT_PUBLIC_SITE_URL}/login`,
-  }, { toName: name });
+  try {
+    console.log(`📧 Attempting to send role change email to: ${email}`);
+    
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <style>
+            body {
+              font-family: Arial, sans-serif;
+              line-height: 1.6;
+              color: #333;
+            }
+            .container {
+              max-width: 600px;
+              margin: 0 auto;
+              padding: 20px;
+            }
+            .header {
+              background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+              color: white;
+              padding: 30px;
+              border-radius: 10px 10px 0 0;
+              text-align: center;
+            }
+            .content {
+              background: #f9f9f9;
+              padding: 30px;
+              border-radius: 0 0 10px 10px;
+            }
+            .role-badge {
+              display: inline-block;
+              background: #667eea;
+              color: white;
+              padding: 8px 16px;
+              border-radius: 20px;
+              font-size: 14px;
+              margin: 5px;
+            }
+            .info-box {
+              background: white;
+              padding: 15px;
+              border-left: 4px solid #667eea;
+              margin: 15px 0;
+            }
+            .button {
+              display: inline-block;
+              background: #667eea;
+              color: white;
+              padding: 12px 30px;
+              text-decoration: none;
+              border-radius: 5px;
+              margin: 20px 0;
+            }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>🔄 Your Roles Have Been Updated</h1>
+            </div>
+            <div class="content">
+              <p>Hello ${name},</p>
+              
+              <p>Your roles in the LNC Admin Panel have been updated.</p>
+              
+              <div class="info-box">
+                <strong>Your Current Roles:</strong><br>
+                ${roles.map(role => `<span class="role-badge">${role}</span>`).join(' ')}
+              </div>
+              
+              <p>These changes are effective immediately. Your access permissions have been updated accordingly.</p>
+              
+              <div style="text-align: center;">
+                <a href="${process.env.NEXT_PUBLIC_SITE_URL}/login" class="button">Go to Dashboard</a>
+              </div>
+              
+              <p>If you have any questions about your new roles, please contact your administrator.</p>
+              
+              <p>Best regards,<br>LNC Admin Team</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+    
+    // Send via Gmail SMTP
+    await gmailTransporter.sendMail({
+      from: `${process.env.EMAIL_FROM_NAME || 'LNC Admin'} <${process.env.GMAIL_USER}>`,
+      to: email,
+      subject: '🔄 Your LNC Admin Roles Have Been Updated',
+      html,
+    });
+
+    console.log(`✅ Role change email sent successfully via Gmail!`);
+    return { success: true };
+  } catch (error: any) {
+    console.error('❌ Error sending role change email:', error);
+    return { success: false, error: error.message };
+  }
 }
