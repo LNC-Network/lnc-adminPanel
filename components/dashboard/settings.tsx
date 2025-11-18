@@ -83,9 +83,14 @@ interface PendingUser {
 export default function Settings() {
   const [users, setUsers] = useState<AuthUser[]>([]);
   const [pendingUsers, setPendingUsers] = useState<PendingUser[]>([]);
+  // User creation form states
+  const [displayName, setDisplayName] = useState("");
   const [email, setEmail] = useState("");
+  const [personalEmail, setPersonalEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("dev member");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [team, setTeam] = useState("");
+  const [newUserRoles, setNewUserRoles] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [currentUserId, setCurrentUserId] = useState("");
   const [currentUserRoles, setCurrentUserRoles] = useState<string[]>([]);
@@ -103,9 +108,13 @@ export default function Settings() {
   const canCreateUser = isSuperAdmin(currentUserRoles);
 
   const clear = () => {
+    setDisplayName("");
     setEmail("");
+    setPersonalEmail("");
     setPassword("");
-    setRole("user");
+    setConfirmPassword("");
+    setTeam("");
+    setNewUserRoles([]);
   };
 
   useEffect(() => {
@@ -286,8 +295,14 @@ export default function Settings() {
   };
 
   const addUser = async () => {
-    if (!email || !password) {
-      toast.warning("Email and password are required");
+    // Validation
+    if (!displayName || !email || !password || !confirmPassword) {
+      toast.warning("Display name, email, and password are required");
+      return;
+    }
+
+    if (!email.endsWith("@lnc.com")) {
+      toast.warning("Email must be from @lnc.com domain");
       return;
     }
 
@@ -296,20 +311,37 @@ export default function Settings() {
       return;
     }
 
+    if (password !== confirmPassword) {
+      toast.warning("Passwords do not match");
+      return;
+    }
+
+    if (newUserRoles.length === 0) {
+      toast.warning("Please select at least one role");
+      return;
+    }
+
     setLoading(true);
     try {
-      const response = await fetch("/api/users/add", {
+      const response = await fetch("/api/users/create-direct", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ email, password, role }),
+        body: JSON.stringify({ 
+          display_name: displayName,
+          email, 
+          personal_email: personalEmail || null,
+          password,
+          team: team || null,
+          roles: newUserRoles
+        }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
-        toast.success(`User created with ${role} role!`);
+        toast.success(`User ${displayName} created successfully!`);
         clear();
         fetchUsers();
       } else {
@@ -414,26 +446,88 @@ export default function Settings() {
                   <CardTitle>Create New User</CardTitle>
                   <CardDescription>
                     {canCreateUser
-                      ? "Add a new user to the admin panel with specific role"
+                      ? "Add a new user directly to the system (no approval needed)"
                       : "Only Super Admin can create new users"}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="grid gap-4">
+                    {/* Display Name */}
                     <div className="grid gap-2">
-                      <Label htmlFor="email">Email</Label>
+                      <Label htmlFor="displayName">
+                        <User className="inline h-4 w-4 mr-1" />
+                        Full Name *
+                      </Label>
                       <Input
-                        id="email"
-                        type="email"
-                        placeholder="user@example.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
+                        id="displayName"
+                        type="text"
+                        placeholder="John Doe"
+                        value={displayName}
+                        onChange={(e) => setDisplayName(e.target.value)}
                         disabled={loading || !canCreateUser}
                       />
                     </div>
 
+                    {/* Email */}
                     <div className="grid gap-2">
-                      <Label htmlFor="password">Password</Label>
+                      <Label htmlFor="email">Login Email (@lnc.com) *</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="user@lnc.com"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        disabled={loading || !canCreateUser}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Must use @lnc.com email address
+                      </p>
+                    </div>
+
+                    {/* Personal Email */}
+                    <div className="grid gap-2">
+                      <Label htmlFor="personalEmail">Personal Email (for notifications)</Label>
+                      <Input
+                        id="personalEmail"
+                        type="email"
+                        placeholder="user@gmail.com"
+                        value={personalEmail}
+                        onChange={(e) => setPersonalEmail(e.target.value)}
+                        disabled={loading || !canCreateUser}
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Notifications will be sent to this email
+                      </p>
+                    </div>
+
+                    {/* Team */}
+                    <div className="grid gap-2">
+                      <Label htmlFor="team">Team/Department</Label>
+                      <Select
+                        value={team}
+                        onValueChange={setTeam}
+                        disabled={loading || !canCreateUser}
+                      >
+                        <SelectTrigger id="team">
+                          <SelectValue placeholder="Select team" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="Development">Development</SelectItem>
+                          <SelectItem value="Design">Design</SelectItem>
+                          <SelectItem value="Marketing">Marketing</SelectItem>
+                          <SelectItem value="Sales">Sales</SelectItem>
+                          <SelectItem value="Support">Support</SelectItem>
+                          <SelectItem value="Operations">Operations</SelectItem>
+                          <SelectItem value="HR">Human Resources</SelectItem>
+                          <SelectItem value="Finance">Finance</SelectItem>
+                          <SelectItem value="Other">Other</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    {/* Password */}
+                    <div className="grid gap-2">
+                      <Label htmlFor="password">Password *</Label>
                       <Input
                         id="password"
                         type="password"
@@ -444,79 +538,64 @@ export default function Settings() {
                       />
                     </div>
 
+                    {/* Confirm Password */}
                     <div className="grid gap-2">
-                      <Label htmlFor="role">Role</Label>
-                      <Select
-                        value={role}
-                        onValueChange={setRole}
+                      <Label htmlFor="confirmPassword">Confirm Password *</Label>
+                      <Input
+                        id="confirmPassword"
+                        type="password"
+                        placeholder="Re-enter password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
                         disabled={loading || !canCreateUser}
-                      >
-                        <SelectTrigger id="role">
-                          <SelectValue placeholder="Select role" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="super admin">
-                            <div className="flex items-center gap-2">
-                              <Shield className="h-4 w-4 text-red-500" />
-                              Super Admin (Full control)
+                      />
+                    </div>
+
+                    {/* Roles */}
+                    <div className="grid gap-2">
+                      <Label>Roles *</Label>
+                      <div className="space-y-2 border rounded-lg p-3 max-h-64 overflow-y-auto">
+                        {[
+                          { name: "Super Admin", icon: Shield, color: "text-red-500" },
+                          { name: "Admistater", icon: Shield, color: "text-blue-500" },
+                          { name: "Dev Team Admin", icon: Code, color: "text-green-500" },
+                          { name: "Social Media Team Admin", icon: MessageSquare, color: "text-purple-500" },
+                          { name: "PR & Outreach Team Admin", icon: Megaphone, color: "text-orange-500" },
+                          { name: "Design Team Admin", icon: Palette, color: "text-pink-500" },
+                          { name: "Dev Member", icon: Code, color: "" },
+                          { name: "Social Media Member", icon: MessageSquare, color: "" },
+                          { name: "PR & Outreach Member", icon: Megaphone, color: "" },
+                          { name: "Design Member", icon: Palette, color: "" },
+                        ].map((roleOption) => {
+                          const Icon = roleOption.icon;
+                          return (
+                            <div key={roleOption.name} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`role-${roleOption.name}`}
+                                checked={newUserRoles.includes(roleOption.name)}
+                                onCheckedChange={(checked) => {
+                                  if (checked) {
+                                    setNewUserRoles([...newUserRoles, roleOption.name]);
+                                  } else {
+                                    setNewUserRoles(newUserRoles.filter((r) => r !== roleOption.name));
+                                  }
+                                }}
+                                disabled={loading || !canCreateUser}
+                              />
+                              <label
+                                htmlFor={`role-${roleOption.name}`}
+                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center gap-2 cursor-pointer"
+                              >
+                                <Icon className={`h-4 w-4 ${roleOption.color}`} />
+                                {roleOption.name}
+                              </label>
                             </div>
-                          </SelectItem>
-                          <SelectItem value="admistater">
-                            <div className="flex items-center gap-2">
-                              <Shield className="h-4 w-4 text-blue-500" />
-                              Admistater (View-only oversight)
-                            </div>
-                          </SelectItem>
-                          <SelectItem value="dev team admin">
-                            <div className="flex items-center gap-2">
-                              <Code className="h-4 w-4 text-green-500" />
-                              Dev Team Admin
-                            </div>
-                          </SelectItem>
-                          <SelectItem value="social media team admin">
-                            <div className="flex items-center gap-2">
-                              <MessageSquare className="h-4 w-4 text-purple-500" />
-                              Social Media Team Admin
-                            </div>
-                          </SelectItem>
-                          <SelectItem value="pr & outreach team admin">
-                            <div className="flex items-center gap-2">
-                              <Megaphone className="h-4 w-4 text-orange-500" />
-                              PR & Outreach Team Admin
-                            </div>
-                          </SelectItem>
-                          <SelectItem value="design team admin">
-                            <div className="flex items-center gap-2">
-                              <Palette className="h-4 w-4 text-pink-500" />
-                              Design Team Admin
-                            </div>
-                          </SelectItem>
-                          <SelectItem value="dev member">
-                            <div className="flex items-center gap-2">
-                              <Code className="h-4 w-4" />
-                              Dev Member
-                            </div>
-                          </SelectItem>
-                          <SelectItem value="social media member">
-                            <div className="flex items-center gap-2">
-                              <MessageSquare className="h-4 w-4" />
-                              Social Media Member
-                            </div>
-                          </SelectItem>
-                          <SelectItem value="pr & outreach member">
-                            <div className="flex items-center gap-2">
-                              <Megaphone className="h-4 w-4" />
-                              PR & Outreach Member
-                            </div>
-                          </SelectItem>
-                          <SelectItem value="design member">
-                            <div className="flex items-center gap-2">
-                              <Palette className="h-4 w-4" />
-                              Design Member
-                            </div>
-                          </SelectItem>
-                        </SelectContent>
-                      </Select>
+                          );
+                        })}
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Select one or more roles for this user
+                      </p>
                     </div>
 
                     <Button
