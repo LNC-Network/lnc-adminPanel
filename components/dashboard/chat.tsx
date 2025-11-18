@@ -272,7 +272,7 @@ export default function ChatPage() {
             const data = await res.json();
             if (res.ok) {
                 setTotalUnseenCount(data.total_unseen || 0);
-                
+
                 // Update groups with unseen counts
                 const unseenByGroup = data.groups?.reduce((acc: any, g: any) => {
                     acc[g.group_id] = g.unseen_count;
@@ -286,8 +286,8 @@ export default function ChatPage() {
 
                 // Emit unseen count for dashboard
                 if (typeof window !== 'undefined') {
-                    window.dispatchEvent(new CustomEvent('chatUnseenCount', { 
-                        detail: { count: data.total_unseen || 0 } 
+                    window.dispatchEvent(new CustomEvent('chatUnseenCount', {
+                        detail: { count: data.total_unseen || 0 }
                     }));
                 }
             }
