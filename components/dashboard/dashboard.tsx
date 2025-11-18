@@ -16,7 +16,9 @@ import {
   UserCircle,
   KeyRound,
   MessageSquare,
-  ListTodo
+  ListTodo,
+  CheckCircle,
+  Users
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import Content from "./content";
@@ -30,6 +32,7 @@ import {
   canViewAll,
 } from "@/lib/permissions";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardContent,
@@ -88,6 +91,7 @@ export default function DashboardClient() {
   const [joinRequests, setJoinRequests] = useState<any[]>([]);
   const [notificationCount, setNotificationCount] = useState(0);
   const [chatUnseenCount, setChatUnseenCount] = useState(0);
+  const [isAdmin, setIsAdmin] = useState(false);
   const router = useRouter();
 
   const handleLogout = () => {
@@ -169,8 +173,9 @@ export default function DashboardClient() {
           setDisplayName(user.display_name || "");
 
           // Fetch notifications if admin
-          const isAdmin = user.roles?.some((role: string) => role.toLowerCase().includes('admin'));
-          if (isAdmin) {
+          const adminStatus = user.roles?.some((role: string) => role.toLowerCase().includes('admin'));
+          setIsAdmin(adminStatus);
+          if (adminStatus) {
             fetchNotifications();
             // Poll for notifications every 30 seconds
             const interval = setInterval(fetchNotifications, 30000);
@@ -535,199 +540,156 @@ export default function DashboardClient() {
           <main className="flex-1 overflow-auto p-4 md:p-6 bg-background">
             {currentTab === "overview" && (
               <div className="space-y-6">
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                  <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">
-                        Total Users
-                      </CardTitle>
-                      <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth="2"
-                        className="h-4 w-4 text-muted-foreground"
-                      >
-                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-                        <circle cx="9" cy="7" r="4" />
-                        <path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75" />
-                      </svg>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-2xl font-bold">2,350</div>
-                      <p className="text-xs text-muted-foreground">
-                        +20.1% from last month
-                      </p>
-                    </CardContent>
-                  </Card>
+                {/* Welcome Section */}
+                <div className="flex flex-col gap-2">
+                  <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
+                    Welcome back, {userEmail.split('@')[0] || 'Admin'}! 👋
+                  </h1>
+                  <p className="text-sm md:text-base text-muted-foreground">
+                    Here's what's happening with your admin panel today.
+                  </p>
+                </div>
 
-                  <Card>
+                {/* Quick Actions */}
+                <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+                  <Card className="cursor-pointer hover:shadow-lg transition-shadow active:scale-95" onClick={() => setCurrentTab('content')}>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                       <CardTitle className="text-sm font-medium">
-                        Total Content
+                        Content
                       </CardTitle>
                       <FileText className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold">845</div>
+                      <div className="text-2xl font-bold">📝</div>
                       <p className="text-xs text-muted-foreground">
-                        +15.3% from last month
+                        Manage your content
                       </p>
                     </CardContent>
                   </Card>
 
-                  <Card>
+                  <Card className="cursor-pointer hover:shadow-lg transition-shadow active:scale-95" onClick={() => setCurrentTab('chat')}>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                       <CardTitle className="text-sm font-medium">
-                        Active Forms
+                        Messages
+                      </CardTitle>
+                      <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{chatUnseenCount}</div>
+                      <p className="text-xs text-muted-foreground">
+                        Unseen messages
+                      </p>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="cursor-pointer hover:shadow-lg transition-shadow active:scale-95" onClick={() => setCurrentTab('forms')}>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">
+                        Forms
                       </CardTitle>
                       <FormInput className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold">23</div>
+                      <div className="text-2xl font-bold">📋</div>
                       <p className="text-xs text-muted-foreground">
-                        +5 new this month
+                        Create and manage forms
                       </p>
                     </CardContent>
                   </Card>
 
-                  <Card>
+                  <Card className="border-l-4 border-l-green-500">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                       <CardTitle className="text-sm font-medium">
-                        Database Size
+                        Status
                       </CardTitle>
-                      <DatabaseIcon className="h-4 w-4 text-muted-foreground" />
+                      <CheckCircle className="h-4 w-4 text-green-500" />
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold">12.4 GB</div>
+                      <div className="text-2xl font-bold text-green-500">Online</div>
                       <p className="text-xs text-muted-foreground">
-                        +2.5 GB from last month
+                        System operational
                       </p>
                     </CardContent>
                   </Card>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-                  <Card className="col-span-4">
+                {/* Main Content Grid */}
+                <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+                  {/* Quick Access */}
+                  <Card>
                     <CardHeader>
-                      <CardTitle>Recent Activity</CardTitle>
+                      <CardTitle>Quick Access</CardTitle>
                       <CardDescription>
-                        Your recent actions in the admin panel
+                        Jump to commonly used sections
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <div className="space-y-4">
-                        {[
-                          {
-                            action: "Added new user",
-                            time: "2 hours ago",
-                            type: "user",
-                          },
-                          {
-                            action: "Updated content item",
-                            time: "4 hours ago",
-                            type: "content",
-                          },
-                          {
-                            action: "Created new form",
-                            time: "1 day ago",
-                            type: "form",
-                          },
-                          {
-                            action: "Database backup completed",
-                            time: "2 days ago",
-                            type: "database",
-                          },
-                        ].map((activity, i) => (
-                          <div key={i} className="flex items-center gap-4">
-                            <div className="h-9 w-9 rounded-full bg-muted flex items-center justify-center">
-                              {activity.type === "user" && (
-                                <svg
-                                  className="h-4 w-4"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  viewBox="0 0 24 24"
-                                >
-                                  <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                                  />
-                                </svg>
-                              )}
-                              {activity.type === "content" && (
-                                <FileText className="h-4 w-4" />
-                              )}
-                              {activity.type === "form" && (
-                                <FormInput className="h-4 w-4" />
-                              )}
-                              {activity.type === "database" && (
-                                <DatabaseIcon className="h-4 w-4" />
-                              )}
-                            </div>
-                            <div className="flex-1 space-y-1">
-                              <p className="text-sm font-medium">
-                                {activity.action}
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                {activity.time}
-                              </p>
-                            </div>
-                          </div>
-                        ))}
+                      <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                        <Button variant="outline" className="h-20 sm:h-24 flex-col gap-1 sm:gap-2 active:scale-95 transition-transform" onClick={() => setCurrentTab('settings')}>
+                          <SettingsIcon className="h-5 w-5" />
+                          <span className="text-xs sm:text-sm">Settings</span>
+                        </Button>
+                        <Button variant="outline" className="h-20 sm:h-24 flex-col gap-1 sm:gap-2 active:scale-95 transition-transform" onClick={() => setCurrentTab('chat')}>
+                          <MessageSquare className="h-5 w-5" />
+                          <span className="text-xs sm:text-sm">Chat</span>
+                        </Button>
+                        <Button variant="outline" className="h-20 sm:h-24 flex-col gap-1 sm:gap-2 active:scale-95 transition-transform" onClick={() => setCurrentTab('tickets')}>
+                          <ListTodo className="h-5 w-5" />
+                          <span className="text-xs sm:text-sm">Tickets</span>
+                        </Button>
+                        <Button variant="outline" className="h-20 sm:h-24 flex-col gap-1 sm:gap-2 active:scale-95 transition-transform" onClick={() => setCurrentTab('database')}>
+                          <DatabaseIcon className="h-5 w-5" />
+                          <span className="text-xs sm:text-sm">Database</span>
+                        </Button>
                       </div>
                     </CardContent>
                   </Card>
 
-                  <Card className="col-span-3">
+                  {/* Account Info */}
+                  <Card>
                     <CardHeader>
-                      <CardTitle>Quick Actions</CardTitle>
+                      <CardTitle>Your Profile</CardTitle>
                       <CardDescription>
-                        Common tasks and shortcuts
+                        Your account information
                       </CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-2">
-                      <Button
-                        className="w-full justify-start"
-                        variant="outline"
-                        onClick={() => setCurrentTab("content")}
-                      >
-                        <FileText className="mr-2 h-4 w-4" />
-                        Add New Content
+                    <CardContent className="space-y-4">
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-10 w-10 sm:h-12 sm:w-12 flex-shrink-0">
+                          <AvatarFallback className="text-base sm:text-lg">
+                            {userEmail[0]?.toUpperCase() || 'A'}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-medium truncate">{displayName || userEmail.split('@')[0]}</p>
+                          <p className="text-xs sm:text-sm text-muted-foreground truncate">{userEmail}</p>
+                        </div>
+                      </div>
+                      <Button variant="outline" className="w-full active:scale-95 transition-transform" onClick={() => setProfileDialogOpen(true)}>
+                        <UserCircle className="h-4 w-4 mr-2" />
+                        Edit Profile
                       </Button>
-                      <Button
-                        className="w-full justify-start"
-                        variant="outline"
-                        onClick={() => setCurrentTab("forms")}
-                      >
-                        <FormInput className="mr-2 h-4 w-4" />
-                        Create Form
-                      </Button>
-                      <Button
-                        className="w-full justify-start"
-                        variant="outline"
-                        onClick={() => setCurrentTab("database")}
-                      >
-                        <DatabaseIcon className="mr-2 h-4 w-4" />
-                        View Database
-                      </Button>
-                      {isSuperAdminUser && (
-                        <Button
-                          className="w-full justify-start"
-                          variant="outline"
-                          onClick={() => setCurrentTab("settings")}
-                        >
-                          <SettingsIcon className="mr-2 h-4 w-4" />
-                          Manage Users
-                        </Button>
-                      )}
                     </CardContent>
                   </Card>
                 </div>
+
+                {/* Footer Info */}
+                <Card>
+                  <CardContent className="pt-4 sm:pt-6">
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
+                      <div className="text-center sm:text-left">
+                        <p className="text-xs sm:text-sm font-medium">LNC Admin Panel</p>
+                        <p className="text-[10px] sm:text-xs text-muted-foreground">Version 2.0.0 • {new Date().getFullYear()}</p>
+                      </div>
+                      <div className="flex gap-2">
+                        <Badge variant="outline" className="gap-1 text-xs">
+                          <CheckCircle className="h-3 w-3 text-green-500" />
+                          Online
+                        </Badge>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
             )}
 

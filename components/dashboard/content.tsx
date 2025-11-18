@@ -294,19 +294,19 @@ export default function Content() {
       <Toaster position="top-center" richColors closeButton />
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between gap-4">
+        <div className="flex flex-col sm:flex-row justify-between gap-3 sm:gap-4">
           <div>
-            <h2 className="text-2xl font-bold tracking-tight">Content Management</h2>
-            <p className="text-muted-foreground">Manage design assets and social media content</p>
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Content Management</h2>
+            <p className="text-sm sm:text-base text-muted-foreground">Manage design assets and social media content</p>
           </div>
           <Dialog open={uploadDialogOpen} onOpenChange={setUploadDialogOpen}>
             <DialogTrigger asChild>
-              <Button className="gap-2">
+              <Button className="gap-2 w-full sm:w-auto">
                 <Plus className="h-4 w-4" />
                 Upload Content
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto mx-4">
               <DialogHeader>
                 <DialogTitle>Upload New Content</DialogTitle>
                 <DialogDescription>Add design assets or social media content</DialogDescription>
@@ -481,16 +481,18 @@ export default function Content() {
               </div>
               <div className="flex gap-2">
                 <Button
-                  variant={viewMode === "grid" ? "default" : "outline"}
-                  size="icon"
+                  variant={viewMode === "grid" ? "secondary" : "ghost"}
+                  size="sm"
                   onClick={() => setViewMode("grid")}
+                  className="h-9 w-9 p-0"
                 >
                   <Grid className="h-4 w-4" />
                 </Button>
                 <Button
-                  variant={viewMode === "list" ? "default" : "outline"}
-                  size="icon"
+                  variant={viewMode === "list" ? "secondary" : "ghost"}
+                  size="sm"
                   onClick={() => setViewMode("list")}
+                  className="h-9 w-9 p-0"
                 >
                   <List className="h-4 w-4" />
                 </Button>

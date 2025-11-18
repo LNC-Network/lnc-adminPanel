@@ -372,21 +372,21 @@ export default function Tickets() {
     <>
       <Toaster position="top-center" richColors closeButton />
 
-      <div className="space-y-8 px-4 sm:px-6 lg:px-8">
+      <div className="space-y-4 sm:space-y-6 lg:space-y-8 px-2 sm:px-4 lg:px-8">
         {/* HEADER */}
-        <div className="flex flex-col sm:flex-row justify-between items-start gap-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start gap-3 sm:gap-4">
           <div>
-            <h2 className="text-2xl font-bold tracking-tight">Ticket System</h2>
-            <p className="text-muted-foreground">Manage and track issues</p>
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Ticket System</h2>
+            <p className="text-sm sm:text-base text-muted-foreground">Manage and track issues</p>
           </div>
-          <Button onClick={() => setCreateOpen(true)} className="rounded-lg">
+          <Button onClick={() => setCreateOpen(true)} className="rounded-lg w-full sm:w-auto">
             <Plus className="mr-2 h-4 w-4" />
             Create Ticket
           </Button>
         </div>
 
         {/* STATS */}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
           <Card className="rounded-xl shadow-sm hover:shadow-md transition-shadow">
             <CardHeader>
               <CardTitle className="text-sm font-medium">Total</CardTitle>

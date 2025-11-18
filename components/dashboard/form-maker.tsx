@@ -19,14 +19,14 @@ import {
 interface FormField {
   id: string;
   type:
-    | "text"
-    | "email"
-    | "password"
-    | "number"
-    | "textarea"
-    | "date"
-    | "checkbox"
-    | "select";
+  | "text"
+  | "email"
+  | "password"
+  | "number"
+  | "textarea"
+  | "date"
+  | "checkbox"
+  | "select";
   label: string;
   placeholder?: string;
   required: boolean;
@@ -160,20 +160,20 @@ export default function FormMaker() {
     <div className="min-h-screen bg-background">
       {/* Header */}
       <div className="bg-card border-b border-border">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3 sm:py-4">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
             <div>
-              <h1 className="text-2xl font-semibold text-foreground">
+              <h1 className="text-xl sm:text-2xl font-semibold text-foreground">
                 Form Builder
               </h1>
-              <p className="text-sm text-muted-foreground mt-0.5">
+              <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">
                 Create and manage forms
               </p>
             </div>
-            <div className="flex gap-3">
+            <div className="flex gap-2 sm:gap-3 w-full sm:w-auto">
               <button
                 onClick={() => setPreviewMode(!previewMode)}
-                className="px-4 py-2 text-sm font-medium text-foreground bg-card border border-border rounded-lg hover:bg-accent transition flex items-center gap-2"
+                className="flex-1 sm:flex-none px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-foreground bg-card border border-border rounded-lg hover:bg-accent transition flex items-center justify-center gap-2"
               >
                 {previewMode ? (
                   <Edit2 className="w-4 h-4" />
@@ -184,7 +184,7 @@ export default function FormMaker() {
               </button>
               <button
                 onClick={saveForm}
-                className="px-4 py-2 text-sm font-medium text-primary-foreground bg-primary rounded-lg hover:opacity-90 transition flex items-center gap-2"
+                className="flex-1 sm:flex-none px-3 sm:px-4 py-2 text-xs sm:text-sm font-medium text-primary-foreground bg-primary rounded-lg hover:opacity-90 transition flex items-center justify-center gap-2"
               >
                 <Save className="w-4 h-4" />
                 Save
@@ -194,10 +194,10 @@ export default function FormMaker() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 py-6">
-        <div className="grid grid-cols-12 gap-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 sm:py-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6">
           {/* Sidebar */}
-          <div className="col-span-3">
+          <div className="lg:col-span-3">
             <div className="bg-card rounded-lg border border-border">
               <div className="p-4 border-b border-border">
                 <div className="flex items-center justify-between mb-3">
@@ -221,11 +221,10 @@ export default function FormMaker() {
                       setFormName(form.name);
                       setFormDescription(form.description);
                     }}
-                    className={`w-full text-left px-3 py-2 rounded-md text-sm transition ${
-                      currentForm?.id === form.id
+                    className={`w-full text-left px-3 py-2 rounded-md text-sm transition ${currentForm?.id === form.id
                         ? "bg-accent text-accent-foreground"
                         : "text-card-foreground hover:bg-muted"
-                    }`}
+                      }`}
                   >
                     <div className="font-medium">{form.name}</div>
                     <div className="text-xs text-muted-foreground mt-0.5">

@@ -432,11 +432,11 @@ export default function Database() {
     <>
       <Toaster position="top-center" richColors closeButton />
 
-      <div className="space-y-6">
-        <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="space-y-4 sm:space-y-6">
+        <header className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
           <div>
-            <h1 className="text-2xl font-semibold">Database Management</h1>
-            <p className="text-sm text-muted-foreground">
+            <h1 className="text-xl sm:text-2xl font-semibold">Database Management</h1>
+            <p className="text-xs sm:text-sm text-muted-foreground">
               Browse, search and export tables — improved layout and
               performance.
             </p>
@@ -462,21 +462,23 @@ export default function Database() {
             <div className="flex items-center gap-2">
               <Button
                 variant="ghost"
+                size="sm"
                 onClick={() => {
                   fetchAllData();
                   toast.success("Refreshed");
                 }}
                 disabled={loading}
+                className="h-9 px-2 sm:px-4"
               >
                 <RefreshCw
-                  className={`mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`}
+                  className={`sm:mr-2 h-4 w-4 ${loading ? "animate-spin" : ""}`}
                 />
-                Refresh
+                <span className="hidden sm:inline">Refresh</span>
               </Button>
 
-              <Button onClick={() => downloadCSV(selectedTable)}>
-                <Download className="mr-2 h-4 w-4" />
-                Export
+              <Button onClick={() => downloadCSV(selectedTable)} size="sm" className="h-9 px-2 sm:px-4">
+                <Download className="sm:mr-2 h-4 w-4" />
+                <span className="hidden sm:inline">Export</span>
               </Button>
             </div>
           </div>

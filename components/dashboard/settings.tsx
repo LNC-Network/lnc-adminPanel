@@ -414,32 +414,32 @@ export default function Settings() {
   return (
     <>
       <Toaster position="top-center" richColors closeButton />
-      <div className="space-y-6">
+      <div className="space-y-4 sm:space-y-6">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight">Settings</h2>
-          <p className="text-muted-foreground">
+          <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Settings</h2>
+          <p className="text-sm sm:text-base text-muted-foreground">
             Manage users, roles, and system configuration
           </p>
         </div>
 
         <Tabs defaultValue="users" className="space-y-4">
-          <TabsList>
-            <TabsTrigger value="users">User Management</TabsTrigger>
-            <TabsTrigger value="pending">
-              Pending Registrations
+          <TabsList className="w-full sm:w-auto overflow-x-auto flex justify-start">
+            <TabsTrigger value="users" className="text-xs sm:text-sm">Users</TabsTrigger>
+            <TabsTrigger value="pending" className="text-xs sm:text-sm">
+              Pending
               {pendingUsers.filter((u) => u.status === "pending").length >
                 0 && (
-                  <Badge variant="destructive" className="ml-2">
+                  <Badge variant="destructive" className="ml-1 sm:ml-2 text-[10px] sm:text-xs">
                     {pendingUsers.filter((u) => u.status === "pending").length}
                   </Badge>
                 )}
             </TabsTrigger>
-            <TabsTrigger value="appearance">Appearance</TabsTrigger>
+            <TabsTrigger value="appearance" className="text-xs sm:text-sm">Appearance</TabsTrigger>
           </TabsList>
 
           {/* User Management Tab */}
           <TabsContent value="users" className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-[350px_1fr] lg:grid-cols-[400px_1fr]">
+            <div className="grid gap-4 grid-cols-1 lg:grid-cols-[400px_1fr]">
               {/* Create User Form - Left Side */}
               <Card className="h-fit">
                 <CardHeader>
