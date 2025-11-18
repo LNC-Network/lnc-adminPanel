@@ -47,6 +47,7 @@ export function PWARegister() {
             }
         });
 
+        
         // Request notification permission
         if ('Notification' in window && Notification.permission === 'default') {
             // Don't request immediately, wait for user interaction
