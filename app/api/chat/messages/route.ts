@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { sendNewMessageNotification } from "@/lib/chat-email-service";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -120,52 +119,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Send email notifications to group members (except sender)
-    try {
-      const { data: groupData } = await supabase
-        .from("chat_groups")
-        .select("name")
-        .eq("id", group_id)
-        .single();
-
-      const { data: members } = await supabase
-        .from("chat_members")
-        .select("user_id")
-        .eq("group_id", group_id)
-        .neq("user_id", user_id);
-
-      const { data: sender } = await supabase
-        .from("users")
-        .select("email")
-        .eq("id", user_id)
-        .single();
-
-      if (members && members.length > 0 && groupData && sender) {
-        const memberIds = members.map(m => m.user_id);
-        const { data: memberUsers } = await supabase
-          .from("users")
-          .select("email, personal_email, display_name")
-          .in("id", memberIds);
-
-        // Send notifications asynchronously
-        memberUsers?.forEach(async (member) => {
-          try {
-            await sendNewMessageNotification({
-              recipientEmail: member.personal_email || member.email,
-              recipientName: member.display_name || member.email,
-              groupName: groupData.name,
-              senderEmail: sender.email,
-              message: message,
-            });
-          } catch (error) {
-            console.error(`Failed to send notification to ${member.email}:`, error);
-          }
-        });
-      }
-    } catch (emailError) {
-      console.error("Error sending email notifications:", emailError);
-      // Don't fail the message send if email fails
-    }
+    // Email notifications are handled by the cron job
+    // Only messages unseen for 12+ hours will trigger emails
+    // See: /api/chat/notify-unseen (runs hourly)
 
     return NextResponse.json({
       success: true,
