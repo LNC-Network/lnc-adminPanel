@@ -1,18 +1,22 @@
 # Settings Form Update - Setup Guide
 
 ## Overview
+
 The Settings tab user creation form has been updated to match the registration form with comprehensive fields. Admin-created users are now stored directly in the `users` table (no approval needed).
 
 ## Changes Made
 
 ### 1. New API Endpoint
+
 - **Path**: `/api/users/create-direct`
 - **Method**: POST
 - **Purpose**: Create users directly in the `users` table bypassing `pending_users`
 - **Fields**: display_name, email, personal_email, password, team, roles (array)
 
 ### 2. Updated Settings Form
+
 **New Fields Added:**
+
 - ✅ Full Name (display_name)
 - ✅ Login Email (@lnc.com validation)
 - ✅ Personal Email (for notifications)
@@ -22,6 +26,7 @@ The Settings tab user creation form has been updated to match the registration f
 - ✅ Roles (multi-select checkboxes)
 
 **Form Features:**
+
 - Comprehensive validation
 - Password confirmation check
 - @lnc.com email domain requirement
@@ -50,18 +55,20 @@ COMMENT ON COLUMN users.team IS 'Department or team the user belongs to (Develop
 ## Setup Instructions
 
 ### Step 1: Database Migration
+
 1. Open Supabase Dashboard
 2. Go to SQL Editor
 3. Copy contents of `schemas/database-add-users-columns.sql`
 4. Run the migration
 5. Verify columns were added:
    ```sql
-   SELECT column_name, data_type 
-   FROM information_schema.columns 
+   SELECT column_name, data_type
+   FROM information_schema.columns
    WHERE table_name = 'users';
    ```
 
 ### Step 2: Test the New Form
+
 1. Start the development server: `npm run dev`
 2. Login as Super Admin
 3. Go to Settings → User Management
@@ -81,11 +88,13 @@ COMMENT ON COLUMN users.team IS 'Department or team the user belongs to (Develop
    - User is active and can login
 
 ### Step 3: Run Test Script (Optional)
+
 ```bash
 node testing/test-direct-user-creation.js
 ```
 
 This will:
+
 - Create a test user via the API
 - Verify user exists in database
 - Check all fields are stored correctly
@@ -94,7 +103,8 @@ This will:
 
 ## Field Descriptions
 
-### Required Fields (*)
+### Required Fields (\*)
+
 - **Full Name**: User's display name (shown in UI)
 - **Login Email**: Must be @lnc.com format (used for login)
 - **Password**: Minimum 6 characters
@@ -102,10 +112,12 @@ This will:
 - **Roles**: At least one role must be selected
 
 ### Optional Fields
+
 - **Personal Email**: Real email for receiving notifications
 - **Team**: Department/team selection (Development, Design, Marketing, etc.)
 
 ## Available Roles
+
 - Super Admin (full control)
 - Admistater (view-only oversight)
 - Dev Team Admin
@@ -119,14 +131,14 @@ This will:
 
 ## Behavior Differences: Settings vs Registration
 
-| Feature | Settings Form | Registration Form |
-|---------|---------------|-------------------|
-| **Target Table** | `users` (direct) | `pending_users` (requires approval) |
-| **User Status** | Active immediately | Pending until approved |
-| **Who Can Create** | Super Admin only | Anyone (public) |
-| **Approval Needed** | ❌ No | ✅ Yes |
-| **Email Sent** | ❌ No welcome email | ✅ Pending approval notification |
-| **Role Assignment** | Admin selects multiple roles | Assigned during approval |
+| Feature             | Settings Form                | Registration Form                   |
+| ------------------- | ---------------------------- | ----------------------------------- |
+| **Target Table**    | `users` (direct)             | `pending_users` (requires approval) |
+| **User Status**     | Active immediately           | Pending until approved              |
+| **Who Can Create**  | Super Admin only             | Anyone (public)                     |
+| **Approval Needed** | ❌ No                        | ✅ Yes                              |
+| **Email Sent**      | ❌ No welcome email          | ✅ Pending approval notification    |
+| **Role Assignment** | Admin selects multiple roles | Assigned during approval            |
 
 ## Validation Rules
 
@@ -141,15 +153,19 @@ This will:
 ## Troubleshooting
 
 ### Error: "Could not find the 'team' column"
+
 **Solution**: Run the database migration (Step 1)
 
 ### Error: "Email must be from @lnc.com domain"
+
 **Solution**: Use format like `user@lnc.com` for login email
 
 ### Error: "Passwords do not match"
+
 **Solution**: Ensure both password fields have identical values
 
 ### Error: "Please select at least one role"
+
 **Solution**: Check at least one role checkbox before submitting
 
 ## Files Modified

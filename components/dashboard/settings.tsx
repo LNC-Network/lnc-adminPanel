@@ -328,9 +328,9 @@ export default function Settings() {
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           display_name: displayName,
-          email, 
+          email,
           personal_email: personalEmail || null,
           password,
           team: team || null,
