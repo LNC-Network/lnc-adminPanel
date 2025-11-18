@@ -87,6 +87,7 @@ export default function DashboardClient() {
   const [pendingUsers, setPendingUsers] = useState<any[]>([]);
   const [joinRequests, setJoinRequests] = useState<any[]>([]);
   const [notificationCount, setNotificationCount] = useState(0);
+  const [chatUnseenCount, setChatUnseenCount] = useState(0);
   const router = useRouter();
 
   const handleLogout = () => {
@@ -182,6 +183,24 @@ export default function DashboardClient() {
     }
   }, []);
 
+  // Listen for chat unseen count updates
+  useEffect(() => {
+    const handleChatUnseenCount = (event: any) => {
+      const newCount = event.detail.count || 0;
+      setChatUnseenCount(newCount);
+      // Immediately update notification count
+      fetchNotifications();
+    };
+
+    window.addEventListener('chatUnseenCount', handleChatUnseenCount);
+    return () => window.removeEventListener('chatUnseenCount', handleChatUnseenCount);
+  }, []);
+
+  // Re-calculate notification count when chatUnseenCount changes
+  useEffect(() => {
+    fetchNotifications();
+  }, [chatUnseenCount]);
+
   const fetchNotifications = async () => {
     try {
       let usersCount = 0;
@@ -205,8 +224,8 @@ export default function DashboardClient() {
         requestsCount = requests.length;
       }
 
-      // Update notification count
-      setNotificationCount(usersCount + requestsCount);
+      // Update notification count (including chat unseen messages)
+      setNotificationCount(usersCount + requestsCount + chatUnseenCount);
     } catch (error) {
       console.error('Failed to fetch notifications:', error);
     }
@@ -389,6 +408,30 @@ export default function DashboardClient() {
                               </div>
                             </DropdownMenuItem>
                           ))}
+                        </div>
+                      )}
+                      {chatUnseenCount > 0 && (
+                        <div>
+                          {(pendingUsers.length > 0 || joinRequests.length > 0) && <DropdownMenuSeparator />}
+                          <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
+                            Unread Chat Messages ({chatUnseenCount})
+                          </div>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              setCurrentTab('chat');
+                              setNotificationsOpen(false);
+                            }}
+                            className="cursor-pointer"
+                          >
+                            <div className="flex flex-col gap-1">
+                              <div className="text-sm font-medium">
+                                💬 You have {chatUnseenCount} unread message{chatUnseenCount > 1 ? 's' : ''}
+                              </div>
+                              <div className="text-xs text-muted-foreground">
+                                Click to view your messages
+                              </div>
+                            </div>
+                          </DropdownMenuItem>
                         </div>
                       )}
                     </div>

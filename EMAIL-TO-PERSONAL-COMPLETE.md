@@ -93,9 +93,9 @@ Personal Email: kundurohit53@gmail.com
 ### Example 2: User without Personal Email
 
 ```
-Login Email: admin@lnc.com
+Login Email: example@lnc.com
 Personal Email: (not set)
-→ All emails sent to: admin@lnc.com ✅
+→ All emails sent to: example@lnc.com ✅
 ```
 
 ### Example 3: User with Real Email (Legacy)

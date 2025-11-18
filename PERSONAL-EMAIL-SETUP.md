@@ -82,15 +82,15 @@ These functions need to be modified to use personal_email:
 
 ### User Table Example
 
-| Login Email   | Personal Email       | Display Name | Roles              |
-| ------------- | -------------------- | ------------ | ------------------ |
-| admin@lnc.com | real.admin@gmail.com | Admin User   | Super Admin        |
-| john@lnc.com  | john.doe@gmail.com   | John Doe     | Design Team Member |
-| sarah@lnc.com | -                    | Sarah Smith  | Social Media Admin |
+| Login Email     | Personal Email       | Display Name | Roles              |
+| --------------- | -------------------- | ------------ | ------------------ |
+| example@lnc.com | real.admin@gmail.com | Admin User   | Super Admin        |
+| john@lnc.com    | john.doe@gmail.com   | John Doe     | Design Team Member |
+| sarah@lnc.com   | -                    | Sarah Smith  | Social Media Admin |
 
 In this example:
 
-- `admin@lnc.com` receives emails at `real.admin@gmail.com`
+- `example@lnc.com` receives emails at `real.admin@gmail.com`
 - `john@lnc.com` receives emails at `john.doe@gmail.com`
 - `sarah@lnc.com` receives emails at `sarah@lnc.com` (no personal email set)
 

@@ -132,11 +132,11 @@ export default function Tickets() {
           setCurrentUserId(user.id || "");
           // Check for admin roles (case-insensitive)
           const userRoles = (user.roles || []).map((r: string) => r.toLowerCase());
-          const hasAdminAccess = userRoles.includes("super admin") || 
-                                  userRoles.includes("dev team admin") ||
-                                  userRoles.includes("admin");
+          const hasAdminAccess = userRoles.includes("super admin") ||
+            userRoles.includes("dev team admin") ||
+            userRoles.includes("admin");
           setIsAdmin(hasAdminAccess);
-        } catch {}
+        } catch { }
       }
     }
     fetchTickets();
@@ -151,7 +151,7 @@ export default function Tickets() {
       const res = await fetch("/api/tickets");
       const data = await res.json();
       if (res.ok) setTickets(data.tickets || []);
-    } catch {}
+    } catch { }
   };
 
   const fetchUsers = async () => {
@@ -159,7 +159,7 @@ export default function Tickets() {
       const res = await fetch("/api/users/list");
       const data = await res.json();
       if (res.ok) setUsers(data.users || []);
-    } catch {}
+    } catch { }
   };
 
   const fetchComments = async (ticketId: string) => {
@@ -167,7 +167,7 @@ export default function Tickets() {
       const res = await fetch(`/api/tickets/comments?ticket_id=${ticketId}`);
       const data = await res.json();
       if (res.ok) setComments(data.comments || []);
-    } catch {}
+    } catch { }
   };
 
   // -------------------------------------------------------------

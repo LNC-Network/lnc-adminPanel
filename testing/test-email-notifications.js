@@ -11,7 +11,7 @@ async function testEmails() {
         recipientName: 'Test User',
         groupName: 'Test Group - LNC Dev Team',
         groupDescription: 'This is a test group notification from the admin panel',
-        createdBy: 'admin@lnc.com',
+        createdBy: 'example@lnc.com',
     });
     console.log('New group notification result:', groupResult);
     console.log('');
@@ -25,7 +25,7 @@ async function testEmails() {
         recipientEmail: 'jitdebnathinkolkata@gmail.com',
         recipientName: 'Test User',
         groupName: 'Test Group - LNC Dev Team',
-        senderEmail: 'admin@lnc.com',
+        senderEmail: 'example@lnc.com',
         message: 'This is a test message notification. Hello from the LNC Admin Panel chat system! 👋',
     });
     console.log('New message notification result:', messageResult);

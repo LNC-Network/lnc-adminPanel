@@ -34,6 +34,7 @@ interface Group {
     created_by: string;
     created_at: string;
     member_count?: number;
+    unseen_count?: number;
 }
 
 interface User {
@@ -77,6 +78,7 @@ export default function ChatPage() {
     const [hasAccess, setHasAccess] = useState(true);
     const [viewMembersOpen, setViewMembersOpen] = useState(false);
     const [groupMembers, setGroupMembers] = useState<GroupMember[]>([]);
+    const [totalUnseenCount, setTotalUnseenCount] = useState(0);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
@@ -94,8 +96,17 @@ export default function ChatPage() {
                     if (adminStatus) {
                         fetchJoinRequests();
                         // Poll for new join requests every 10 seconds
-                        const interval = setInterval(fetchJoinRequests, 10000);
-                        return () => clearInterval(interval);
+                        const joinInterval = setInterval(fetchJoinRequests, 10000);
+                        // Poll for unseen counts every 10 seconds
+                        const unseenInterval = setInterval(fetchUnseenCounts, 10000);
+                        return () => {
+                            clearInterval(joinInterval);
+                            clearInterval(unseenInterval);
+                        };
+                    } else {
+                        // Non-admins also need to poll for unseen counts
+                        const unseenInterval = setInterval(fetchUnseenCounts, 10000);
+                        return () => clearInterval(unseenInterval);
                     }
                 } catch (e) {
                     console.error("Failed to parse user data:", e);
@@ -103,11 +114,13 @@ export default function ChatPage() {
             }
         }
         fetchGroups();
+        fetchUnseenCounts();
     }, []);
 
     useEffect(() => {
         if (selectedGroup) {
             fetchMessages(selectedGroup.id);
+            markMessagesAsSeen(selectedGroup.id);
             // Poll for new messages every 3 seconds
             const interval = setInterval(() => {
                 fetchMessages(selectedGroup.id);
@@ -246,6 +259,62 @@ export default function ChatPage() {
         } catch (error) {
             toast.error("Failed to add members");
             console.error(error);
+        }
+    };
+
+    const fetchUnseenCounts = async () => {
+        try {
+            const userData = localStorage.getItem("user");
+            if (!userData) return;
+            const user = JSON.parse(userData);
+
+            const res = await fetch(`/api/chat/unseen?user_id=${user.id}`);
+            const data = await res.json();
+            if (res.ok) {
+                setTotalUnseenCount(data.total_unseen || 0);
+                
+                // Update groups with unseen counts
+                const unseenByGroup = data.groups?.reduce((acc: any, g: any) => {
+                    acc[g.group_id] = g.unseen_count;
+                    return acc;
+                }, {}) || {};
+
+                setGroups(prev => prev.map(group => ({
+                    ...group,
+                    unseen_count: unseenByGroup[group.id] || 0
+                })));
+
+                // Emit unseen count for dashboard
+                if (typeof window !== 'undefined') {
+                    window.dispatchEvent(new CustomEvent('chatUnseenCount', { 
+                        detail: { count: data.total_unseen || 0 } 
+                    }));
+                }
+            }
+        } catch (error) {
+            console.error("Failed to fetch unseen counts:", error);
+        }
+    };
+
+    const markMessagesAsSeen = async (groupId: string) => {
+        try {
+            const userData = localStorage.getItem("user");
+            if (!userData) return;
+            const user = JSON.parse(userData);
+
+            await fetch('/api/chat/unseen', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    user_id: user.id,
+                    group_id: groupId,
+                }),
+            });
+
+            // Refresh unseen counts after marking as seen
+            setTimeout(fetchUnseenCounts, 500);
+        } catch (error) {
+            console.error("Failed to mark messages as seen:", error);
         }
     };
 
@@ -506,6 +575,13 @@ export default function ChatPage() {
                                             {group.description || "No description"}
                                         </p>
                                     </div>
+                                    {group.unseen_count && group.unseen_count > 0 && (
+                                        <div className="flex-shrink-0">
+                                            <div className="bg-blue-500 text-white text-xs font-bold rounded-full h-6 w-6 flex items-center justify-center">
+                                                {group.unseen_count > 9 ? '9+' : group.unseen_count}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         ))}
