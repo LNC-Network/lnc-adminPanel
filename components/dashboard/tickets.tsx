@@ -130,7 +130,12 @@ export default function Tickets() {
         try {
           const user = JSON.parse(data);
           setCurrentUserId(user.id || "");
-          setIsAdmin(user.roles?.includes("admin") || false);
+          // Check for admin roles (case-insensitive)
+          const userRoles = (user.roles || []).map((r: string) => r.toLowerCase());
+          const hasAdminAccess = userRoles.includes("super admin") || 
+                                  userRoles.includes("dev team admin") ||
+                                  userRoles.includes("admin");
+          setIsAdmin(hasAdminAccess);
         } catch {}
       }
     }
