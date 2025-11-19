@@ -79,9 +79,9 @@ export default function LoginPage() {
             <Link href="/" className="flex items-center gap-2 font-medium text-sm sm:text-base">
               <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary text-primary-foreground">
                 <Image
-                  src="/avatars/shadcn.jpg"
-                  width={20}
-                  height={20}
+                  src="/icons/icon-192x192.svg"
+                  width={24}
+                  height={24}
                   alt="logo"
                 />
               </div>
