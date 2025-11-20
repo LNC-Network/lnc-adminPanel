@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -12,6 +13,21 @@ const supabase = createClient(
     },
   }
 );
+
+// Encryption utilities
+const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY || crypto.randomBytes(32).toString('hex');
+const ALGORITHM = 'aes-256-cbc';
+
+function decrypt(text: string): string {
+  const parts = text.split(':');
+  const iv = Buffer.from(parts[0], 'hex');
+  const encryptedText = parts[1];
+  const key = Buffer.from(ENCRYPTION_KEY.slice(0, 64), 'hex');
+  const decipher = crypto.createDecipheriv(ALGORITHM, key, iv);
+  let decrypted = decipher.update(encryptedText, 'hex', 'utf8');
+  decrypted += decipher.final('utf8');
+  return decrypted;
+}
 
 // POST - Verify project password
 export async function POST(req: NextRequest) {
@@ -54,7 +70,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Project not found" }, { status: 404 });
     }
 
-    if (project.password !== password) {
+    // Decrypt stored password and compare
+    let decryptedPassword: string;
+    try {
+      decryptedPassword = decrypt(project.password);
+    } catch (err) {
+      return NextResponse.json({ error: "Password decryption failed" }, { status: 500 });
+    }
+
+    if (decryptedPassword !== password) {
       return NextResponse.json({ error: "Incorrect password" }, { status: 401 });
     }
 
