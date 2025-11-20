@@ -10,7 +10,7 @@
 -- Example mappings (adjust as needed):
 -- Old "admin" role → "super admin" or "admistater" or team admin
 -- Old "dev member" role → "dev member" (same)
--- Old "editor" role → team admin or admistater
+-- Old "editor" role → team admin or administrator
 -- Old "user" role → team member
 
 -- Check current user-role assignments

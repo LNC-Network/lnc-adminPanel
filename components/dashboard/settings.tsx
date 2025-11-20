@@ -14,6 +14,7 @@ import {
   MessageSquare,
   Megaphone,
   Palette,
+  FileText,
 } from "lucide-react";
 import { isSuperAdmin, isAdmistater } from "@/lib/permissions";
 import { Input } from "../ui/input";
@@ -556,10 +557,12 @@ export default function Settings() {
                           { name: "Admistater", icon: Shield, color: "text-blue-500" },
                           { name: "Dev Team Admin", icon: Code, color: "text-green-500" },
                           { name: "Social Media Team Admin", icon: MessageSquare, color: "text-purple-500" },
+                          { name: "Content Team Admin", icon: FileText, color: "text-cyan-500" },
                           { name: "PR & Outreach Team Admin", icon: Megaphone, color: "text-orange-500" },
                           { name: "Design Team Admin", icon: Palette, color: "text-pink-500" },
                           { name: "Dev Member", icon: Code, color: "" },
                           { name: "Social Media Member", icon: MessageSquare, color: "" },
+                          { name: "Content Member", icon: FileText, color: "" },
                           { name: "PR & Outreach Member", icon: Megaphone, color: "" },
                           { name: "Design Member", icon: Palette, color: "" },
                         ].map((roleOption) => {
@@ -957,7 +960,7 @@ export default function Settings() {
               </div>
               <div className="space-y-3">
                 <div className="text-sm font-semibold text-muted-foreground">Team Admins</div>
-                {["dev team admin", "social media team admin", "pr & outreach team admin", "design team admin"].map((role) => (
+                {["dev team admin", "social media team admin", "content team admin", "pr & outreach team admin", "design team admin"].map((role) => (
                   <div key={role} className="flex items-center space-x-2 pl-2">
                     <Checkbox
                       id={role}
@@ -984,7 +987,7 @@ export default function Settings() {
               </div>
               <div className="space-y-3">
                 <div className="text-sm font-semibold text-muted-foreground">Team Members</div>
-                {["dev member", "social media member", "pr & outreach member", "design member"].map((role) => (
+                {["dev member", "social media member", "content member", "pr & outreach member", "design member"].map((role) => (
                   <div key={role} className="flex items-center space-x-2 pl-2">
                     <Checkbox
                       id={role}

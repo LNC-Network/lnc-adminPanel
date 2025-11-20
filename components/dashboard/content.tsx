@@ -82,10 +82,12 @@ export default function Content() {
             role.toLowerCase() === 'super admin'
           );
 
-          // Allow access for Social Media, Design team members/admins, and Admistater
+          // Allow access for Social Media, Content, Design team members/admins, and admistater
           const allowedRoles = [
             'social media team admin',
             'social media member',
+            'content team admin',
+            'content member',
             'design team admin',
             'design member',
             'admistater'
@@ -279,6 +281,8 @@ export default function Content() {
                 <li>• Admistater</li>
                 <li>• Social Media Team Admin</li>
                 <li>• Social Media Member</li>
+                <li>• Content Team Admin</li>
+                <li>• Content Member</li>
                 <li>• Design Team Admin</li>
                 <li>• Design Member</li>
               </ul>

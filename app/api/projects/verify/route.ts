@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
 
     // Check user roles from JWT payload
     const roles = decoded.roles || [];
-    const allowedRoles = ["dev_member", "dev_admin", "super admin"];
+    const allowedRoles = ["dev_member", "dev_admin", "super admin", "admistater"];
     
     if (!roles.some((role: string) => allowedRoles.includes(role))) {
       return NextResponse.json({ error: "Access denied" }, { status: 403 });

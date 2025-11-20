@@ -1,4 +1,4 @@
-// Test role change for rohit@lnc.com: Super Admin -> Admistater
+// Test role change for rohit@lnc.com: Super Admin -> Administrator
 // This will update the role and send email notification
 
 const fs = require('fs');

@@ -5,10 +5,12 @@ export const ROLES = {
   ADMISTATER: 'admistater',
   DEV_TEAM_ADMIN: 'dev team admin',
   SOCIAL_MEDIA_TEAM_ADMIN: 'social media team admin',
+  CONTENT_TEAM_ADMIN: 'content team admin',
   PR_TEAM_ADMIN: 'pr & outreach team admin',
   DESIGN_TEAM_ADMIN: 'design team admin',
   DEV_MEMBER: 'dev member',
   SOCIAL_MEDIA_MEMBER: 'social media member',
+  CONTENT_MEMBER: 'content member',
   PR_MEMBER: 'pr & outreach member',
   DESIGN_MEMBER: 'design member',
 } as const;
@@ -16,6 +18,7 @@ export const ROLES = {
 export const TEAMS = {
   DEV: 'dev',
   SOCIAL_MEDIA: 'social media',
+  CONTENT: 'content',
   PR_OUTREACH: 'pr & outreach',
   DESIGN: 'design',
 } as const;
@@ -24,6 +27,7 @@ export const TEAMS = {
 export const TEAM_ADMIN_MAP: Record<string, string> = {
   [ROLES.DEV_TEAM_ADMIN]: TEAMS.DEV,
   [ROLES.SOCIAL_MEDIA_TEAM_ADMIN]: TEAMS.SOCIAL_MEDIA,
+  [ROLES.CONTENT_TEAM_ADMIN]: TEAMS.CONTENT,
   [ROLES.PR_TEAM_ADMIN]: TEAMS.PR_OUTREACH,
   [ROLES.DESIGN_TEAM_ADMIN]: TEAMS.DESIGN,
 };
@@ -32,6 +36,7 @@ export const TEAM_ADMIN_MAP: Record<string, string> = {
 export const TEAM_MEMBER_MAP: Record<string, string> = {
   [ROLES.DEV_MEMBER]: TEAMS.DEV,
   [ROLES.SOCIAL_MEDIA_MEMBER]: TEAMS.SOCIAL_MEDIA,
+  [ROLES.CONTENT_MEMBER]: TEAMS.CONTENT,
   [ROLES.PR_MEMBER]: TEAMS.PR_OUTREACH,
   [ROLES.DESIGN_MEMBER]: TEAMS.DESIGN,
 };

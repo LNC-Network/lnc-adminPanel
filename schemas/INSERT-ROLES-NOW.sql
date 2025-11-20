@@ -14,10 +14,12 @@ INSERT INTO roles (name, description) VALUES
     ('admistater', 'View-only access - can see everything except database, cannot change anything'),
     ('dev team admin', 'Development team administrator - manage dev team and tasks'),
     ('social media team admin', 'Social media team administrator - manage social media team'),
+    ('content team admin', 'Content team administrator - manage content team'),
     ('pr & outreach team admin', 'PR & Outreach team administrator - manage PR team'),
     ('design team admin', 'Design team administrator - manage design team'),
     ('dev member', 'Development team member'),
     ('social media member', 'Social media team member'),
+    ('content member', 'Content team member'),
     ('pr & outreach member', 'PR & Outreach team member'),
     ('design member', 'Design team member')
 ON CONFLICT (name) DO UPDATE 
