@@ -18,7 +18,8 @@ import {
   MessageSquare,
   ListTodo,
   CheckCircle,
-  Users
+  Users,
+  FolderLock
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import Content from "./content";
@@ -68,6 +69,7 @@ const Settings = dynamic(() => import("./settings"));
 const Database = dynamic(() => import("./database"));
 const Chat = dynamic(() => import("./chat"));
 const Tickets = dynamic(() => import("./tickets"));
+const ProjectEnv = dynamic(() => import("./project-env"));
 
 export default function DashboardClient() {
   const [currentTab, setCurrentTab] = useState<string>(() => {
@@ -240,6 +242,11 @@ export default function DashboardClient() {
   const isAdmistaterUser = isAdmistater(userRoles);
   const canViewAllContent = canViewAll(userRoles);
 
+  const canAccessProjectEnv = (roles: string[]) => {
+    const allowedRoles = ["dev_member", "dev_admin", "super admin"];
+    return roles.some(role => allowedRoles.includes(role));
+  };
+
   const navigationItems = [
     { id: "overview", label: "Overview", icon: LayoutDashboard },
     { id: "content", label: "Content", icon: FileText },
@@ -247,6 +254,7 @@ export default function DashboardClient() {
     { id: "tickets", label: "Tickets", icon: ListTodo, requiresPermission: () => canAccessTickets(userRoles) },
     { id: "database", label: "Database", icon: DatabaseIcon, requiresPermission: () => canAccessDatabase(userRoles) },
     { id: "forms", label: "Forms", icon: FormInput },
+    { id: "project-env", label: "Project ENV", icon: FolderLock, requiresPermission: () => canAccessProjectEnv(userRoles) },
     { id: "settings", label: "Settings", icon: SettingsIcon, requiresPermission: () => canAccessSettings(userRoles) },
   ].filter(item => {
     if (item.requiresPermission) return item.requiresPermission();
@@ -698,6 +706,7 @@ export default function DashboardClient() {
             {currentTab === "tickets" && canAccessTickets(userRoles) && <Tickets />}
             {currentTab === "database" && canAccessDatabase(userRoles) && <Database />}
             {currentTab === "forms" && <FormMaker />}
+            {currentTab === "project-env" && <ProjectEnv userRole={userRoles[0] || ""} />}
             {currentTab === "settings" && canAccessSettings(userRoles) && <Settings />}
           </main>
         </div>
