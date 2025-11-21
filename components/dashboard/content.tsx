@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,6 +53,7 @@ interface ContentItem {
   uploadDate: string;
   scheduledDate?: string;
   url: string;
+  thumbnail?: string; // Cloudinary thumbnail URL
   tags: string[];
   description: string;
   assignedTo?: string;
@@ -59,6 +61,7 @@ interface ContentItem {
 }
 
 export default function Content() {
+  const router = useRouter();
   const [hasAccess, setHasAccess] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
@@ -108,6 +111,53 @@ export default function Content() {
     }
   }, []);
 
+  // Fetch content from database
+  useEffect(() => {
+    if (hasAccess) {
+      fetchContent();
+    }
+  }, [hasAccess]);
+
+  const fetchContent = async () => {
+    try {
+      setIsLoading(true);
+      const response = await fetch('/api/content/upload');
+
+      // Check for JWT expiration
+      if (response.status === 401) {
+        const error = await response.json();
+        if (error.error === 'jwt expired') {
+          toast.error('Session expired. Please log in again.');
+          setTimeout(() => router.push('/login'), 1500);
+          return;
+        }
+      }
+
+      if (response.ok) {
+        const data = await response.json();
+        const formattedContent: ContentItem[] = data.content.map((item: any) => ({
+          id: item.id,
+          name: item.title,
+          type: item.file_type,
+          category: item.category,
+          status: "draft",
+          size: `${(item.file_size / (1024 * 1024)).toFixed(2)} MB`,
+          uploadDate: new Date(item.created_at).toISOString().split('T')[0],
+          url: item.url, // Cloudinary URL
+          thumbnail: item.thumbnail_url, // Cloudinary thumbnail URL
+          tags: item.tags || [],
+          description: item.description || '',
+        }));
+        setContentItems(formattedContent);
+      }
+    } catch (error) {
+      console.error('Failed to fetch content:', error);
+      toast.error('Failed to load content');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Upload form state
   const [uploadForm, setUploadForm] = useState<{
     category: "design" | "social-media" | "video" | "graphics";
@@ -125,50 +175,8 @@ export default function Content() {
     assignedTo: ""
   });
 
-  // Mock data - replace with actual API calls
-  const [contentItems, setContentItems] = useState<ContentItem[]>([
-    {
-      id: "1",
-      name: "Brand Logo V2.png",
-      type: "image/png",
-      category: "design",
-      status: "approved",
-      size: "2.4 MB",
-      uploadDate: "2025-11-15",
-      url: "/logo.jpg",
-      tags: ["logo", "branding", "design"],
-      description: "Updated brand logo with new color scheme",
-      assignedTo: "Design Team"
-    },
-    {
-      id: "2",
-      name: "Instagram Post - Product Launch",
-      type: "image/jpeg",
-      category: "social-media",
-      status: "pending",
-      size: "1.8 MB",
-      uploadDate: "2025-11-16",
-      scheduledDate: "2025-11-20",
-      url: "/placeholder.svg",
-      tags: ["instagram", "product", "launch"],
-      description: "Product launch announcement for Instagram",
-      platform: "Instagram",
-      assignedTo: "Social Media Team"
-    },
-    {
-      id: "3",
-      name: "Promo Video - Winter Sale",
-      type: "video/mp4",
-      category: "video",
-      status: "draft",
-      size: "45 MB",
-      uploadDate: "2025-11-17",
-      url: "/video.mp4",
-      tags: ["promo", "winter", "sale"],
-      description: "15-second promo video for winter sale campaign",
-      assignedTo: "Design Team"
-    },
-  ]);
+  const [contentItems, setContentItems] = useState<ContentItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -176,7 +184,7 @@ export default function Content() {
     }
   };
 
-  const handleUpload = () => {
+  const handleUpload = async () => {
     if (!selectedFile) {
       toast.error("Please select a file first");
       return;
@@ -187,35 +195,75 @@ export default function Content() {
       return;
     }
 
-    // Mock upload - replace with actual API call
-    const newItem: ContentItem = {
-      id: Date.now().toString(),
-      name: selectedFile.name,
-      type: selectedFile.type,
-      category: uploadForm.category,
-      status: "draft",
-      size: `${(selectedFile.size / (1024 * 1024)).toFixed(2)} MB`,
-      uploadDate: new Date().toISOString().split('T')[0],
-      scheduledDate: uploadForm.scheduledDate || undefined,
-      url: URL.createObjectURL(selectedFile),
-      tags: uploadForm.tags.split(',').map(t => t.trim()).filter(Boolean),
-      description: uploadForm.description,
-      assignedTo: uploadForm.assignedTo || undefined,
-      platform: uploadForm.platform || undefined
-    };
+    // Validate file type (images and videos only)
+    if (!selectedFile.type.startsWith('image/') && !selectedFile.type.startsWith('video/')) {
+      toast.error("Only images and videos are allowed");
+      return;
+    }
 
-    setContentItems([newItem, ...contentItems]);
-    setSelectedFile(null);
-    setUploadForm({
-      category: "design",
-      description: "",
-      tags: "",
-      scheduledDate: "",
-      platform: "",
-      assignedTo: ""
-    });
-    setUploadDialogOpen(false);
-    toast.success("Content uploaded successfully!");
+    // Upload to Cloudinary via API
+    try {
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+      formData.append('title', selectedFile.name);
+      formData.append('category', uploadForm.category);
+      formData.append('description', uploadForm.description);
+      formData.append('tags', JSON.stringify(uploadForm.tags.split(',').map(t => t.trim()).filter(Boolean)));
+
+      const response = await fetch('/api/content/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+
+        // Check for JWT expiration
+        if (error.error === 'jwt expired' || response.status === 401) {
+          toast.error('Session expired. Please log in again.');
+          setTimeout(() => router.push('/login'), 1500);
+          return;
+        }
+
+        throw new Error(error.error || 'Upload failed');
+      }
+
+      const data = await response.json();
+
+      // Create new content item from response
+      const newItem: ContentItem = {
+        id: data.content.id,
+        name: data.content.file_name,
+        type: data.content.file_type,
+        category: data.content.category,
+        status: "draft",
+        size: `${(data.content.file_size / (1024 * 1024)).toFixed(2)} MB`,
+        uploadDate: new Date(data.content.created_at).toISOString().split('T')[0],
+        scheduledDate: uploadForm.scheduledDate || undefined,
+        url: data.content.url, // Cloudinary URL
+        thumbnail: data.content.thumbnail_url, // Cloudinary thumbnail URL
+        tags: data.content.tags || [],
+        description: data.content.description || '',
+        assignedTo: uploadForm.assignedTo || undefined,
+        platform: uploadForm.platform || undefined
+      };
+
+      setContentItems([newItem, ...contentItems]);
+      setSelectedFile(null);
+      setUploadForm({
+        category: "design",
+        description: "",
+        tags: "",
+        scheduledDate: "",
+        platform: "",
+        assignedTo: ""
+      });
+      setUploadDialogOpen(false);
+      toast.success("Content uploaded to Cloudinary successfully!");
+    } catch (error: any) {
+      console.error('Upload error:', error);
+      toast.error(error.message || "Failed to upload content");
+    }
   };
 
   const handleDelete = (id: string) => {
@@ -524,7 +572,14 @@ export default function Content() {
           </TabsList>
 
           <TabsContent value={activeTab} className="mt-6">
-            {filteredItems.length === 0 ? (
+            {isLoading ? (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-12">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mb-4" />
+                  <p className="text-muted-foreground">Loading content...</p>
+                </CardContent>
+              </Card>
+            ) : filteredItems.length === 0 ? (
               <Card>
                 <CardContent className="flex flex-col items-center justify-center py-12">
                   <FileText className="h-12 w-12 text-muted-foreground mb-4" />
@@ -538,15 +593,24 @@ export default function Content() {
                     <div className="aspect-video bg-muted relative">
                       {item.type.startsWith("image") ? (
                         <Image
-                          src={item.url}
+                          src={item.thumbnail || item.url}
                           alt={item.name}
                           fill
                           className="object-cover"
                         />
                       ) : item.type.startsWith("video") ? (
-                        <div className="flex items-center justify-center h-full">
-                          <Video className="h-12 w-12 text-muted-foreground" />
-                        </div>
+                        item.thumbnail ? (
+                          <Image
+                            src={item.thumbnail}
+                            alt={item.name}
+                            fill
+                            className="object-cover"
+                          />
+                        ) : (
+                          <div className="flex items-center justify-center h-full">
+                            <Video className="h-12 w-12 text-muted-foreground" />
+                          </div>
+                        )
                       ) : (
                         <div className="flex items-center justify-center h-full">
                           <FileText className="h-12 w-12 text-muted-foreground" />
