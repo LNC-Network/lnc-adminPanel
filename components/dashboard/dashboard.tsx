@@ -19,7 +19,11 @@ import {
   ListTodo,
   CheckCircle,
   Users,
-  FolderLock
+  FolderLock,
+  Calendar as CalendarIcon,
+  BarChart3,
+  Activity,
+  Mail
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import Content from "./content";
@@ -68,8 +72,12 @@ import { useRouter } from "next/navigation";
 const Settings = dynamic(() => import("./settings"));
 const Database = dynamic(() => import("./database"));
 const Chat = dynamic(() => import("./chat"));
+const ChatAnalytics = dynamic(() => import("./chat-analytics"));
+const WebAnalytics = dynamic(() => import("./web-analytics"));
+const Mailing = dynamic(() => import("./mailing"));
 const Tickets = dynamic(() => import("./tickets"));
 const ProjectEnv = dynamic(() => import("./project-env"));
+const CalendarPage = dynamic(() => import("./calendar"));
 
 export default function DashboardClient() {
   const [currentTab, setCurrentTab] = useState<string>(() => {
@@ -249,8 +257,12 @@ export default function DashboardClient() {
 
   const navigationItems = [
     { id: "overview", label: "Overview", icon: LayoutDashboard },
+    { id: "calendar", label: "Calendar", icon: CalendarIcon },
     { id: "content", label: "Content", icon: FileText },
     { id: "chat", label: "Chat", icon: MessageSquare },
+    { id: "chat-analytics", label: "Chat Analytics", icon: BarChart3, requiresPermission: () => isSuperAdmin(userRoles) },
+    { id: "web-analytics", label: "Web Analytics", icon: Activity, requiresPermission: () => isSuperAdmin(userRoles) },
+    { id: "mailing", label: "Mailing Service", icon: Mail, requiresPermission: () => isSuperAdmin(userRoles) },
     { id: "tickets", label: "Tickets", icon: ListTodo, requiresPermission: () => canAccessTickets(userRoles) },
     { id: "database", label: "Database", icon: DatabaseIcon, requiresPermission: () => canAccessDatabase(userRoles) },
     { id: "forms", label: "Forms", icon: FormInput },
@@ -701,8 +713,12 @@ export default function DashboardClient() {
               </div>
             )}
 
+            {currentTab === "calendar" && <CalendarPage />}
             {currentTab === "content" && <Content />}
             {currentTab === "chat" && <Chat />}
+            {currentTab === "chat-analytics" && isSuperAdmin(userRoles) && <ChatAnalytics />}
+            {currentTab === "web-analytics" && isSuperAdmin(userRoles) && <WebAnalytics />}
+            {currentTab === "mailing" && isSuperAdmin(userRoles) && <Mailing />}
             {currentTab === "tickets" && canAccessTickets(userRoles) && <Tickets />}
             {currentTab === "database" && canAccessDatabase(userRoles) && <Database />}
             {currentTab === "forms" && <FormMaker />}
