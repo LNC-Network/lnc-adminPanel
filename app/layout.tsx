@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { ThemeProvider } from "next-themes";
 import { Analytics } from "@vercel/analytics/next";
 import { PWARegister, InstallPrompt } from "@/components/pwa-register";
+import AnalyticsTracker from "@/components/analytics-tracker";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -53,6 +54,7 @@ export default function RootLayout({
         <ThemeProvider attribute="class" defaultTheme="dark">
           <PWARegister />
           <InstallPrompt />
+          <AnalyticsTracker />
           {children}
           <Analytics />
         </ThemeProvider>

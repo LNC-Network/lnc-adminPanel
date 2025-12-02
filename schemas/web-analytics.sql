@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS web_analytics_pageviews (
   browser TEXT,
   os TEXT,
   session_id TEXT,
-  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  user_id UUID REFERENCES users(id) ON DELETE SET NULL,
   duration INTEGER, -- time spent on page in seconds
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS web_analytics_pageviews (
 CREATE TABLE IF NOT EXISTS web_analytics_sessions (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   session_id TEXT UNIQUE NOT NULL,
-  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  user_id UUID REFERENCES users(id) ON DELETE SET NULL,
   ip_address TEXT,
   country TEXT,
   city TEXT,
@@ -58,7 +58,7 @@ CREATE TABLE IF NOT EXISTS web_analytics_events (
   event_data JSONB,
   page_path TEXT,
   session_id TEXT,
-  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  user_id UUID REFERENCES users(id) ON DELETE SET NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
