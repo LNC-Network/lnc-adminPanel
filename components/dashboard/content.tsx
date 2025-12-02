@@ -472,66 +472,66 @@ export default function Content() {
         </div>
 
         {/* Stats Cards */}
-        <div className="grid gap-4 md:grid-cols-4">
+        <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Content</CardTitle>
-              <FileText className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-xs sm:text-sm font-medium">Total Content</CardTitle>
+              <FileText className="h-3 w-3 sm:h-4 sm:w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{contentItems.length}</div>
-              <p className="text-xs text-muted-foreground">All items</p>
+              <div className="text-xl sm:text-2xl font-bold">{contentItems.length}</div>
+              <p className="text-[10px] sm:text-xs text-muted-foreground">All items</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pending Review</CardTitle>
-              <Clock className="h-4 w-4 text-yellow-500" />
+              <CardTitle className="text-xs sm:text-sm font-medium">Pending Review</CardTitle>
+              <Clock className="h-3 w-3 sm:h-4 sm:w-4 text-amber-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{contentItems.filter(i => i.status === "pending").length}</div>
-              <p className="text-xs text-muted-foreground">Needs approval</p>
+              <div className="text-xl sm:text-2xl font-bold">{contentItems.filter(i => i.status === "pending").length}</div>
+              <p className="text-[10px] sm:text-xs text-muted-foreground">Needs approval</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Approved</CardTitle>
-              <CheckCircle className="h-4 w-4 text-green-500" />
+              <CardTitle className="text-xs sm:text-sm font-medium">Approved</CardTitle>
+              <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 text-teal-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{contentItems.filter(i => i.status === "approved").length}</div>
-              <p className="text-xs text-muted-foreground">Ready to publish</p>
+              <div className="text-xl sm:text-2xl font-bold">{contentItems.filter(i => i.status === "approved").length}</div>
+              <p className="text-[10px] sm:text-xs text-muted-foreground">Ready to publish</p>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Scheduled</CardTitle>
-              <Calendar className="h-4 w-4 text-blue-500" />
+              <CardTitle className="text-xs sm:text-sm font-medium">Scheduled</CardTitle>
+              <Calendar className="h-3 w-3 sm:h-4 sm:w-4 text-sky-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{contentItems.filter(i => i.scheduledDate).length}</div>
-              <p className="text-xs text-muted-foreground">Upcoming posts</p>
+              <div className="text-xl sm:text-2xl font-bold">{contentItems.filter(i => i.scheduledDate).length}</div>
+              <p className="text-[10px] sm:text-xs text-muted-foreground">Upcoming posts</p>
             </CardContent>
           </Card>
         </div>
 
         {/* Search and Filters */}
         <Card>
-          <CardContent className="pt-6">
-            <div className="flex flex-col sm:flex-row gap-4">
+          <CardContent className="pt-4 sm:pt-6">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
               <div className="flex-1 relative">
                 <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                 <Input
                   placeholder="Search content..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-8"
+                  className="pl-8 text-sm"
                 />
               </div>
-              <div className="flex gap-2">
+              <div className="flex gap-2 justify-end">
                 <Button
                   variant={viewMode === "grid" ? "secondary" : "ghost"}
                   size="sm"
@@ -555,19 +555,21 @@ export default function Content() {
 
         {/* Content Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="all">All ({contentItems.length})</TabsTrigger>
-            <TabsTrigger value="design">
-              Design ({contentItems.filter(i => i.category === "design").length})
+          <TabsList className="w-full flex overflow-x-auto no-scrollbar">
+            <TabsTrigger value="all" className="flex-1 min-w-fit text-xs sm:text-sm px-2 sm:px-4">
+              All <span className="hidden sm:inline ml-1">({contentItems.length})</span>
             </TabsTrigger>
-            <TabsTrigger value="social-media">
-              Social ({contentItems.filter(i => i.category === "social-media").length})
+            <TabsTrigger value="design" className="flex-1 min-w-fit text-xs sm:text-sm px-2 sm:px-4">
+              Design <span className="hidden sm:inline ml-1">({contentItems.filter(i => i.category === "design").length})</span>
             </TabsTrigger>
-            <TabsTrigger value="video">
-              Video ({contentItems.filter(i => i.category === "video").length})
+            <TabsTrigger value="social-media" className="flex-1 min-w-fit text-xs sm:text-sm px-2 sm:px-4">
+              Social <span className="hidden sm:inline ml-1">({contentItems.filter(i => i.category === "social-media").length})</span>
             </TabsTrigger>
-            <TabsTrigger value="graphics">
-              Graphics ({contentItems.filter(i => i.category === "graphics").length})
+            <TabsTrigger value="video" className="flex-1 min-w-fit text-xs sm:text-sm px-2 sm:px-4">
+              Video <span className="hidden sm:inline ml-1">({contentItems.filter(i => i.category === "video").length})</span>
+            </TabsTrigger>
+            <TabsTrigger value="graphics" className="flex-1 min-w-fit text-xs sm:text-sm px-2 sm:px-4">
+              Graphics <span className="hidden sm:inline ml-1">({contentItems.filter(i => i.category === "graphics").length})</span>
             </TabsTrigger>
           </TabsList>
 
@@ -587,7 +589,7 @@ export default function Content() {
                 </CardContent>
               </Card>
             ) : viewMode === "grid" ? (
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                 {filteredItems.map((item) => (
                   <Card key={item.id} className="overflow-hidden hover:shadow-lg transition-shadow">
                     <div className="aspect-video bg-muted relative">
@@ -623,19 +625,22 @@ export default function Content() {
                         {getCategoryIcon(item.category)}
                       </div>
                     </div>
-                    <CardHeader className="pb-3">
-                      <CardTitle className="text-base line-clamp-1">{item.name}</CardTitle>
-                      <CardDescription className="line-clamp-2">
+                    <CardHeader className="pb-2 sm:pb-3">
+                      <CardTitle className="text-sm sm:text-base line-clamp-1">{item.name}</CardTitle>
+                      <CardDescription className="text-xs sm:text-sm line-clamp-2">
                         {item.description}
                       </CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-3">
+                    <CardContent className="space-y-2 sm:space-y-3">
                       <div className="flex flex-wrap gap-1">
-                        {item.tags.map((tag, idx) => (
-                          <Badge key={idx} variant="secondary" className="text-xs">
+                        {item.tags.slice(0, 3).map((tag, idx) => (
+                          <Badge key={idx} variant="secondary" className="text-[10px] sm:text-xs">
                             {tag}
                           </Badge>
                         ))}
+                        {item.tags.length > 3 && (
+                          <Badge variant="secondary" className="text-[10px] sm:text-xs">+{item.tags.length - 3}</Badge>
+                        )}
                       </div>
 
                       {item.platform && (
@@ -659,23 +664,23 @@ export default function Content() {
                         </div>
                       )}
 
-                      <div className="flex gap-2 pt-2">
+                      <div className="flex gap-1 sm:gap-2 pt-2">
                         <Button
                           variant="outline"
                           size="sm"
-                          className="flex-1"
+                          className="flex-1 text-xs sm:text-sm h-8 sm:h-9"
                           onClick={() => {
                             setSelectedItem(item);
                             setDetailsDialogOpen(true);
                           }}
                         >
-                          <Eye className="h-3 w-3 mr-1" />
-                          View
+                          <Eye className="h-3 w-3 sm:mr-1" />
+                          <span className="hidden sm:inline">View</span>
                         </Button>
-                        <Button variant="outline" size="sm" onClick={() => window.open(item.url)}>
+                        <Button variant="outline" size="sm" onClick={() => window.open(item.url)} className="h-8 sm:h-9 w-8 sm:w-9 p-0">
                           <Download className="h-3 w-3" />
                         </Button>
-                        <Button variant="outline" size="sm" onClick={() => handleDelete(item.id)}>
+                        <Button variant="outline" size="sm" onClick={() => handleDelete(item.id)} className="h-8 sm:h-9 w-8 sm:w-9 p-0">
                           <Trash2 className="h-3 w-3 text-rose-500" />
                         </Button>
                       </div>
@@ -688,55 +693,62 @@ export default function Content() {
                 <CardContent className="p-0">
                   <div className="divide-y">
                     {filteredItems.map((item) => (
-                      <div key={item.id} className="p-4 hover:bg-muted/50 transition-colors">
-                        <div className="flex items-start gap-4">
-                          <div className="flex-shrink-0">
-                            {getCategoryIcon(item.category)}
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-start justify-between gap-4 mb-2">
-                              <div>
-                                <h3 className="font-semibold">{item.name}</h3>
-                                <p className="text-sm text-muted-foreground line-clamp-1">{item.description}</p>
+                      <div key={item.id} className="p-3 sm:p-4 hover:bg-muted/50 transition-colors">
+                        <div className="flex flex-col sm:flex-row sm:items-start gap-3 sm:gap-4">
+                          <div className="flex items-start gap-3 sm:gap-4 flex-1 min-w-0">
+                            <div className="flex-shrink-0">
+                              {getCategoryIcon(item.category)}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-4 mb-2">
+                                <div>
+                                  <h3 className="font-semibold text-sm sm:text-base">{item.name}</h3>
+                                  <p className="text-xs sm:text-sm text-muted-foreground line-clamp-1">{item.description}</p>
+                                </div>
+                                <div className="flex-shrink-0">
+                                  {getStatusBadge(item.status)}
+                                </div>
                               </div>
-                              {getStatusBadge(item.status)}
-                            </div>
-                            <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
-                              <span>{item.size}</span>
-                              <span>•</span>
-                              <span>{item.uploadDate}</span>
-                              {item.assignedTo && (
-                                <>
-                                  <span>•</span>
-                                  <span className="flex items-center gap-1">
-                                    <Users className="h-3 w-3" />
-                                    {item.assignedTo}
-                                  </span>
-                                </>
-                              )}
-                              {item.platform && (
-                                <>
-                                  <span>•</span>
-                                  <span className="flex items-center gap-1">
-                                    <Share2 className="h-3 w-3" />
-                                    {item.platform}
-                                  </span>
-                                </>
-                              )}
-                            </div>
-                            <div className="flex flex-wrap gap-1 mt-2">
-                              {item.tags.map((tag, idx) => (
-                                <Badge key={idx} variant="secondary" className="text-xs">
-                                  {tag}
-                                </Badge>
-                              ))}
+                              <div className="flex flex-wrap gap-2 sm:gap-3 text-xs sm:text-sm text-muted-foreground">
+                                <span>{item.size}</span>
+                                <span className="hidden sm:inline">•</span>
+                                <span>{item.uploadDate}</span>
+                                {item.assignedTo && (
+                                  <>
+                                    <span className="hidden sm:inline">•</span>
+                                    <span className="flex items-center gap-1">
+                                      <Users className="h-3 w-3" />
+                                      <span className="hidden sm:inline">{item.assignedTo}</span>
+                                    </span>
+                                  </>
+                                )}
+                                {item.platform && (
+                                  <>
+                                    <span className="hidden sm:inline">•</span>
+                                    <span className="flex items-center gap-1">
+                                      <Share2 className="h-3 w-3" />
+                                      <span className="hidden sm:inline">{item.platform}</span>
+                                    </span>
+                                  </>
+                                )}
+                              </div>
+                              <div className="flex flex-wrap gap-1 mt-2">
+                                {item.tags.slice(0, 3).map((tag, idx) => (
+                                  <Badge key={idx} variant="secondary" className="text-[10px] sm:text-xs">
+                                    {tag}
+                                  </Badge>
+                                ))}
+                                {item.tags.length > 3 && (
+                                  <Badge variant="secondary" className="text-[10px] sm:text-xs">+{item.tags.length - 3}</Badge>
+                                )}
+                              </div>
                             </div>
                           </div>
-                          <div className="flex gap-2">
-                            <Button variant="outline" size="sm" onClick={() => window.open(item.url)}>
+                          <div className="flex gap-2 self-end sm:self-start">
+                            <Button variant="outline" size="sm" onClick={() => window.open(item.url)} className="h-8 w-8 p-0">
                               <Download className="h-3 w-3" />
                             </Button>
-                            <Button variant="outline" size="sm" onClick={() => handleDelete(item.id)}>
+                            <Button variant="outline" size="sm" onClick={() => handleDelete(item.id)} className="h-8 w-8 p-0">
                               <Trash2 className="h-3 w-3 text-rose-500" />
                             </Button>
                           </div>
@@ -752,9 +764,9 @@ export default function Content() {
 
         {/* Details Dialog */}
         <Dialog open={detailsDialogOpen} onOpenChange={setDetailsDialogOpen}>
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto mx-4">
             <DialogHeader>
-              <DialogTitle>{selectedItem?.name}</DialogTitle>
+              <DialogTitle className="text-base sm:text-lg line-clamp-1">{selectedItem?.name}</DialogTitle>
               <DialogDescription>Content Details</DialogDescription>
             </DialogHeader>
             {selectedItem && (
@@ -830,10 +842,11 @@ export default function Content() {
 
                   <div>
                     <Label className="mb-2 block">Update Status</Label>
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-1 sm:gap-2">
                       <Button
                         variant={selectedItem.status === "draft" ? "default" : "outline"}
                         size="sm"
+                        className="text-xs sm:text-sm"
                         onClick={() => handleStatusChange(selectedItem.id, "draft")}
                       >
                         Draft
@@ -841,6 +854,7 @@ export default function Content() {
                       <Button
                         variant={selectedItem.status === "pending" ? "default" : "outline"}
                         size="sm"
+                        className="text-xs sm:text-sm"
                         onClick={() => handleStatusChange(selectedItem.id, "pending")}
                       >
                         Pending
@@ -848,6 +862,7 @@ export default function Content() {
                       <Button
                         variant={selectedItem.status === "approved" ? "default" : "outline"}
                         size="sm"
+                        className="text-xs sm:text-sm"
                         onClick={() => handleStatusChange(selectedItem.id, "approved")}
                       >
                         Approve
@@ -855,6 +870,7 @@ export default function Content() {
                       <Button
                         variant={selectedItem.status === "published" ? "default" : "outline"}
                         size="sm"
+                        className="text-xs sm:text-sm"
                         onClick={() => handleStatusChange(selectedItem.id, "published")}
                       >
                         Publish
@@ -862,6 +878,7 @@ export default function Content() {
                       <Button
                         variant={selectedItem.status === "rejected" ? "default" : "outline"}
                         size="sm"
+                        className="text-xs sm:text-sm"
                         onClick={() => handleStatusChange(selectedItem.id, "rejected")}
                       >
                         Reject
