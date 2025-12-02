@@ -23,7 +23,7 @@ interface Event {
 
 const eventColors = [
     { value: "bg-blue-500", label: "Blue" },
-    { value: "bg-red-500", label: "Red" },
+    { value: "bg-rose-500", label: "Rose" },
     { value: "bg-green-500", label: "Green" },
     { value: "bg-yellow-500", label: "Yellow" },
     { value: "bg-purple-500", label: "Purple" },
@@ -265,7 +265,7 @@ export default function Calendar() {
 
         // Empty cells for days before the first day of the month
         for (let i = 0; i < firstDayOfMonth; i++) {
-            days.push(<div key={`empty-${i}`} className="min-h-[120px] border-r border-b border-border/40 bg-muted/5"></div>);
+            days.push(<div key={`empty-${i}`} className="min-h-[80px] sm:min-h-[100px] lg:min-h-[120px] border-r border-b border-border/40 bg-muted/5"></div>);
         }
 
         // Days of the month
@@ -277,26 +277,36 @@ export default function Calendar() {
             days.push(
                 <div
                     key={day}
-                    className={`min-h-[120px] border-r border-b border-border/40 p-2 relative hover:bg-accent/50 transition-all cursor-pointer group ${isToday ? 'bg-primary/5 border-primary/20' : 'bg-card'}`}
+                    className={`min-h-[80px] sm:min-h-[100px] lg:min-h-[120px] border-r border-b border-border/40 p-1.5 sm:p-2 relative hover:bg-accent/30 hover:shadow-md transition-all duration-200 cursor-pointer group ${isToday ? 'bg-primary/5 border-primary/30 shadow-inner' : 'bg-card'}`}
                     onClick={() => openAddDialog(dateStr)}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => e.key === 'Enter' && openAddDialog(dateStr)}
+                    aria-label={`${day} ${monthNames[currentDate.getMonth()]} - ${dayEvents.length} events`}
                 >
-                    <div className={`inline-flex items-center justify-center w-7 h-7 rounded-full text-sm font-semibold mb-1 ${isToday ? 'bg-primary text-primary-foreground' : 'text-foreground group-hover:bg-accent'}`}>
+                    <div className={`inline-flex items-center justify-center w-6 h-6 sm:w-8 sm:h-8 rounded-full text-xs sm:text-sm font-semibold mb-1 transition-all ${isToday ? 'bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-lg' : 'text-foreground group-hover:bg-accent group-hover:scale-110'}`}>
                         {day}
                     </div>
-                    <div className="space-y-1 overflow-y-auto max-h-[calc(100%-36px)]">
-                        {dayEvents.map(event => (
+                    <div className="space-y-0.5 sm:space-y-1 overflow-y-auto max-h-[calc(100%-28px)] sm:max-h-[calc(100%-36px)]">
+                        {dayEvents.slice(0, 3).map(event => (
                             <div
                                 key={event.id}
-                                className={`text-xs px-2 py-1 rounded text-white truncate shadow-sm font-medium ${event.color} hover:scale-[1.02] transition-transform cursor-pointer`}
+                                className={`text-[10px] sm:text-xs px-1.5 sm:px-2 py-1 sm:py-1.5 rounded-md text-white truncate shadow-md font-medium ${event.color} hover:scale-105 hover:shadow-lg transition-all duration-200 cursor-pointer`}
                                 onClick={(e) => {
                                     e.stopPropagation();
                                     viewEventDetails(event);
                                 }}
+                                role="button"
+                                tabIndex={0}
+                                onKeyDown={(e) => e.key === 'Enter' && viewEventDetails(event)}
                             >
-                                {event.time && <span className="mr-1">{event.time}</span>}
+                                {event.time && <span className="mr-1 font-bold hidden sm:inline">{event.time}</span>}
                                 {event.title}
                             </div>
                         ))}
+                        {dayEvents.length > 3 && (
+                            <div className="text-[10px] text-muted-foreground">+{dayEvents.length - 3} more</div>
+                        )}
                     </div>
                 </div>
             );
@@ -306,30 +316,30 @@ export default function Calendar() {
     };
 
     return (
-        <div className="space-y-6">
-            <div className="flex flex-col gap-2">
+        <div className="space-y-4 sm:space-y-6 animate-fade-in">
+            <div className="flex flex-col gap-2 animate-slide-in-up">
                 <div className="flex items-center gap-3">
-                    <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10">
-                        <CalendarIcon className="h-5 w-5 text-primary" />
+                    <div className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-xl gradient-primary shadow-lg shadow-primary/20">
+                        <CalendarIcon className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                     </div>
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight">Calendar</h1>
-                        <p className="text-muted-foreground text-sm">Manage your events and schedules.</p>
+                        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">Calendar</h1>
+                        <p className="text-muted-foreground text-xs sm:text-sm">Manage your events and schedules.</p>
                     </div>
                 </div>
             </div>
 
-            <Card className="border-border/40 shadow-lg">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4 border-b border-border/40">
-                    <div className="flex items-center gap-4">
-                        <CardTitle className="text-2xl font-bold">
+            <Card className="border-border/40 shadow-xl hover:shadow-2xl transition-shadow duration-300 animate-scale-in animate-delay-100">
+                <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4 border-b border-border/40">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 w-full sm:w-auto">
+                        <CardTitle className="text-xl sm:text-2xl font-bold">
                             {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
                         </CardTitle>
                         <div className="flex items-center gap-1">
-                            <Button variant="outline" size="icon" onClick={prevMonth} className="hover:bg-accent">
+                            <Button variant="outline" size="icon" onClick={prevMonth} className="hover:bg-accent h-8 w-8 sm:h-9 sm:w-9" aria-label="Previous month">
                                 <ChevronLeft className="h-4 w-4" />
                             </Button>
-                            <Button variant="outline" size="icon" onClick={nextMonth} className="hover:bg-accent">
+                            <Button variant="outline" size="icon" onClick={nextMonth} className="hover:bg-accent h-8 w-8 sm:h-9 sm:w-9" aria-label="Next month">
                                 <ChevronRight className="h-4 w-4" />
                             </Button>
                         </div>
@@ -495,8 +505,13 @@ export default function Calendar() {
                     ) : (
                         <>
                             <div className="grid grid-cols-7 bg-muted/20 border-b border-border/40">
+                                {["S", "M", "T", "W", "T", "F", "S"].map((day, idx) => (
+                                    <div key={idx} className="text-center py-2 sm:py-3 text-xs sm:text-sm font-semibold text-muted-foreground border-r border-border/40 last:border-r-0 sm:hidden">
+                                        {day}
+                                    </div>
+                                ))}
                                 {["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].map((day) => (
-                                    <div key={day} className="text-center py-3 text-sm font-semibold text-muted-foreground border-r border-border/40 last:border-r-0">
+                                    <div key={day} className="text-center py-2 sm:py-3 text-xs sm:text-sm font-semibold text-muted-foreground border-r border-border/40 last:border-r-0 hidden sm:block">
                                         {day}
                                     </div>
                                 ))}

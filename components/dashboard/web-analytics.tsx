@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { Loader2, TrendingUp, Users, Eye, Globe, Monitor, Chrome, ArrowUpRight, Clock, MousePointer } from "lucide-react";
+import { Loader2, TrendingUp, TrendingDown, Users, Eye, Globe, Monitor, Chrome, ArrowUpRight, Clock, MousePointer, Activity } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -83,23 +83,33 @@ export default function WebAnalytics() {
             .join(", ");
 
         return (
-            <div className="flex items-center gap-6">
+            <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
                 <div
-                    className="w-40 h-40 rounded-full"
+                    className="w-32 h-32 sm:w-40 sm:h-40 rounded-full flex-shrink-0"
                     style={{
                         background: `conic-gradient(${gradientString})`,
                     }}
+                    role="img"
+                    aria-label="Device distribution pie chart"
                 />
-                <div className="space-y-2">
-                    {data.map((item, idx) => (
-                        <div key={idx} className="flex items-center gap-2">
-                            <div className="w-3 h-3 rounded" style={{ backgroundColor: item.color }} />
-                            <span className="text-sm font-medium">{item.label}</span>
-                            <span className="text-sm text-muted-foreground">
-                                ({item.value.toLocaleString()} - {((item.value / total) * 100).toFixed(1)}%)
-                            </span>
-                        </div>
-                    ))}
+                <div className="space-y-2 w-full sm:w-auto">
+                    {data.map((item, idx) => {
+                        const colorClasses: Record<string, string> = {
+                            '#7dd3fc': 'color-indicator-sky',
+                            '#5eead4': 'color-indicator-teal',
+                            '#fcd34d': 'color-indicator-amber',
+                            '#f9a8d4': 'color-indicator-pink',
+                        };
+                        return (
+                            <div key={idx} className="flex items-center gap-2">
+                                <div className={`w-3 h-3 rounded flex-shrink-0 ${colorClasses[item.color] || 'bg-primary'}`} />
+                                <span className="text-xs sm:text-sm font-medium">{item.label}</span>
+                                <span className="text-xs sm:text-sm text-muted-foreground">
+                                    ({item.value.toLocaleString()} - {((item.value / total) * 100).toFixed(1)}%)
+                                </span>
+                            </div>
+                        );
+                    })}
                 </div>
             </div>
         );
@@ -121,7 +131,7 @@ export default function WebAnalytics() {
         );
     }
 
-    const deviceColors = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444"];
+    const deviceColors = ["#7dd3fc", "#5eead4", "#fcd34d", "#f9a8d4"];
     const deviceData = analytics.deviceTypes.map((device, idx) => ({
         label: device.type.charAt(0).toUpperCase() + device.type.slice(1),
         value: device.count,
@@ -130,81 +140,95 @@ export default function WebAnalytics() {
     const totalDeviceCount = analytics.deviceTypes.reduce((sum, d) => sum + d.count, 0);
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
             {/* Header */}
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div className="flex items-center gap-3">
-                    <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10">
-                        <TrendingUp className="h-5 w-5 text-primary" />
+            <div className="flex flex-col gap-4">
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                    <div className="flex items-center gap-3">
+                        <div className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-xl gradient-primary shadow-lg shadow-primary/20">
+                            <Activity className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                        </div>
+                        <div>
+                            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">Web Analytics</h1>
+                            <p className="text-muted-foreground text-xs sm:text-sm">
+                                Monitor website performance and visitor insights
+                            </p>
+                        </div>
                     </div>
-                    <div>
-                        <h1 className="text-3xl font-bold tracking-tight">Web Analytics</h1>
-                        <p className="text-muted-foreground text-sm">
-                            Comprehensive website performance and visitor insights
-                        </p>
-                    </div>
+                    <Select value={timeRange} onValueChange={setTimeRange}>
+                        <SelectTrigger className="w-full sm:w-[180px]">
+                            <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="7">Last 7 days</SelectItem>
+                            <SelectItem value="30">Last 30 days</SelectItem>
+                            <SelectItem value="90">Last 90 days</SelectItem>
+                        </SelectContent>
+                    </Select>
                 </div>
-                <Select value={timeRange} onValueChange={setTimeRange}>
-                    <SelectTrigger className="w-[180px]">
-                        <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                        <SelectItem value="7">Last 7 days</SelectItem>
-                        <SelectItem value="30">Last 30 days</SelectItem>
-                        <SelectItem value="90">Last 90 days</SelectItem>
-                    </SelectContent>
-                </Select>
             </div>
 
-            {/* Key Metrics */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            {/* Stats Cards */}
+            <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4 animate-slide-in-up animate-delay-100">
+                <Card className="hover:shadow-xl hover:scale-[1.02] transition-all duration-300 border-border/50 overflow-hidden group">
+                    <div className="absolute inset-0 bg-gradient-to-br from-sky-400/10 to-indigo-400/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
                         <CardTitle className="text-sm font-medium">Page Views</CardTitle>
-                        <Eye className="h-4 w-4 text-muted-foreground" />
+                        <div className="p-2 rounded-lg bg-sky-400/10 group-hover:bg-sky-400/20 transition-colors">
+                            <Eye className="h-4 w-4 text-sky-500" />
+                        </div>
                     </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{analytics.totalPageViews.toLocaleString()}</div>
-                        <p className="text-xs text-muted-foreground">Total visits</p>
+                    <CardContent className="relative">
+                        <div className="text-2xl font-bold bg-gradient-to-r from-sky-400 to-indigo-400 bg-clip-text text-transparent">{analytics.totalPageViews.toLocaleString()}</div>
+                        <p className="text-xs text-muted-foreground mt-1">Total page views</p>
                     </CardContent>
                 </Card>
 
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <Card className="hover:shadow-xl hover:scale-[1.02] transition-all duration-300 border-border/50 overflow-hidden group">
+                    <div className="absolute inset-0 bg-gradient-to-br from-teal-400/10 to-emerald-400/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
                         <CardTitle className="text-sm font-medium">Unique Visitors</CardTitle>
-                        <Users className="h-4 w-4 text-muted-foreground" />
+                        <div className="p-2 rounded-lg bg-teal-400/10 group-hover:bg-teal-400/20 transition-colors">
+                            <Users className="h-4 w-4 text-teal-500" />
+                        </div>
                     </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{analytics.uniqueVisitors.toLocaleString()}</div>
+                    <CardContent className="relative">
+                        <div className="text-2xl font-bold bg-gradient-to-r from-teal-400 to-emerald-400 bg-clip-text text-transparent">{analytics.uniqueVisitors.toLocaleString()}</div>
                         <p className="text-xs text-muted-foreground">Unique sessions</p>
                     </CardContent>
                 </Card>
 
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <Card className="hover:shadow-xl hover:scale-[1.02] transition-all duration-300 border-border/50 overflow-hidden group">
+                    <div className="absolute inset-0 bg-gradient-to-br from-violet-400/10 to-fuchsia-400/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
                         <CardTitle className="text-sm font-medium">Avg. Session</CardTitle>
-                        <Clock className="h-4 w-4 text-muted-foreground" />
+                        <div className="p-2 rounded-lg bg-violet-400/10 group-hover:bg-violet-400/20 transition-colors">
+                            <Clock className="h-4 w-4 text-violet-500" />
+                        </div>
                     </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{formatDuration(analytics.avgSessionDuration)}</div>
+                    <CardContent className="relative">
+                        <div className="text-2xl font-bold bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">{formatDuration(analytics.avgSessionDuration)}</div>
                         <p className="text-xs text-muted-foreground">Time on site</p>
                     </CardContent>
                 </Card>
 
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <Card className="hover:shadow-xl hover:scale-[1.02] transition-all duration-300 border-border/50 overflow-hidden group">
+                    <div className="absolute inset-0 bg-gradient-to-br from-amber-300/10 to-orange-300/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
                         <CardTitle className="text-sm font-medium">Bounce Rate</CardTitle>
-                        <MousePointer className="h-4 w-4 text-muted-foreground" />
+                        <div className="p-2 rounded-lg bg-amber-300/10 group-hover:bg-amber-300/20 transition-colors">
+                            <MousePointer className="h-4 w-4 text-amber-500" />
+                        </div>
                     </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{analytics.bounceRate}%</div>
+                    <CardContent className="relative">
+                        <div className="text-2xl font-bold bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">{analytics.bounceRate}%</div>
                         <p className="text-xs text-muted-foreground">Single page visits</p>
                     </CardContent>
                 </Card>
             </div>
 
             {/* Traffic Chart */}
-            <Card>
+            <Card className="border-border/50 shadow-lg hover:shadow-xl transition-shadow">
                 <CardHeader>
                     <CardTitle>Traffic Overview</CardTitle>
                     <CardDescription>Daily page views for the selected period</CardDescription>
@@ -222,9 +246,9 @@ export default function WebAnalytics() {
                                         </span>
                                         <span className="text-sm text-muted-foreground">{day.count} views</span>
                                     </div>
-                                    <div className="w-full bg-secondary rounded-full h-2">
+                                    <div className="w-full bg-secondary/50 rounded-full h-2.5 overflow-hidden">
                                         <div
-                                            className="bg-blue-500 h-2 rounded-full transition-all"
+                                            className="h-2.5 rounded-full transition-all duration-500 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600"
                                             style={{ width: `${percentage}%` }}
                                         />
                                     </div>
@@ -237,9 +261,12 @@ export default function WebAnalytics() {
 
             {/* Top Pages & Geographic Data */}
             <div className="grid gap-6 md:grid-cols-2">
-                <Card>
+                <Card className="border-border/50 shadow-lg hover:shadow-xl transition-shadow">
                     <CardHeader>
-                        <CardTitle>Top Pages</CardTitle>
+                        <CardTitle className="flex items-center gap-2">
+                            <Globe className="h-5 w-5 text-primary" />
+                            Top Pages
+                        </CardTitle>
                         <CardDescription>Most visited pages</CardDescription>
                     </CardHeader>
                     <CardContent>
@@ -257,9 +284,9 @@ export default function WebAnalytics() {
                                                 {page.count} views
                                             </span>
                                         </div>
-                                        <div className="w-full bg-secondary rounded-full h-2">
+                                        <div className="w-full bg-secondary/50 rounded-full h-2.5 overflow-hidden">
                                             <div
-                                                className="bg-primary h-2 rounded-full transition-all"
+                                                className="h-2.5 rounded-full transition-all duration-500 bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
                                                 style={{ width: `${percentage}%` }}
                                             />
                                         </div>
@@ -366,7 +393,7 @@ export default function WebAnalytics() {
                     <CardDescription>Average website performance indicators</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-6">
+                    <div className="grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-3 lg:grid-cols-6">
                         <div className="p-4 border rounded-lg">
                             <p className="text-xs text-muted-foreground mb-1">Load Time</p>
                             <p className="text-2xl font-bold">{analytics.avgPerformance.loadTime}ms</p>

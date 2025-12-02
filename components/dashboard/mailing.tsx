@@ -237,16 +237,16 @@ export default function MailingService() {
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6 animate-fade-in">
             {/* Header */}
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2 animate-slide-in-up">
                 <div className="flex items-center gap-3">
-                    <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10">
-                        <Mail className="h-5 w-5 text-primary" />
+                    <div className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-xl gradient-primary shadow-lg shadow-primary/20">
+                        <Mail className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                     </div>
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight">Mailing Service</h1>
-                        <p className="text-muted-foreground text-sm">
+                        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">Mailing Service</h1>
+                        <p className="text-muted-foreground text-xs sm:text-sm">
                             Send emails, manage templates, and track delivery
                         </p>
                     </div>
@@ -255,36 +255,45 @@ export default function MailingService() {
 
             {/* Stats Cards */}
             {stats && (
-                <div className="grid gap-4 md:grid-cols-3">
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-3 animate-slide-in-up animate-delay-100">
+                    <Card className="hover:shadow-xl hover:scale-[1.02] transition-all duration-300 border-border/50 overflow-hidden group">
+                        <div className="absolute inset-0 bg-gradient-to-br from-teal-400/10 to-emerald-300/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
                             <CardTitle className="text-sm font-medium">Total Sent</CardTitle>
-                            <CheckCircle className="h-4 w-4 text-green-500" />
+                            <div className="p-2 rounded-lg bg-teal-400/10 group-hover:bg-teal-400/20 transition-colors">
+                                <CheckCircle className="h-4 w-4 text-teal-500" />
+                            </div>
                         </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">{stats.totalSent}</div>
+                        <CardContent className="relative">
+                            <div className="text-2xl font-bold bg-gradient-to-r from-teal-400 to-emerald-400 bg-clip-text text-transparent">{stats.totalSent}</div>
                             <p className="text-xs text-muted-foreground">Successfully delivered</p>
                         </CardContent>
                     </Card>
 
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <Card className="hover:shadow-xl hover:scale-[1.02] transition-all duration-300 border-border/50 overflow-hidden group">
+                        <div className="absolute inset-0 bg-gradient-to-br from-amber-300/10 to-orange-300/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
                             <CardTitle className="text-sm font-medium">Pending</CardTitle>
-                            <Clock className="h-4 w-4 text-yellow-500" />
+                            <div className="p-2 rounded-lg bg-amber-300/10 group-hover:bg-amber-300/20 transition-colors">
+                                <Clock className="h-4 w-4 text-amber-500" />
+                            </div>
                         </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">{stats.totalPending}</div>
+                        <CardContent className="relative">
+                            <div className="text-2xl font-bold bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">{stats.totalPending}</div>
                             <p className="text-xs text-muted-foreground">In queue</p>
                         </CardContent>
                     </Card>
 
-                    <Card>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <Card className="hover:shadow-xl hover:scale-[1.02] transition-all duration-300 border-border/50 overflow-hidden group">
+                        <div className="absolute inset-0 bg-gradient-to-br from-pink-300/10 to-fuchsia-300/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
                             <CardTitle className="text-sm font-medium">Failed</CardTitle>
-                            <XCircle className="h-4 w-4 text-red-500" />
+                            <div className="p-2 rounded-lg bg-pink-300/10 group-hover:bg-pink-300/20 transition-colors">
+                                <XCircle className="h-4 w-4 text-pink-500" />
+                            </div>
                         </CardHeader>
-                        <CardContent>
-                            <div className="text-2xl font-bold">{stats.totalFailed}</div>
+                        <CardContent className="relative">
+                            <div className="text-2xl font-bold bg-gradient-to-r from-pink-400 to-fuchsia-400 bg-clip-text text-transparent">{stats.totalFailed}</div>
                             <p className="text-xs text-muted-foreground">Delivery errors</p>
                         </CardContent>
                     </Card>
@@ -292,25 +301,28 @@ export default function MailingService() {
             )}
 
             {/* Main Content */}
-            <Tabs value={activeTab} onValueChange={setActiveTab}>
-                <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="send">
-                        <Send className="h-4 w-4 mr-2" />
-                        Send Email
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="animate-scale-in animate-delay-200">
+                <TabsList className="grid w-full grid-cols-3 p-1 bg-muted/50">
+                    <TabsTrigger value="send" className="data-[state=active]:shadow-md transition-all text-xs sm:text-sm">
+                        <Send className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                        <span className="hidden xs:inline">Send</span>
+                        <span className="xs:hidden">📤</span>
                     </TabsTrigger>
-                    <TabsTrigger value="templates">
-                        <FileText className="h-4 w-4 mr-2" />
-                        Templates
+                    <TabsTrigger value="templates" className="data-[state=active]:shadow-md transition-all text-xs sm:text-sm">
+                        <FileText className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                        <span className="hidden xs:inline">Templates</span>
+                        <span className="xs:hidden">📄</span>
                     </TabsTrigger>
-                    <TabsTrigger value="queue">
-                        <Inbox className="h-4 w-4 mr-2" />
-                        Queue
+                    <TabsTrigger value="queue" className="data-[state=active]:shadow-md transition-all text-xs sm:text-sm">
+                        <Inbox className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" />
+                        <span className="hidden xs:inline">Queue</span>
+                        <span className="xs:hidden">📥</span>
                     </TabsTrigger>
                 </TabsList>
 
                 {/* Send Email Tab */}
                 <TabsContent value="send" className="space-y-4">
-                    <Card>
+                    <Card className="border-border/50 shadow-lg hover:shadow-xl transition-shadow">
                         <CardHeader>
                             <CardTitle>Compose Email</CardTitle>
                             <CardDescription>Send email to users or groups</CardDescription>
@@ -472,14 +484,15 @@ export default function MailingService() {
                         </Dialog>
                     </div>
 
-                    <div className="grid gap-4 md:grid-cols-2">
+                    <div className="grid gap-3 sm:gap-4 grid-cols-1 md:grid-cols-2">
                         {templates.map((template) => (
-                            <Card key={template.id}>
-                                <CardHeader>
+                            <Card key={template.id} className="border-border/50 hover:shadow-lg hover:scale-[1.02] transition-all duration-300 group">
+                                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity rounded-lg"></div>
+                                <CardHeader className="relative">
                                     <CardTitle className="text-lg">{template.name}</CardTitle>
                                     <CardDescription className="truncate">{template.subject}</CardDescription>
                                 </CardHeader>
-                                <CardContent>
+                                <CardContent className="relative">
                                     <p className="text-sm text-muted-foreground line-clamp-3 mb-4">
                                         {template.body}
                                     </p>
@@ -488,6 +501,7 @@ export default function MailingService() {
                                             size="sm"
                                             variant="outline"
                                             onClick={() => editTemplate(template)}
+                                            className="hover:bg-primary/10 hover:text-primary transition-colors"
                                         >
                                             <Edit className="h-4 w-4 mr-1" />
                                             Edit
@@ -499,6 +513,7 @@ export default function MailingService() {
                                                 setActiveTab("send");
                                                 handleLoadTemplate(template);
                                             }}
+                                            className="hover:bg-green-500/10 hover:text-green-500 transition-colors"
                                         >
                                             <Eye className="h-4 w-4 mr-1" />
                                             Use
@@ -507,6 +522,7 @@ export default function MailingService() {
                                             size="sm"
                                             variant="destructive"
                                             onClick={() => handleDeleteTemplate(template.id)}
+                                            className="hover:scale-110 transition-transform"
                                         >
                                             <Trash2 className="h-4 w-4" />
                                         </Button>
@@ -532,32 +548,32 @@ export default function MailingService() {
                                     queueItems.map((item) => (
                                         <div
                                             key={item.id}
-                                            className="flex items-center justify-between p-4 border rounded-lg"
+                                            className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 sm:p-4 border rounded-lg gap-2 sm:gap-4"
                                         >
-                                            <div className="flex-1">
-                                                <div className="flex items-center gap-2">
-                                                    <p className="font-medium">{item.recipient}</p>
-                                                    {item.status === "sent" && <CheckCircle className="h-4 w-4 text-green-500" />}
-                                                    {item.status === "pending" && <Clock className="h-4 w-4 text-yellow-500" />}
-                                                    {item.status === "failed" && <XCircle className="h-4 w-4 text-red-500" />}
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center gap-2 flex-wrap">
+                                                    <p className="font-medium text-sm truncate">{item.recipient}</p>
+                                                    {item.status === "sent" && <CheckCircle className="h-4 w-4 text-green-500 flex-shrink-0" />}
+                                                    {item.status === "pending" && <Clock className="h-4 w-4 text-yellow-500 flex-shrink-0" />}
+                                                    {item.status === "failed" && <XCircle className="h-4 w-4 text-rose-500 flex-shrink-0" />}
                                                 </div>
-                                                <p className="text-sm text-muted-foreground">{item.subject}</p>
-                                                <p className="text-xs text-muted-foreground mt-1">
+                                                <p className="text-xs sm:text-sm text-muted-foreground truncate">{item.subject}</p>
+                                                <p className="text-[10px] sm:text-xs text-muted-foreground mt-1">
                                                     {item.status === "sent" && item.sent_at
-                                                        ? `Sent: ${new Date(item.sent_at).toLocaleString()}`
-                                                        : `Scheduled: ${new Date(item.scheduled_at).toLocaleString()}`}
+                                                        ? `Sent: ${new Date(item.sent_at).toLocaleDateString()}`
+                                                        : `Scheduled: ${new Date(item.scheduled_at).toLocaleDateString()}`}
                                                 </p>
                                                 {item.error_message && (
-                                                    <p className="text-xs text-red-500 mt-1">{item.error_message}</p>
+                                                    <p className="text-[10px] sm:text-xs text-rose-500 mt-1 truncate">{item.error_message}</p>
                                                 )}
                                             </div>
-                                            <div className="ml-4">
+                                            <div className="self-start sm:self-center">
                                                 <span
-                                                    className={`px-2 py-1 text-xs rounded-full ${item.status === "sent"
-                                                            ? "bg-green-100 text-green-700"
-                                                            : item.status === "pending"
-                                                                ? "bg-yellow-100 text-yellow-700"
-                                                                : "bg-red-100 text-red-700"
+                                                    className={`px-2 py-1 text-xs rounded-full whitespace-nowrap ${item.status === "sent"
+                                                        ? "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400"
+                                                        : item.status === "pending"
+                                                            ? "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/30 dark:text-yellow-400"
+                                                            : "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400"
                                                         }`}
                                                 >
                                                     {item.status}

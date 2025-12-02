@@ -733,7 +733,7 @@ export default function Database() {
                                   setSelectedGroup(g);
                                   setDeleteGroupOpen(true);
                                 }}
-                                className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
+                                className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950"
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
@@ -802,7 +802,7 @@ export default function Database() {
                                   setSelectedMessage(m);
                                   setDeleteMessageOpen(true);
                                 }}
-                                className="text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-950"
+                                className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 dark:hover:bg-rose-950"
                               >
                                 <Trash2 className="h-4 w-4" />
                               </Button>
@@ -1043,11 +1043,11 @@ export default function Database() {
           </DialogHeader>
           {selectedGroup && (
             <div className="space-y-4">
-              <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg p-4">
-                <p className="text-sm font-medium text-red-900 dark:text-red-100">
+              <div className="bg-rose-50 dark:bg-rose-950 border border-rose-200 dark:border-rose-800 rounded-lg p-4">
+                <p className="text-sm font-medium text-rose-900 dark:text-rose-100">
                   Group: <span className="font-bold">{selectedGroup.name}</span>
                 </p>
-                <p className="text-xs text-red-700 dark:text-red-300 mt-1">
+                <p className="text-xs text-rose-700 dark:text-rose-300 mt-1">
                   All messages in this group will also be deleted.
                 </p>
               </div>
@@ -1078,11 +1078,11 @@ export default function Database() {
           </DialogHeader>
           {selectedMessage && (
             <div className="space-y-4">
-              <div className="bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg p-4">
-                <p className="text-sm font-medium text-red-900 dark:text-red-100">
+              <div className="bg-rose-50 dark:bg-rose-950 border border-rose-200 dark:border-rose-800 rounded-lg p-4">
+                <p className="text-sm font-medium text-rose-900 dark:text-rose-100">
                   Message: <span className="font-normal">{selectedMessage.message.substring(0, 100)}{selectedMessage.message.length > 100 ? '...' : ''}</span>
                 </p>
-                <p className="text-xs text-red-700 dark:text-red-300 mt-1">
+                <p className="text-xs text-rose-700 dark:text-rose-300 mt-1">
                   From group: {selectedMessage.group_name}
                 </p>
               </div>

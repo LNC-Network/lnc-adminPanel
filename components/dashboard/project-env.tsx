@@ -529,12 +529,11 @@ export default function ProjectEnv({ userRole }: ProjectEnvProps) {
               <button
                 key={project.id}
                 onClick={() => handleProjectClick(project)}
-                className={`w-full text-left p-3 rounded-xl bg-muted transition flex items-start justify-between ${
-                  selectedProject?.id === project.id && isUnlocked
+                className={`w-full text-left p-3 rounded-xl bg-muted transition flex items-start justify-between ${selectedProject?.id === project.id && isUnlocked
                     ? "border-primary bg-primary/5"
                     : "hover:shadow-sm"
-                }`}
-                aria-pressed={selectedProject?.id === project.id && isUnlocked}
+                  }`}
+                aria-current={selectedProject?.id === project.id && isUnlocked ? "true" : undefined}
                 aria-label={`Open project ${project.name}`}
               >
                 <div className="flex-1 min-w-0">

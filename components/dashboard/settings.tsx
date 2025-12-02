@@ -553,7 +553,7 @@ export default function Settings() {
                       <Label>Roles *</Label>
                       <div className="space-y-2 border rounded-lg p-3 max-h-64 overflow-y-auto">
                         {[
-                          { name: "Super Admin", icon: Shield, color: "text-red-500" },
+                          { name: "Super Admin", icon: Shield, color: "text-violet-500" },
                           { name: "Admistater", icon: Shield, color: "text-blue-500" },
                           { name: "Dev Team Admin", icon: Code, color: "text-green-500" },
                           { name: "Social Media Team Admin", icon: MessageSquare, color: "text-purple-500" },
@@ -770,7 +770,7 @@ export default function Settings() {
                                 </Badge>
                               )}
                               {pending.status === "rejected" && (
-                                <Badge className="bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-100">
+                                <Badge className="bg-rose-100 text-rose-700 dark:bg-rose-900 dark:text-rose-100">
                                   <XCircle className="h-3 w-3 mr-1" />
                                   Rejected
                                 </Badge>

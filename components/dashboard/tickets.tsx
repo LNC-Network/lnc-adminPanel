@@ -341,7 +341,7 @@ export default function Tickets() {
   const priorityColor = (p: string) => {
     switch (p) {
       case "critical":
-        return "bg-red-500/10 text-red-600 dark:text-red-300";
+        return "bg-rose-500/10 text-rose-600 dark:text-rose-300";
       case "high":
         return "bg-orange-500/10 text-orange-600 dark:text-orange-300";
       case "medium":

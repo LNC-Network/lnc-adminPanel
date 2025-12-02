@@ -907,7 +907,7 @@ export default function ChatPage() {
                                                 onClick={() => handleRejectRequest(request.id)}
                                                 className="flex-1 sm:flex-none h-9"
                                             >
-                                                <XCircle className="h-4 w-4 sm:mr-1 text-red-600" />
+                                                <XCircle className="h-4 w-4 sm:mr-1 text-rose-600" />
                                                 <span className="hidden sm:inline">Reject</span>
                                             </Button>
                                         </div>

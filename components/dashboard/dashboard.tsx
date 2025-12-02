@@ -371,7 +371,7 @@ export default function DashboardClient() {
                   <Button variant="ghost" size="icon" className="relative">
                     <Bell className="h-5 w-5" />
                     {notificationCount > 0 && (
-                      <span className="absolute top-1 right-1 h-5 w-5 bg-red-500 rounded-full text-[10px] text-white flex items-center justify-center">
+                      <span className="absolute top-1 right-1 h-5 w-5 bg-gradient-to-r from-pink-400 to-fuchsia-400 rounded-full text-[10px] text-white flex items-center justify-center shadow-lg shadow-pink-400/30">
                         {notificationCount > 9 ? '9+' : notificationCount}
                       </span>
                     )}

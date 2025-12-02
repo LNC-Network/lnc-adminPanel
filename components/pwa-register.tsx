@@ -31,7 +31,7 @@ export function PWARegister() {
             // Show install button or banner
             const installBanner = document.getElementById('install-banner');
             if (installBanner) {
-                installBanner.style.display = 'flex';
+                installBanner.classList.remove('hidden-initially');
             }
         });
 
@@ -43,7 +43,7 @@ export function PWARegister() {
             // Hide the install banner
             const installBanner = document.getElementById('install-banner');
             if (installBanner) {
-                installBanner.style.display = 'none';
+                installBanner.classList.add('hidden-initially');
             }
         });
 
@@ -63,7 +63,7 @@ export function PWARegister() {
                 // Show offline notification
                 const offlineDiv = document.createElement('div');
                 offlineDiv.id = 'offline-notification';
-                offlineDiv.style.cssText = 'position:fixed;top:0;left:0;right:0;background:#ef4444;color:white;padding:8px;text-align:center;z-index:9999;font-size:14px;';
+                offlineDiv.style.cssText = 'position:fixed;top:0;left:0;right:0;background:linear-gradient(to right,#7dd3fc,#c4b5fd);color:white;padding:8px;text-align:center;z-index:9999;font-size:14px;font-weight:500;';
                 offlineDiv.textContent = '⚠️ You are offline. Some features may be limited.';
                 document.body.appendChild(offlineDiv);
             } else {
@@ -101,19 +101,18 @@ export function InstallPrompt() {
 
         (window as any).deferredPrompt = null;
         const banner = document.getElementById('install-banner');
-        if (banner) banner.style.display = 'none';
+        if (banner) banner.classList.add('hidden-initially');
     };
 
     const handleDismiss = () => {
         const banner = document.getElementById('install-banner');
-        if (banner) banner.style.display = 'none';
+        if (banner) banner.classList.add('hidden-initially');
     };
 
     return (
         <div
             id="install-banner"
-            style={{ display: 'none' }}
-            className="fixed bottom-4 left-4 right-4 bg-primary text-primary-foreground p-4 rounded-lg shadow-lg z-50 flex items-center justify-between max-w-md mx-auto"
+            className="hidden-initially fixed bottom-4 left-4 right-4 bg-gradient-to-r from-sky-500 to-violet-500 text-white p-4 rounded-lg shadow-lg z-50 flex items-center justify-between max-w-md mx-auto"
         >
             <div className="flex-1">
                 <p className="font-semibold text-sm">Install LNC Admin App</p>
@@ -122,7 +121,7 @@ export function InstallPrompt() {
             <div className="flex items-center gap-2 ml-4">
                 <button
                     onClick={handleInstall}
-                    className="bg-white text-primary px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-100 transition"
+                    className="bg-white text-violet-600 px-4 py-2 rounded-md text-sm font-medium hover:bg-gray-100 transition"
                 >
                     Install
                 </button>

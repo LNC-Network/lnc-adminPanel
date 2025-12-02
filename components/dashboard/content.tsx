@@ -294,7 +294,7 @@ export default function Content() {
       pending: <Badge variant="outline" className="gap-1 border-yellow-500 text-yellow-600"><Clock className="h-3 w-3" /> Pending</Badge>,
       approved: <Badge variant="outline" className="gap-1 border-green-500 text-green-600"><CheckCircle className="h-3 w-3" /> Approved</Badge>,
       published: <Badge variant="outline" className="gap-1 border-blue-500 text-blue-600"><Share2 className="h-3 w-3" /> Published</Badge>,
-      rejected: <Badge variant="outline" className="gap-1 border-red-500 text-red-600"><XCircle className="h-3 w-3" /> Rejected</Badge>,
+      rejected: <Badge variant="outline" className="gap-1 border-rose-500 text-rose-600"><XCircle className="h-3 w-3" /> Rejected</Badge>,
     };
     return variants[status];
   };
@@ -303,7 +303,7 @@ export default function Content() {
     const icons = {
       design: <Palette className="h-5 w-5 text-purple-500" />,
       "social-media": <Share2 className="h-5 w-5 text-blue-500" />,
-      video: <Video className="h-5 w-5 text-red-500" />,
+      video: <Video className="h-5 w-5 text-pink-500" />,
       graphics: <ImageIcon className="h-5 w-5 text-green-500" />,
     };
     return icons[category];
@@ -676,7 +676,7 @@ export default function Content() {
                           <Download className="h-3 w-3" />
                         </Button>
                         <Button variant="outline" size="sm" onClick={() => handleDelete(item.id)}>
-                          <Trash2 className="h-3 w-3 text-red-500" />
+                          <Trash2 className="h-3 w-3 text-rose-500" />
                         </Button>
                       </div>
                     </CardContent>
@@ -737,7 +737,7 @@ export default function Content() {
                               <Download className="h-3 w-3" />
                             </Button>
                             <Button variant="outline" size="sm" onClick={() => handleDelete(item.id)}>
-                              <Trash2 className="h-3 w-3 text-red-500" />
+                              <Trash2 className="h-3 w-3 text-rose-500" />
                             </Button>
                           </div>
                         </div>

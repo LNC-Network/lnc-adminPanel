@@ -91,23 +91,34 @@ export default function ChatAnalytics() {
             .join(", ");
 
         return (
-            <div className="flex items-center gap-6">
+            <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
                 <div
-                    className="w-48 h-48 rounded-full"
+                    className="w-36 h-36 sm:w-48 sm:h-48 rounded-full flex-shrink-0"
                     style={{
                         background: `conic-gradient(${gradientString})`,
                     }}
+                    role="img"
+                    aria-label="Message types distribution pie chart"
                 />
-                <div className="space-y-2">
-                    {data.map((item, idx) => (
-                        <div key={idx} className="flex items-center gap-2">
-                            <div className={`w-4 h-4 rounded`} style={{ backgroundColor: item.color }} />
-                            <span className="text-sm font-medium">{item.label}</span>
-                            <span className="text-sm text-muted-foreground">
-                                ({item.value} - {((item.value / total) * 100).toFixed(1)}%)
-                            </span>
-                        </div>
-                    ))}
+                <div className="space-y-2 w-full sm:w-auto">
+                    {data.map((item, idx) => {
+                        const colorClasses: Record<string, string> = {
+                            '#7dd3fc': 'color-indicator-sky',
+                            '#5eead4': 'color-indicator-teal',
+                            '#fcd34d': 'color-indicator-amber',
+                            '#f9a8d4': 'color-indicator-pink',
+                            '#c4b5fd': 'color-indicator-violet',
+                        };
+                        return (
+                            <div key={idx} className="flex items-center gap-2">
+                                <div className={`w-4 h-4 rounded flex-shrink-0 ${colorClasses[item.color] || 'bg-primary'}`} />
+                                <span className="text-xs sm:text-sm font-medium">{item.label}</span>
+                                <span className="text-xs sm:text-sm text-muted-foreground">
+                                    ({item.value} - {((item.value / total) * 100).toFixed(1)}%)
+                                </span>
+                            </div>
+                        );
+                    })}
                 </div>
             </div>
         );
@@ -130,7 +141,7 @@ export default function ChatAnalytics() {
     }
 
     const messageTypesData = stats.messageTypes.map((type, idx) => {
-        const colors = ["#3b82f6", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6"];
+        const colors = ["#7dd3fc", "#5eead4", "#fcd34d", "#f9a8d4", "#c4b5fd"];
         return {
             label: type.type,
             value: type.count,
@@ -141,24 +152,24 @@ export default function ChatAnalytics() {
     const totalMessagesByType = stats.messageTypes.reduce((acc, type) => acc + type.count, 0);
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6 animate-fade-in">
             {/* Header */}
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2 animate-slide-in-up">
                 <div className="flex items-center gap-3">
-                    <div className="flex items-center justify-center w-10 h-10 rounded-lg bg-primary/10">
-                        <BarChart3 className="h-5 w-5 text-primary" />
+                    <div className="flex items-center justify-center w-10 h-10 sm:w-12 sm:h-12 rounded-xl gradient-primary shadow-lg shadow-primary/20">
+                        <BarChart3 className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                     </div>
                     <div>
-                        <h1 className="text-3xl font-bold tracking-tight">Chat Analytics</h1>
-                        <p className="text-muted-foreground text-sm">
-                            Comprehensive chat statistics and insights (Super Admin Only)
+                        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">Chat Analytics</h1>
+                        <p className="text-muted-foreground text-xs sm:text-sm">
+                            Comprehensive chat statistics and insights
                         </p>
                     </div>
                 </div>
             </div>
 
             {/* Search Section */}
-            <Card>
+            <Card className="border-border/50 shadow-lg hover:shadow-xl transition-shadow animate-scale-in animate-delay-100">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                         <Search className="h-5 w-5" />
@@ -203,47 +214,59 @@ export default function ChatAnalytics() {
             </Card>
 
             {/* Statistics Cards */}
-            <div className="grid gap-4 md:grid-cols-4">
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <div className="grid gap-3 sm:gap-4 grid-cols-2 lg:grid-cols-4 animate-slide-in-up animate-delay-200">
+                <Card className="hover:shadow-xl hover:scale-[1.02] transition-all duration-300 border-border/50 overflow-hidden group">
+                    <div className="absolute inset-0 bg-gradient-to-br from-sky-400/10 to-indigo-300/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
                         <CardTitle className="text-sm font-medium">Total Messages</CardTitle>
-                        <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                        <div className="p-2 rounded-lg bg-sky-400/10 group-hover:bg-sky-400/20 transition-colors">
+                            <MessageSquare className="h-4 w-4 text-sky-500" />
+                        </div>
                     </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{stats.totalMessages.toLocaleString()}</div>
+                    <CardContent className="relative">
+                        <div className="text-2xl font-bold bg-gradient-to-r from-sky-400 to-indigo-400 bg-clip-text text-transparent">{stats.totalMessages.toLocaleString()}</div>
                         <p className="text-xs text-muted-foreground">Across all groups</p>
                     </CardContent>
                 </Card>
 
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <Card className="hover:shadow-xl hover:scale-[1.02] transition-all duration-300 border-border/50 overflow-hidden group">
+                    <div className="absolute inset-0 bg-gradient-to-br from-teal-400/10 to-emerald-300/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
                         <CardTitle className="text-sm font-medium">Active Users</CardTitle>
-                        <Users className="h-4 w-4 text-muted-foreground" />
+                        <div className="p-2 rounded-lg bg-teal-400/10 group-hover:bg-teal-400/20 transition-colors">
+                            <Users className="h-4 w-4 text-teal-500" />
+                        </div>
                     </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{stats.totalUsers.toLocaleString()}</div>
+                    <CardContent className="relative">
+                        <div className="text-2xl font-bold bg-gradient-to-r from-teal-400 to-emerald-400 bg-clip-text text-transparent">{stats.totalUsers.toLocaleString()}</div>
                         <p className="text-xs text-muted-foreground">Participating in chats</p>
                     </CardContent>
                 </Card>
 
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <Card className="hover:shadow-xl hover:scale-[1.02] transition-all duration-300 border-border/50 overflow-hidden group">
+                    <div className="absolute inset-0 bg-gradient-to-br from-violet-400/10 to-fuchsia-300/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
                         <CardTitle className="text-sm font-medium">Chat Groups</CardTitle>
-                        <Globe className="h-4 w-4 text-muted-foreground" />
+                        <div className="p-2 rounded-lg bg-violet-400/10 group-hover:bg-violet-400/20 transition-colors">
+                            <Globe className="h-4 w-4 text-violet-500" />
+                        </div>
                     </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{stats.totalGroups.toLocaleString()}</div>
+                    <CardContent className="relative">
+                        <div className="text-2xl font-bold bg-gradient-to-r from-violet-400 to-fuchsia-400 bg-clip-text text-transparent">{stats.totalGroups.toLocaleString()}</div>
                         <p className="text-xs text-muted-foreground">Total groups created</p>
                     </CardContent>
                 </Card>
 
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <Card className="hover:shadow-xl hover:scale-[1.02] transition-all duration-300 border-border/50 overflow-hidden group">
+                    <div className="absolute inset-0 bg-gradient-to-br from-amber-300/10 to-orange-300/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 relative">
                         <CardTitle className="text-sm font-medium">Recent Logins</CardTitle>
-                        <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                        <div className="p-2 rounded-lg bg-amber-300/10 group-hover:bg-amber-300/20 transition-colors">
+                            <TrendingUp className="h-4 w-4 text-amber-500" />
+                        </div>
                     </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{stats.recentLogins.length}</div>
+                    <CardContent className="relative">
+                        <div className="text-2xl font-bold bg-gradient-to-r from-amber-400 to-orange-400 bg-clip-text text-transparent">{stats.recentLogins.length}</div>
                         <p className="text-xs text-muted-foreground">Last 7 days</p>
                     </CardContent>
                 </Card>
@@ -309,16 +332,16 @@ export default function ChatAnalytics() {
                     <CardDescription>Users with highest message counts</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    <div className="grid gap-4 md:grid-cols-3">
+                    <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
                         {stats.activeUsers.slice(0, 6).map((user, idx) => (
-                            <div key={idx} className="p-4 border rounded-lg">
-                                <div className="flex items-center gap-3">
-                                    <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 text-primary font-bold">
+                            <div key={idx} className="p-3 sm:p-4 border rounded-lg">
+                                <div className="flex items-center gap-2 sm:gap-3">
+                                    <div className="flex items-center justify-center w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-primary/10 text-primary font-bold text-sm sm:text-base flex-shrink-0">
                                         {idx + 1}
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <p className="font-medium text-sm truncate">{user.email}</p>
-                                        <p className="text-xs text-muted-foreground">
+                                        <p className="font-medium text-xs sm:text-sm truncate">{user.email}</p>
+                                        <p className="text-[10px] sm:text-xs text-muted-foreground">
                                             {user.messageCount} messages
                                         </p>
                                     </div>
@@ -371,16 +394,16 @@ export default function ChatAnalytics() {
                     <CardContent>
                         <div className="space-y-3">
                             {stats.recentLogins.slice(0, 10).map((login, idx) => (
-                                <div key={idx} className="flex items-center justify-between p-3 border rounded-lg">
+                                <div key={idx} className="flex items-center justify-between p-2 sm:p-3 border rounded-lg gap-2">
                                     <div className="flex-1 min-w-0">
-                                        <p className="font-medium text-sm truncate">{login.email}</p>
-                                        <p className="text-xs text-muted-foreground">
-                                            Last login: {new Date(login.lastLogin).toLocaleString()}
+                                        <p className="font-medium text-xs sm:text-sm truncate">{login.email}</p>
+                                        <p className="text-[10px] sm:text-xs text-muted-foreground truncate">
+                                            Last: {new Date(login.lastLogin).toLocaleDateString()}
                                         </p>
                                     </div>
-                                    <div className="text-right ml-4">
-                                        <p className="text-sm font-semibold">{login.loginCount}x</p>
-                                        <p className="text-xs text-muted-foreground">logins</p>
+                                    <div className="text-right flex-shrink-0">
+                                        <p className="text-xs sm:text-sm font-semibold">{login.loginCount}x</p>
+                                        <p className="text-[10px] sm:text-xs text-muted-foreground">logins</p>
                                     </div>
                                 </div>
                             ))}

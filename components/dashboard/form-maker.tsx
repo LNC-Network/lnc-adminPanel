@@ -207,6 +207,8 @@ export default function FormMaker() {
                   <button
                     onClick={createNewForm}
                     className="p-1.5 text-primary hover:bg-accent rounded transition"
+                    title="Create new form"
+                    aria-label="Create new form"
                   >
                     <Plus className="w-4 h-4" />
                   </button>
@@ -222,8 +224,8 @@ export default function FormMaker() {
                       setFormDescription(form.description);
                     }}
                     className={`w-full text-left px-3 py-2 rounded-md text-sm transition ${currentForm?.id === form.id
-                        ? "bg-accent text-accent-foreground"
-                        : "text-card-foreground hover:bg-muted"
+                      ? "bg-accent text-accent-foreground"
+                      : "text-card-foreground hover:bg-muted"
                       }`}
                   >
                     <div className="font-medium">{form.name}</div>
@@ -306,13 +308,18 @@ export default function FormMaker() {
                             <input
                               type="checkbox"
                               className="w-4 h-4 text-primary border-border rounded focus:ring-ring"
+                              aria-label={field.label || "Checkbox option"}
+                              title={field.label || "Checkbox option"}
                             />
                             <span className="text-sm text-foreground">
                               {field.placeholder}
                             </span>
                           </div>
                         ) : field.type === "select" ? (
-                          <select className="w-full px-3 py-2 bg-input border border-border rounded-lg focus:ring-2 focus:ring-ring focus:border-transparent outline-none text-foreground">
+                          <select
+                            className="w-full px-3 py-2 bg-input border border-border rounded-lg focus:ring-2 focus:ring-ring focus:border-transparent outline-none text-foreground"
+                            aria-label={field.label || "Select option"}
+                          >
                             <option value="">Select...</option>
                             {field.options?.map((o, i) => (
                               <option value={o} key={i}>
@@ -411,6 +418,8 @@ export default function FormMaker() {
                           <button
                             onClick={() => removeField(field.id)}
                             className="p-2 text-destructive hover:bg-destructive/10 rounded-md transition flex-shrink-0"
+                            title="Remove field"
+                            aria-label="Remove field"
                           >
                             <Trash2 className="w-4 h-4" />
                           </button>
