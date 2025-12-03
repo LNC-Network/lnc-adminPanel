@@ -20,37 +20,33 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // For all users (including admins), return only groups they're members of
-    const { data: memberGroups, error } = await supabase
-      .from("chat_members")
-      .select(`
-        group_id,
-        chat_groups(
-          id,
-          name,
-          description,
-          created_by,
-          created_at,
-          updated_at
-        )
-      `)
-      .eq("user_id", userId);
+    // Fetch all groups
+    const { data: allGroups, error: groupsError } = await supabase
+      .from("chat_groups")
+      .select("id, name, description, created_by, created_at, updated_at")
+      .order("created_at", { ascending: false });
 
-    if (error) {
-      console.error("Fetch groups error:", error);
+    if (groupsError) {
+      console.error("Fetch groups error:", groupsError);
       return NextResponse.json(
-        { error: error.message },
+        { error: groupsError.message },
         { status: 500 }
       );
     }
 
-    // Extract and format groups
-    const groups = memberGroups
-      .map((item: any) => item.chat_groups)
-      .filter((group: any) => group !== null)
-      .sort((a: any, b: any) => 
-        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      );
+    // Fetch user's memberships to mark which groups they belong to
+    const { data: memberGroups } = await supabase
+      .from("chat_members")
+      .select("group_id")
+      .eq("user_id", userId);
+
+    const memberGroupIds = new Set(memberGroups?.map((m: any) => m.group_id) || []);
+
+    // Add is_member flag to each group
+    const groups = allGroups.map((group: any) => ({
+      ...group,
+      is_member: memberGroupIds.has(group.id),
+    }));
 
     return NextResponse.json({ groups });
   } catch (error) {

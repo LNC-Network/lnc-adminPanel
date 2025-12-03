@@ -35,6 +35,7 @@ interface Group {
     created_at: string;
     member_count?: number;
     unseen_count?: number;
+    is_member?: boolean;
 }
 
 interface User {
@@ -116,17 +117,28 @@ export default function ChatPage() {
         }
         fetchGroups();
         fetchUnseenCounts();
+
+        // Auto-refresh groups every 30 seconds
+        const groupsInterval = setInterval(fetchGroups, 30000);
+        return () => clearInterval(groupsInterval);
     }, []);
 
     useEffect(() => {
         if (selectedGroup) {
-            fetchMessages(selectedGroup.id);
-            markMessagesAsSeen(selectedGroup.id);
-            // Poll for new messages every 3 seconds
-            const interval = setInterval(() => {
+            // Check membership immediately from group data
+            if (selectedGroup.is_member === false) {
+                setHasAccess(false);
+                setMessages([]);
+            } else {
+                setHasAccess(true);
                 fetchMessages(selectedGroup.id);
-            }, 3000);
-            return () => clearInterval(interval);
+                markMessagesAsSeen(selectedGroup.id);
+                // Poll for new messages every 3 seconds
+                const interval = setInterval(() => {
+                    fetchMessages(selectedGroup.id);
+                }, 3000);
+                return () => clearInterval(interval);
+            }
         }
     }, [selectedGroup]);
 
@@ -575,12 +587,19 @@ export default function ChatPage() {
                                         </AvatarFallback>
                                     </Avatar>
                                     <div className="flex-1 min-w-0">
-                                        <h3 className="font-medium truncate text-sm sm:text-base">{group.name}</h3>
+                                        <div className="flex items-center gap-2">
+                                            <h3 className="font-medium truncate text-sm sm:text-base">{group.name}</h3>
+                                            {group.is_member === false && (
+                                                <Badge variant="outline" className="text-xs flex-shrink-0">
+                                                    Not joined
+                                                </Badge>
+                                            )}
+                                        </div>
                                         <p className="text-xs text-muted-foreground truncate">
                                             {group.description || "No description"}
                                         </p>
                                     </div>
-                                    {group.unseen_count && group.unseen_count > 0 && (
+                                    {group.is_member !== false && group.unseen_count && group.unseen_count > 0 && (
                                         <div className="flex-shrink-0">
                                             <div className="bg-blue-500 text-white text-xs font-bold rounded-full h-5 w-5 sm:h-6 sm:w-6 flex items-center justify-center">
                                                 {group.unseen_count > 9 ? '9+' : group.unseen_count}
