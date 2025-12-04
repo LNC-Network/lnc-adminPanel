@@ -1,0 +1,54 @@
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#0f0f0f"/>
+      <stop offset="100%" style="stop-color:#1a1a2e"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#3b82f6"/>
+      <stop offset="100%" style="stop-color:#8b5cf6"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  
+  <!-- Grid pattern -->
+  <g opacity="0.1">
+    <line x1="0" y1="100" x2="1200" y2="100" stroke="#ffffff" stroke-width="1"/>
+    <line x1="0" y1="200" x2="1200" y2="200" stroke="#ffffff" stroke-width="1"/>
+    <line x1="0" y1="300" x2="1200" y2="300" stroke="#ffffff" stroke-width="1"/>
+    <line x1="0" y1="400" x2="1200" y2="400" stroke="#ffffff" stroke-width="1"/>
+    <line x1="0" y1="500" x2="1200" y2="500" stroke="#ffffff" stroke-width="1"/>
+    <line x1="200" y1="0" x2="200" y2="630" stroke="#ffffff" stroke-width="1"/>
+    <line x1="400" y1="0" x2="400" y2="630" stroke="#ffffff" stroke-width="1"/>
+    <line x1="600" y1="0" x2="600" y2="630" stroke="#ffffff" stroke-width="1"/>
+    <line x1="800" y1="0" x2="800" y2="630" stroke="#ffffff" stroke-width="1"/>
+    <line x1="1000" y1="0" x2="1000" y2="630" stroke="#ffffff" stroke-width="1"/>
+  </g>
+  
+  <!-- Accent line -->
+  <rect x="0" y="0" width="1200" height="4" fill="url(#accent)"/>
+  
+  <!-- Logo circle -->
+  <circle cx="600" cy="220" r="80" fill="url(#accent)" opacity="0.2"/>
+  <circle cx="600" cy="220" r="60" fill="url(#accent)" opacity="0.3"/>
+  <text x="600" y="240" font-family="Arial, sans-serif" font-size="48" font-weight="bold" fill="white" text-anchor="middle">LNC</text>
+  
+  <!-- Title -->
+  <text x="600" y="360" font-family="Arial, sans-serif" font-size="56" font-weight="bold" fill="white" text-anchor="middle">Admin Panel</text>
+  
+  <!-- Subtitle -->
+  <text x="600" y="420" font-family="Arial, sans-serif" font-size="24" fill="#a1a1aa" text-anchor="middle">Network Management Dashboard</text>
+  
+  <!-- Features -->
+  <g font-family="Arial, sans-serif" font-size="16" fill="#71717a">
+    <text x="300" y="520" text-anchor="middle">👥 User Management</text>
+    <text x="500" y="520" text-anchor="middle">📊 Analytics</text>
+    <text x="700" y="520" text-anchor="middle">📧 Mailing</text>
+    <text x="900" y="520" text-anchor="middle">📅 Calendar</text>
+  </g>
+  
+  <!-- URL -->
+  <text x="600" y="590" font-family="Arial, sans-serif" font-size="18" fill="#3b82f6" text-anchor="middle">lnc-admin-panel.vercel.app</text>
+</svg>

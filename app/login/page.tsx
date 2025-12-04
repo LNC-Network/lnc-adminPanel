@@ -1,6 +1,20 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { Metadata } from "next";
 import LoginPage from "@/components/login-page";
+
+export const metadata: Metadata = {
+  title: "Login",
+  description: "Sign in to LNC Admin Panel. Access your dashboard to manage users, teams, content, and analytics.",
+  openGraph: {
+    title: "Login | LNC Admin Panel",
+    description: "Sign in to access your LNC Network administrative dashboard.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+};
 
 export default async function Page() {
   const cookieStore = cookies();
