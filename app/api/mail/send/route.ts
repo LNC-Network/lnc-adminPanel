@@ -70,14 +70,20 @@ export async function POST(request: NextRequest) {
 
     const scheduled = scheduledAt ? new Date(scheduledAt) : new Date();
     const isScheduled = scheduledAt && new Date(scheduledAt) > new Date();
+    
+    const fromEmail = process.env.GMAIL_USER || process.env.EMAIL_FROM || 'noreply@lnc.com';
+    const fromName = process.env.EMAIL_FROM_NAME || 'LNC Admin Panel';
 
-    // Add emails to queue
+    // Add emails to queue with correct column names
     const queueItems = recipients.map(email => ({
-      recipient: email,
+      to_email: email,
+      from_email: fromEmail,
+      from_name: fromName,
       subject,
-      body: emailBody,
+      body_html: emailBody.replace(/\n/g, "<br>"),
+      body_text: emailBody,
       status: isScheduled ? "pending" : "pending",
-      scheduled_at: scheduled.toISOString(),
+      scheduled_for: scheduled.toISOString(),
     }));
 
     const { error: queueError } = await supabase
@@ -104,7 +110,7 @@ export async function POST(request: NextRequest) {
               status: "sent",
               sent_at: new Date().toISOString(),
             })
-            .eq("recipient", email)
+            .eq("to_email", email)
             .eq("subject", subject)
             .eq("status", "pending");
         } catch (error: any) {
@@ -115,7 +121,7 @@ export async function POST(request: NextRequest) {
               status: "failed",
               error_message: error.message,
             })
-            .eq("recipient", email)
+            .eq("to_email", email)
             .eq("subject", subject)
             .eq("status", "pending");
         }

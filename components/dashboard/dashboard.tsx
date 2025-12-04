@@ -18,7 +18,7 @@ import {
   MessageSquare,
   ListTodo,
   CheckCircle,
-  Users,
+  Users as UsersIcon,
   FolderLock,
   Calendar as CalendarIcon,
   BarChart3,
@@ -35,6 +35,7 @@ import {
   canAccessSettings,
   canAccessTickets,
   canViewAll,
+  canAccessMailing,
 } from "@/lib/permissions";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -78,6 +79,7 @@ const Mailing = dynamic(() => import("./mailing"));
 const Tickets = dynamic(() => import("./tickets"));
 const ProjectEnv = dynamic(() => import("./project-env"));
 const CalendarPage = dynamic(() => import("./calendar"));
+const UserManagement = dynamic(() => import("./user-management"));
 
 export default function DashboardClient() {
   const [currentTab, setCurrentTab] = useState<string>(() => {
@@ -262,12 +264,13 @@ export default function DashboardClient() {
     { id: "chat", label: "Chat", icon: MessageSquare },
     { id: "chat-analytics", label: "Chat Analytics", icon: BarChart3, requiresPermission: () => isSuperAdmin(userRoles) },
     { id: "web-analytics", label: "Web Analytics", icon: Activity, requiresPermission: () => isSuperAdmin(userRoles) },
-    { id: "mailing", label: "Mailing Service", icon: Mail, requiresPermission: () => isSuperAdmin(userRoles) },
+    { id: "mailing", label: "Mailing Service", icon: Mail, requiresPermission: () => canAccessMailing(userRoles) },
     { id: "tickets", label: "Tickets", icon: ListTodo, requiresPermission: () => canAccessTickets(userRoles) },
     { id: "database", label: "Database", icon: DatabaseIcon, requiresPermission: () => canAccessDatabase(userRoles) },
     { id: "forms", label: "Forms", icon: FormInput },
     { id: "project-env", label: "Project ENV", icon: FolderLock, requiresPermission: () => canAccessProjectEnv(userRoles) },
-    { id: "settings", label: "Settings", icon: SettingsIcon, requiresPermission: () => canAccessSettings(userRoles) },
+    { id: "user-manage", label: "User Manage", icon: UsersIcon, requiresPermission: () => isSuperAdmin(userRoles) },
+    { id: "settings", label: "Settings", icon: SettingsIcon },
   ].filter(item => {
     if (item.requiresPermission) return item.requiresPermission();
     return true;
@@ -718,12 +721,13 @@ export default function DashboardClient() {
             {currentTab === "chat" && <Chat />}
             {currentTab === "chat-analytics" && isSuperAdmin(userRoles) && <ChatAnalytics />}
             {currentTab === "web-analytics" && isSuperAdmin(userRoles) && <WebAnalytics />}
-            {currentTab === "mailing" && isSuperAdmin(userRoles) && <Mailing />}
+            {currentTab === "mailing" && canAccessMailing(userRoles) && <Mailing />}
             {currentTab === "tickets" && canAccessTickets(userRoles) && <Tickets />}
             {currentTab === "database" && canAccessDatabase(userRoles) && <Database />}
             {currentTab === "forms" && <FormMaker />}
             {currentTab === "project-env" && <ProjectEnv userRole={userRoles[0] || ""} />}
-            {currentTab === "settings" && canAccessSettings(userRoles) && <Settings />}
+            {currentTab === "user-manage" && isSuperAdmin(userRoles) && <UserManagement />}
+            {currentTab === "settings" && <Settings />}
           </main>
         </div>
       </div>

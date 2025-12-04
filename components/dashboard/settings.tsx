@@ -1,39 +1,22 @@
 "use client";
+import { useState, useEffect, useRef } from "react";
 import { Label } from "../ui/label";
-import {
-  Plus,
-  Trash2,
-  Shield,
-  User,
-  CheckCircle,
-  XCircle,
-  Clock,
-  UserPlus,
-  Users,
-  Code,
-  MessageSquare,
-  Megaphone,
-  Palette,
-  FileText,
-} from "lucide-react";
-import { isSuperAdmin, isAdmistater } from "@/lib/permissions";
 import { Input } from "../ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Button } from "../ui/button";
+import {
+  Palette,
+  User,
+  Lock,
+  Camera,
+  Save,
+  Eye,
+  EyeOff,
+  Bell,
+  Globe,
+  Shield,
+  Mail
+} from "lucide-react";
+import ThemeSwitch from "../ThemeSwitch";
 import {
   Card,
   CardContent,
@@ -41,376 +24,283 @@ import {
   CardHeader,
   CardTitle,
 } from "../ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "../ui/avatar";
 import { Badge } from "../ui/badge";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "../ui/dialog";
-import { Textarea } from "../ui/textarea";
-import { Checkbox } from "../ui/checkbox";
-import ThemeSwitch from "../ThemeSwitch";
-import { useState, useEffect } from "react";
+import { Separator } from "../ui/separator";
+import { Switch } from "../ui/switch";
 import { toast } from "sonner";
 import { Toaster } from "../ui/sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "../ui/tabs";
 
-interface AuthUser {
-  id: string;
-  email: string;
-  display_name?: string;
-  created_at: string;
-  last_sign_in_at?: string;
-  user_metadata?: {
-    role?: string;
-  };
-  roles?: string[];
-}
-
-interface PendingUser {
+interface UserData {
   id: string;
   display_name: string;
   email: string;
-  team: string;
-  status: string;
-  submitted_at: string;
-  reviewed_at?: string;
-  reviewed_by?: string;
-  rejection_reason?: string;
+  personal_email?: string;
+  avatar_url?: string;
+  roles?: string[];
+  team?: string;
+  created_at?: string;
 }
 
 export default function Settings() {
-  const [users, setUsers] = useState<AuthUser[]>([]);
-  const [pendingUsers, setPendingUsers] = useState<PendingUser[]>([]);
-  // User creation form states
+  const [userData, setUserData] = useState<UserData | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  // Profile form states
   const [displayName, setDisplayName] = useState("");
-  const [email, setEmail] = useState("");
   const [personalEmail, setPersonalEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [savingProfile, setSavingProfile] = useState(false);
+
+  // Password form states
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
-  const [team, setTeam] = useState("");
-  const [newUserRoles, setNewUserRoles] = useState<string[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [currentUserId, setCurrentUserId] = useState("");
-  const [currentUserRoles, setCurrentUserRoles] = useState<string[]>([]);
-  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
-  const [selectedPending, setSelectedPending] = useState<PendingUser | null>(
-    null
-  );
-  const [rejectionReason, setRejectionReason] = useState("");
-  const [approvingId, setApprovingId] = useState<string | null>(null);
-  const [editingUserId, setEditingUserId] = useState<string | null>(null);
-  const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
-  const [showRoleDialog, setShowRoleDialog] = useState(false);
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [changingPassword, setChangingPassword] = useState(false);
 
-  const canEdit = !isAdmistater(currentUserRoles);
-  const canCreateUser = isSuperAdmin(currentUserRoles);
+  // Avatar states
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const clear = () => {
-    setDisplayName("");
-    setEmail("");
-    setPersonalEmail("");
-    setPassword("");
-    setConfirmPassword("");
-    setTeam("");
-    setNewUserRoles([]);
-  };
+  // Notification preferences
+  const [emailNotifications, setEmailNotifications] = useState(true);
+  const [pushNotifications, setPushNotifications] = useState(true);
+  const [soundEnabled, setSoundEnabled] = useState(true);
+  const [savingPreferences, setSavingPreferences] = useState(false);
 
   useEffect(() => {
-    if (typeof window !== "undefined") {
-      const userData = localStorage.getItem("user");
-      if (userData) {
-        try {
-          const user = JSON.parse(userData);
-          setCurrentUserId(user.id || "");
-          setCurrentUserRoles(user.roles || []);
-        } catch (e) {
-          console.error("Failed to parse user data:", e);
-        }
-      }
-    }
-    fetchUsers();
-    fetchPendingUsers();
+    fetchUserData();
   }, []);
 
-  const fetchUsers = async () => {
-    try {
-      const res = await fetch("/api/users/fetch?start=0&end=100");
-      const json = await res.json();
+  // Fetch preferences when userData is loaded
+  useEffect(() => {
+    if (userData?.id) {
+      fetchPreferences(userData.id);
+    }
+  }, [userData?.id]);
 
-      if (res.ok) {
-        setUsers(json.data || []);
-      } else {
-        toast.error(json.error || "Failed to fetch users");
+  const fetchUserData = async () => {
+    try {
+      // Get user ID from localStorage
+      const storedUser = localStorage.getItem("user");
+      if (!storedUser) {
+        throw new Error("Not authenticated");
+      }
+
+      const user = JSON.parse(storedUser);
+      const userId = user.id;
+
+      if (!userId) {
+        throw new Error("User ID not found");
+      }
+
+      // Fetch full user profile from database
+      const profileResponse = await fetch(`/api/users/me?userId=${userId}`);
+      if (profileResponse.ok) {
+        const profileData = await profileResponse.json();
+        setUserData(profileData.user);
+        setDisplayName(profileData.user.display_name || "");
+        setPersonalEmail(profileData.user.personal_email || "");
+        setAvatarPreview(profileData.user.avatar_url || null);
       }
     } catch (error) {
-      toast.error("Failed to fetch users");
-      console.error(error);
-    }
-  };
-
-  const fetchPendingUsers = async () => {
-    try {
-      const res = await fetch("/api/users/pending");
-      const json = await res.json();
-
-      if (res.ok) {
-        setPendingUsers(json.pending_users || []);
-      } else {
-        toast.error(json.error || "Failed to fetch pending registrations");
-      }
-    } catch (error) {
-      toast.error("Failed to fetch pending registrations");
-      console.error(error);
-    }
-  };
-
-  const handleApprove = async (
-    pendingUser: PendingUser,
-    assignedRole: string
-  ) => {
-    console.log("Approving user:", pendingUser.email, "as role:", assignedRole);
-    console.log("Current user ID:", currentUserId);
-
-    if (!currentUserId) {
-      toast.error("Admin user ID not found. Please refresh and try again.");
-      return;
-    }
-
-    setApprovingId(pendingUser.id);
-    try {
-      const payload = {
-        pending_user_id: pendingUser.id,
-        action: "approve",
-        reviewed_by: currentUserId,
-        role: assignedRole,
-      };
-      console.log("Sending approval request:", payload);
-
-      const response = await fetch("/api/users/pending", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-
-      const data = await response.json();
-      console.log("Approval response:", data);
-
-      if (response.ok) {
-        toast.success(`${pendingUser.email} approved and account created`);
-        fetchPendingUsers();
-        fetchUsers();
-      } else {
-        console.error("Approval failed:", data);
-        toast.error(data.error || "Failed to approve registration");
-      }
-    } catch (error) {
-      console.error("Approval error:", error);
-      toast.error("Failed to approve registration");
-    } finally {
-      setApprovingId(null);
-    }
-  };
-
-  const handleReject = async () => {
-    if (!selectedPending) return;
-
-    try {
-      const response = await fetch("/api/users/pending", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          pending_user_id: selectedPending.id,
-          action: "reject",
-          reviewed_by: currentUserId,
-          rejection_reason: rejectionReason || "Not specified",
-        }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        toast.success(`${selectedPending.email} registration rejected`);
-        setRejectDialogOpen(false);
-        setRejectionReason("");
-        setSelectedPending(null);
-        fetchPendingUsers();
-      } else {
-        toast.error(data.error || "Failed to reject registration");
-      }
-    } catch (error) {
-      toast.error("Failed to reject registration");
-      console.error(error);
-    }
-  };
-
-  const openRejectDialog = (pendingUser: PendingUser) => {
-    setSelectedPending(pendingUser);
-    setRejectDialogOpen(true);
-  };
-
-  const handleOpenRoleDialog = (user: AuthUser) => {
-    setEditingUserId(user.id);
-    setSelectedRoles(user.roles || []);
-    setShowRoleDialog(true);
-  };
-
-  const handleUpdateRoles = async () => {
-    if (!editingUserId) return;
-
-    console.log(
-      "Updating roles for user:",
-      editingUserId,
-      "to:",
-      selectedRoles
-    );
-
-    try {
-      const response = await fetch("/api/users/update-roles", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          userId: editingUserId,
-          roles: selectedRoles,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        toast.success("User roles updated successfully");
-        setShowRoleDialog(false);
-        setEditingUserId(null);
-        setSelectedRoles([]);
-        fetchUsers();
-      } else {
-        console.error("Failed to update roles:", data);
-        toast.error(data.error || "Failed to update user roles");
-      }
-    } catch (error) {
-      console.error("Error updating roles:", error);
-      toast.error("Failed to update user roles");
-    }
-  };
-
-  const addUser = async () => {
-    // Validation
-    if (!displayName || !email || !password || !confirmPassword) {
-      toast.warning("Display name, email, and password are required");
-      return;
-    }
-
-    if (!email.endsWith("@lnc.com")) {
-      toast.warning("Email must be from @lnc.com domain");
-      return;
-    }
-
-    if (password.length < 6) {
-      toast.warning("Password must be at least 6 characters");
-      return;
-    }
-
-    if (password !== confirmPassword) {
-      toast.warning("Passwords do not match");
-      return;
-    }
-
-    if (newUserRoles.length === 0) {
-      toast.warning("Please select at least one role");
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const response = await fetch("/api/users/create-direct", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          display_name: displayName,
-          email,
-          personal_email: personalEmail || null,
-          password,
-          team: team || null,
-          roles: newUserRoles
-        }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        toast.success(`User ${displayName} created successfully!`);
-        clear();
-        fetchUsers();
-      } else {
-        toast.error(data.error || "Failed to create user");
-      }
-    } catch (error) {
-      toast.error("Failed to create user");
-      console.error(error);
+      console.error("Failed to fetch user data:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  const deleteUser = async (userId: string, userEmail: string) => {
-    if (!confirm(`Are you sure you want to delete ${userEmail}?`)) {
+  const fetchPreferences = async (userId: string) => {
+    try {
+      const response = await fetch(`/api/users/preferences?userId=${userId}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data.preferences) {
+          setEmailNotifications(data.preferences.email_notifications ?? true);
+          setPushNotifications(data.preferences.push_notifications ?? true);
+          setSoundEnabled(data.preferences.sound_enabled ?? true);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to fetch preferences:", error);
+    }
+  };
+
+  const handleSavePreferences = async () => {
+    if (!userData) return;
+
+    setSavingPreferences(true);
+    try {
+      const response = await fetch("/api/users/preferences", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: userData.id,
+          email_notifications: emailNotifications,
+          push_notifications: pushNotifications,
+          sound_enabled: soundEnabled,
+        }),
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        toast.success("Preferences saved successfully!");
+      } else {
+        toast.error(data.error || "Failed to save preferences");
+      }
+    } catch (error) {
+      toast.error("Failed to save preferences");
+      console.error(error);
+    } finally {
+      setSavingPreferences(false);
+    }
+  };
+
+  const handleSaveProfile = async () => {
+    if (!userData) return;
+
+    setSavingProfile(true);
+    try {
+      const response = await fetch("/api/users/update-profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: userData.id,
+          display_name: displayName,
+          personal_email: personalEmail,
+        }),
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        toast.success("Profile updated successfully!");
+        setUserData({ ...userData, display_name: displayName, personal_email: personalEmail });
+      } else {
+        toast.error(data.error || "Failed to update profile");
+      }
+    } catch (error) {
+      toast.error("Failed to update profile");
+      console.error(error);
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
+  const handleChangePassword = async () => {
+    if (!userData) return;
+
+    if (newPassword !== confirmPassword) {
+      toast.error("New passwords do not match");
       return;
     }
 
-    console.log("Deleting user:", userId, userEmail);
-
-    try {
-      const response = await fetch("/api/users/delete", {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ userId }),
-      });
-
-      const data = await response.json();
-      console.log("Delete response:", data);
-
-      if (response.ok) {
-        toast.success("User deleted");
-        fetchUsers();
-      } else {
-        console.error("Delete failed:", data);
-        toast.error(data.error || "Failed to delete user");
-      }
-    } catch (error) {
-      console.error("Delete error:", error);
-      toast.error("Failed to delete user");
+    if (newPassword.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
     }
-  };
 
-  const updateUserRole = async (userId: string, newRole: string) => {
+    setChangingPassword(true);
     try {
-      const response = await fetch("/api/users/update-role", {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ userId, role: newRole }),
+      const response = await fetch("/api/users/change-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: userData.id,
+          currentPassword,
+          newPassword,
+        }),
       });
 
       const data = await response.json();
-
       if (response.ok) {
-        toast.success(`Role updated to ${newRole}`);
-        fetchUsers();
+        toast.success("Password changed successfully!");
+        setCurrentPassword("");
+        setNewPassword("");
+        setConfirmPassword("");
       } else {
-        toast.error(data.error || "Failed to update role");
+        toast.error(data.error || "Failed to change password");
       }
     } catch (error) {
-      toast.error("Failed to update role");
+      toast.error("Failed to change password");
       console.error(error);
+    } finally {
+      setChangingPassword(false);
     }
   };
+
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !userData) return;
+
+    // Preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setAvatarPreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+
+    // Upload
+    setUploadingAvatar(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("userId", userData.id);
+
+      const response = await fetch("/api/users/upload-avatar", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+      if (response.ok) {
+        toast.success("Avatar uploaded successfully!");
+        setAvatarPreview(data.avatarUrl);
+        setUserData({ ...userData, avatar_url: data.avatarUrl });
+      } else {
+        toast.error(data.error || "Failed to upload avatar");
+        setAvatarPreview(userData.avatar_url || null);
+      }
+    } catch (error) {
+      toast.error("Failed to upload avatar");
+      setAvatarPreview(userData.avatar_url || null);
+      console.error(error);
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -419,440 +309,420 @@ export default function Settings() {
         <div>
           <h2 className="text-xl sm:text-2xl font-bold tracking-tight">Settings</h2>
           <p className="text-sm sm:text-base text-muted-foreground">
-            Manage users, roles, and system configuration
+            Manage your account settings and preferences
           </p>
         </div>
 
-        <Tabs defaultValue="users" className="space-y-4">
+        <Tabs defaultValue="profile" className="space-y-4">
           <TabsList className="w-full sm:w-auto overflow-x-auto flex justify-start">
-            <TabsTrigger value="users" className="text-xs sm:text-sm">Users</TabsTrigger>
-            <TabsTrigger value="pending" className="text-xs sm:text-sm">
-              Pending
-              {pendingUsers.filter((u) => u.status === "pending").length >
-                0 && (
-                  <Badge variant="destructive" className="ml-1 sm:ml-2 text-[10px] sm:text-xs">
-                    {pendingUsers.filter((u) => u.status === "pending").length}
-                  </Badge>
-                )}
+            <TabsTrigger value="profile" className="text-xs sm:text-sm gap-1">
+              <User className="h-4 w-4" />
+              Profile
             </TabsTrigger>
-            <TabsTrigger value="appearance" className="text-xs sm:text-sm">Appearance</TabsTrigger>
+            <TabsTrigger value="security" className="text-xs sm:text-sm gap-1">
+              <Lock className="h-4 w-4" />
+              Security
+            </TabsTrigger>
+            <TabsTrigger value="notifications" className="text-xs sm:text-sm gap-1">
+              <Bell className="h-4 w-4" />
+              Notifications
+            </TabsTrigger>
+            <TabsTrigger value="appearance" className="text-xs sm:text-sm gap-1">
+              <Palette className="h-4 w-4" />
+              Appearance
+            </TabsTrigger>
           </TabsList>
 
-          {/* User Management Tab */}
-          <TabsContent value="users" className="space-y-4">
-            <div className="grid gap-4 grid-cols-1 lg:grid-cols-[400px_1fr]">
-              {/* Create User Form - Left Side */}
-              <Card className="h-fit">
+          {/* Profile Tab */}
+          <TabsContent value="profile" className="space-y-4">
+            <div className="grid gap-4 grid-cols-1 lg:grid-cols-[300px_1fr]">
+              {/* Avatar Card */}
+              <Card>
                 <CardHeader>
-                  <CardTitle>Create New User</CardTitle>
+                  <CardTitle className="flex items-center gap-2">
+                    <Camera className="h-5 w-5" />
+                    Profile Picture
+                  </CardTitle>
                   <CardDescription>
-                    {canCreateUser
-                      ? "Add a new user directly to the system (no approval needed)"
-                      : "Only Super Admin can create new users"}
+                    Click on the avatar to upload a new picture
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="grid gap-4">
-                    {/* Display Name */}
-                    <div className="grid gap-2">
-                      <Label htmlFor="displayName">
-                        <User className="inline h-4 w-4 mr-1" />
-                        Full Name *
-                      </Label>
-                      <Input
-                        id="displayName"
-                        type="text"
-                        placeholder="John Doe"
-                        value={displayName}
-                        onChange={(e) => setDisplayName(e.target.value)}
-                        disabled={loading || !canCreateUser}
-                      />
-                    </div>
-
-                    {/* Email */}
-                    <div className="grid gap-2">
-                      <Label htmlFor="email">Login Email (@lnc.com) *</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="user@lnc.com"
-                        value={email}
-                        onChange={(e) => setEmail(e.target.value)}
-                        disabled={loading || !canCreateUser}
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        Must use @lnc.com email address
-                      </p>
-                    </div>
-
-                    {/* Personal Email */}
-                    <div className="grid gap-2">
-                      <Label htmlFor="personalEmail">Personal Email (for notifications)</Label>
-                      <Input
-                        id="personalEmail"
-                        type="email"
-                        placeholder="user@gmail.com"
-                        value={personalEmail}
-                        onChange={(e) => setPersonalEmail(e.target.value)}
-                        disabled={loading || !canCreateUser}
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        Notifications will be sent to this email
-                      </p>
-                    </div>
-
-                    {/* Team */}
-                    <div className="grid gap-2">
-                      <Label htmlFor="team">Team/Department</Label>
-                      <Select
-                        value={team}
-                        onValueChange={setTeam}
-                        disabled={loading || !canCreateUser}
-                      >
-                        <SelectTrigger id="team">
-                          <SelectValue placeholder="Select team" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Dev Team">Dev Team</SelectItem>
-                          <SelectItem value="Design Team">Design Team</SelectItem>
-                          <SelectItem value="Social Media Team">Social Media Team</SelectItem>
-                          <SelectItem value="PR & Outreach Team">PR & Outreach Team</SelectItem>
-                          <SelectItem value="Contant Team">Contant Team</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-
-                    {/* Password */}
-                    <div className="grid gap-2">
-                      <Label htmlFor="password">Password *</Label>
-                      <Input
-                        id="password"
-                        type="password"
-                        placeholder="Minimum 6 characters"
-                        value={password}
-                        onChange={(e) => setPassword(e.target.value)}
-                        disabled={loading || !canCreateUser}
-                      />
-                    </div>
-
-                    {/* Confirm Password */}
-                    <div className="grid gap-2">
-                      <Label htmlFor="confirmPassword">Confirm Password *</Label>
-                      <Input
-                        id="confirmPassword"
-                        type="password"
-                        placeholder="Re-enter password"
-                        value={confirmPassword}
-                        onChange={(e) => setConfirmPassword(e.target.value)}
-                        disabled={loading || !canCreateUser}
-                      />
-                    </div>
-
-                    {/* Roles */}
-                    <div className="grid gap-2">
-                      <Label>Roles *</Label>
-                      <div className="space-y-2 border rounded-lg p-3 max-h-64 overflow-y-auto">
-                        {[
-                          { name: "Super Admin", icon: Shield, color: "text-violet-500" },
-                          { name: "Admistater", icon: Shield, color: "text-blue-500" },
-                          { name: "Dev Team Admin", icon: Code, color: "text-green-500" },
-                          { name: "Social Media Team Admin", icon: MessageSquare, color: "text-purple-500" },
-                          { name: "Content Team Admin", icon: FileText, color: "text-cyan-500" },
-                          { name: "PR & Outreach Team Admin", icon: Megaphone, color: "text-orange-500" },
-                          { name: "Design Team Admin", icon: Palette, color: "text-pink-500" },
-                          { name: "Dev Member", icon: Code, color: "" },
-                          { name: "Social Media Member", icon: MessageSquare, color: "" },
-                          { name: "Content Member", icon: FileText, color: "" },
-                          { name: "PR & Outreach Member", icon: Megaphone, color: "" },
-                          { name: "Design Member", icon: Palette, color: "" },
-                        ].map((roleOption) => {
-                          const Icon = roleOption.icon;
-                          return (
-                            <div key={roleOption.name} className="flex items-center space-x-2">
-                              <Checkbox
-                                id={`role-${roleOption.name}`}
-                                checked={newUserRoles.includes(roleOption.name)}
-                                onCheckedChange={(checked) => {
-                                  if (checked) {
-                                    setNewUserRoles([...newUserRoles, roleOption.name]);
-                                  } else {
-                                    setNewUserRoles(newUserRoles.filter((r) => r !== roleOption.name));
-                                  }
-                                }}
-                                disabled={loading || !canCreateUser}
-                              />
-                              <label
-                                htmlFor={`role-${roleOption.name}`}
-                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex items-center gap-2 cursor-pointer"
-                              >
-                                <Icon className={`h-4 w-4 ${roleOption.color}`} />
-                                {roleOption.name}
-                              </label>
-                            </div>
-                          );
-                        })}
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        Select one or more roles for this user
-                      </p>
-                    </div>
-
-                    <Button
-                      onClick={addUser}
-                      disabled={loading || !canCreateUser}
-                      className="w-full"
+                <CardContent className="flex flex-col items-center gap-4">
+                  <div className="relative group">
+                    <Avatar
+                      className="h-32 w-32 cursor-pointer ring-4 ring-muted transition-all hover:ring-primary"
+                      onClick={handleAvatarClick}
                     >
-                      <Plus className="mr-2 h-4 w-4" />
-                      {loading ? "Creating..." : "Create User"}
-                    </Button>
+                      <AvatarImage src={avatarPreview || undefined} />
+                      <AvatarFallback className="text-2xl bg-gradient-to-br from-violet-500 to-purple-600 text-white">
+                        {userData?.display_name ? getInitials(userData.display_name) : "U"}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div
+                      className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                      onClick={handleAvatarClick}
+                    >
+                      <Camera className="h-8 w-8 text-white" />
+                    </div>
+                    {uploadingAvatar && (
+                      <div className="absolute inset-0 flex items-center justify-center bg-black/50 rounded-full">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+                      </div>
+                    )}
                   </div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/gif,image/webp"
+                    className="hidden"
+                    onChange={handleAvatarChange}
+                    aria-label="Upload profile picture"
+                    title="Upload profile picture"
+                  />
+                  <div className="text-center">
+                    <p className="font-medium">{userData?.display_name}</p>
+                    <p className="text-sm text-muted-foreground">{userData?.email}</p>
+                    {userData?.roles && userData.roles.length > 0 && (
+                      <div className="flex flex-wrap gap-1 justify-center mt-2">
+                        {userData.roles.map((role) => (
+                          <Badge key={role} variant="secondary" className="text-xs">
+                            {role}
+                          </Badge>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Max file size: 5MB. Supported: JPEG, PNG, GIF, WebP
+                  </p>
                 </CardContent>
               </Card>
 
-              {/* User Table - Right Side */}
+              {/* Profile Details Card */}
               <Card>
                 <CardHeader>
-                  <CardTitle>User Management</CardTitle>
+                  <CardTitle className="flex items-center gap-2">
+                    <User className="h-5 w-5" />
+                    Profile Information
+                  </CardTitle>
                   <CardDescription>
-                    View and manage all users in the system
+                    Update your personal information
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="rounded-lg overflow-auto">
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Email</TableHead>
-                          <TableHead>Roles</TableHead>
-                          <TableHead>Created</TableHead>
-                          <TableHead>Last Sign In</TableHead>
-                          <TableHead className="text-right">Actions</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {users.length === 0 ? (
-                          <TableRow>
-                            <TableCell
-                              colSpan={5}
-                              className="text-center text-muted-foreground"
-                            >
-                              No users found
-                            </TableCell>
-                          </TableRow>
-                        ) : (
-                          users.map((user) => (
-                            <TableRow key={user.id}>
-                              <TableCell className="font-medium">
-                                {user.email}
-                              </TableCell>
-                              <TableCell>
-                                <div className="flex flex-wrap gap-1">
-                                  {user.roles && user.roles.length > 0 ? (
-                                    user.roles.map((role, idx) => (
-                                      <Badge
-                                        key={idx}
-                                        variant="secondary"
-                                        className="capitalize"
-                                      >
-                                        {role}
-                                      </Badge>
-                                    ))
-                                  ) : (
-                                    <span className="text-sm text-muted-foreground">
-                                      No role
-                                    </span>
-                                  )}
-                                </div>
-                              </TableCell>
-                              <TableCell>
-                                {new Date(user.created_at).toLocaleDateString()}
-                              </TableCell>
-                              <TableCell>
-                                {user.last_sign_in_at
-                                  ? new Date(
-                                    user.last_sign_in_at
-                                  ).toLocaleDateString()
-                                  : "Never"}
-                              </TableCell>
-                              <TableCell className="text-right">
-                                <div className="flex justify-end gap-2">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => handleOpenRoleDialog(user)}
-                                    disabled={!canEdit}
-                                  >
-                                    Edit Roles
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="text-destructive"
-                                    onClick={() =>
-                                      deleteUser(user.id, user.email || "")
-                                    }
-                                    disabled={!canEdit}
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              </TableCell>
-                            </TableRow>
-                          ))
-                        )}
-                      </TableBody>
-                    </Table>
+                <CardContent className="space-y-4">
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="displayName">Display Name</Label>
+                      <Input
+                        id="displayName"
+                        value={displayName}
+                        onChange={(e) => setDisplayName(e.target.value)}
+                        placeholder="Enter your name"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Work Email</Label>
+                      <Input
+                        id="email"
+                        value={userData?.email || ""}
+                        disabled
+                        className="bg-muted"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Contact admin to change work email
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="personalEmail">Personal Email</Label>
+                      <Input
+                        id="personalEmail"
+                        type="email"
+                        value={personalEmail}
+                        onChange={(e) => setPersonalEmail(e.target.value)}
+                        placeholder="your@personal.email"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="team">Team</Label>
+                      <Input
+                        id="team"
+                        value={userData?.team || "Not assigned"}
+                        disabled
+                        className="bg-muted"
+                      />
+                    </div>
+                  </div>
+
+                  {userData?.created_at && (
+                    <div className="pt-2">
+                      <p className="text-sm text-muted-foreground">
+                        Member since: {formatDate(userData.created_at)}
+                      </p>
+                    </div>
+                  )}
+
+                  <Separator />
+
+                  <div className="flex justify-end">
+                    <Button onClick={handleSaveProfile} disabled={savingProfile}>
+                      {savingProfile ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="h-4 w-4 mr-2" />
+                          Save Changes
+                        </>
+                      )}
+                    </Button>
                   </div>
                 </CardContent>
               </Card>
             </div>
           </TabsContent>
 
-          {/* Pending Registrations Tab */}
-          <TabsContent value="pending" className="space-y-4">
+          {/* Security Tab */}
+          <TabsContent value="security" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>
-                  <UserPlus className="inline h-5 w-5 mr-2" />
-                  Pending Registration Requests
+                <CardTitle className="flex items-center gap-2">
+                  <Lock className="h-5 w-5" />
+                  Change Password
                 </CardTitle>
                 <CardDescription>
-                  Review and approve new user registration requests
+                  Update your password to keep your account secure
                 </CardDescription>
               </CardHeader>
-              <CardContent>
-                <div className="rounded-lg overflow-auto">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Name</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Team</TableHead>
-                        <TableHead>Submitted</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {pendingUsers.length === 0 ? (
-                        <TableRow>
-                          <TableCell
-                            colSpan={6}
-                            className="text-center text-muted-foreground"
-                          >
-                            No pending registrations
-                          </TableCell>
-                        </TableRow>
+              <CardContent className="space-y-4">
+                <div className="max-w-md space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="currentPassword">Current Password</Label>
+                    <div className="relative">
+                      <Input
+                        id="currentPassword"
+                        type={showCurrentPassword ? "text" : "password"}
+                        value={currentPassword}
+                        onChange={(e) => setCurrentPassword(e.target.value)}
+                        placeholder="Enter current password"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                        onClick={() => setShowCurrentPassword(!showCurrentPassword)}
+                      >
+                        {showCurrentPassword ? (
+                          <EyeOff className="h-4 w-4 text-muted-foreground" />
+                        ) : (
+                          <Eye className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  <div className="space-y-2">
+                    <Label htmlFor="newPassword">New Password</Label>
+                    <div className="relative">
+                      <Input
+                        id="newPassword"
+                        type={showNewPassword ? "text" : "password"}
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
+                        placeholder="Enter new password"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                        onClick={() => setShowNewPassword(!showNewPassword)}
+                      >
+                        {showNewPassword ? (
+                          <EyeOff className="h-4 w-4 text-muted-foreground" />
+                        ) : (
+                          <Eye className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </Button>
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Password must be at least 6 characters
+                    </p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                    <div className="relative">
+                      <Input
+                        id="confirmPassword"
+                        type={showConfirmPassword ? "text" : "password"}
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        placeholder="Confirm new password"
+                      />
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="absolute right-0 top-0 h-full px-3 hover:bg-transparent"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                      >
+                        {showConfirmPassword ? (
+                          <EyeOff className="h-4 w-4 text-muted-foreground" />
+                        ) : (
+                          <Eye className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </Button>
+                    </div>
+                    {newPassword && confirmPassword && newPassword !== confirmPassword && (
+                      <p className="text-xs text-destructive">Passwords do not match</p>
+                    )}
+                  </div>
+
+                  <div className="flex justify-end pt-2">
+                    <Button
+                      onClick={handleChangePassword}
+                      disabled={changingPassword || !currentPassword || !newPassword || !confirmPassword}
+                    >
+                      {changingPassword ? (
+                        <>
+                          <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                          Changing...
+                        </>
                       ) : (
-                        pendingUsers.map((pending) => (
-                          <TableRow key={pending.id}>
-                            <TableCell className="font-medium">
-                              {pending.display_name}
-                            </TableCell>
-                            <TableCell>{pending.email}</TableCell>
-                            <TableCell>{pending.team}</TableCell>
-                            <TableCell>
-                              {new Date(
-                                pending.submitted_at
-                              ).toLocaleDateString()}
-                            </TableCell>
-                            <TableCell>
-                              {pending.status === "pending" && (
-                                <Badge className="bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-100">
-                                  <Clock className="h-3 w-3 mr-1" />
-                                  Pending
-                                </Badge>
-                              )}
-                              {pending.status === "approved" && (
-                                <Badge className="bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-100">
-                                  <CheckCircle className="h-3 w-3 mr-1" />
-                                  Approved
-                                </Badge>
-                              )}
-                              {pending.status === "rejected" && (
-                                <Badge className="bg-rose-100 text-rose-700 dark:bg-rose-900 dark:text-rose-100">
-                                  <XCircle className="h-3 w-3 mr-1" />
-                                  Rejected
-                                </Badge>
-                              )}
-                            </TableCell>
-                            <TableCell className="text-right">
-                              {pending.status === "pending" && (
-                                <div className="flex justify-end gap-2">
-                                  <Select
-                                    disabled={approvingId === pending.id || !canEdit}
-                                    onValueChange={(role) =>
-                                      handleApprove(pending, role)
-                                    }
-                                  >
-                                    <SelectTrigger className="w-32">
-                                      <SelectValue
-                                        placeholder={
-                                          approvingId === pending.id
-                                            ? "Approving..."
-                                            : canEdit
-                                              ? "Approve as..."
-                                              : "View only"
-                                        }
-                                      />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                      <SelectItem value="dev member">
-                                        As Dev Member
-                                      </SelectItem>
-                                      <SelectItem value="social media member">
-                                        As Social Media Member
-                                      </SelectItem>
-                                      <SelectItem value="pr & outreach member">
-                                        As PR & Outreach Member
-                                      </SelectItem>
-                                      <SelectItem value="design member">
-                                        As Design Member
-                                      </SelectItem>
-                                      <SelectItem value="dev team admin">
-                                        As Dev Team Admin
-                                      </SelectItem>
-                                      <SelectItem value="social media team admin">
-                                        As Social Media Team Admin
-                                      </SelectItem>
-                                      <SelectItem value="pr & outreach team admin">
-                                        As PR & Outreach Team Admin
-                                      </SelectItem>
-                                      <SelectItem value="design team admin">
-                                        As Design Team Admin
-                                      </SelectItem>
-                                      <SelectItem value="admistater">
-                                        As Admistater
-                                      </SelectItem>
-                                      <SelectItem value="super admin">
-                                        As Super Admin
-                                      </SelectItem>
-                                    </SelectContent>
-                                  </Select>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="text-destructive"
-                                    onClick={() => openRejectDialog(pending)}
-                                    disabled={approvingId === pending.id || !canEdit}
-                                  >
-                                    <XCircle className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              )}
-                              {pending.status !== "pending" && (
-                                <span className="text-sm text-muted-foreground">
-                                  {new Date(
-                                    pending.reviewed_at || ""
-                                  ).toLocaleDateString()}
-                                </span>
-                              )}
-                            </TableCell>
-                          </TableRow>
-                        ))
+                        <>
+                          <Shield className="h-4 w-4 mr-2" />
+                          Change Password
+                        </>
                       )}
-                    </TableBody>
-                  </Table>
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Security Info Card */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="h-5 w-5" />
+                  Security Information
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                        <Shield className="h-5 w-5 text-green-600 dark:text-green-400" />
+                      </div>
+                      <div>
+                        <p className="font-medium">Account Status</p>
+                        <p className="text-sm text-muted-foreground">Your account is active and secure</p>
+                      </div>
+                    </div>
+                    <Badge variant="outline" className="bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400 border-green-200 dark:border-green-800">
+                      Active
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
+                    <div className="flex items-center gap-3">
+                      <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                        <Globe className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                      </div>
+                      <div>
+                        <p className="font-medium">Login Sessions</p>
+                        <p className="text-sm text-muted-foreground">Manage your active sessions</p>
+                      </div>
+                    </div>
+                    <Badge variant="secondary">1 Active</Badge>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Notifications Tab */}
+          <TabsContent value="notifications">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Bell className="h-5 w-5" />
+                  Notification Preferences
+                </CardTitle>
+                <CardDescription>
+                  Choose how you want to be notified
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label className="flex items-center gap-2">
+                      <Mail className="h-4 w-4" />
+                      Email Notifications
+                    </Label>
+                    <p className="text-sm text-muted-foreground">
+                      Receive notifications via email
+                    </p>
+                  </div>
+                  <Switch
+                    checked={emailNotifications}
+                    onCheckedChange={setEmailNotifications}
+                  />
+                </div>
+                <Separator />
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label className="flex items-center gap-2">
+                      <Bell className="h-4 w-4" />
+                      Push Notifications
+                    </Label>
+                    <p className="text-sm text-muted-foreground">
+                      Receive push notifications in browser
+                    </p>
+                  </div>
+                  <Switch
+                    checked={pushNotifications}
+                    onCheckedChange={setPushNotifications}
+                  />
+                </div>
+                <Separator />
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label className="flex items-center gap-2">
+                      🔊 Sound
+                    </Label>
+                    <p className="text-sm text-muted-foreground">
+                      Play sound for new notifications
+                    </p>
+                  </div>
+                  <Switch
+                    checked={soundEnabled}
+                    onCheckedChange={setSoundEnabled}
+                  />
+                </div>
+                <Separator />
+                <div className="flex justify-end pt-2">
+                  <Button onClick={handleSavePreferences} disabled={savingPreferences}>
+                    {savingPreferences ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                        Saving...
+                      </>
+                    ) : (
+                      <>
+                        <Save className="h-4 w-4 mr-2" />
+                        Save Preferences
+                      </>
+                    )}
+                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -862,12 +732,15 @@ export default function Settings() {
           <TabsContent value="appearance">
             <Card>
               <CardHeader>
-                <CardTitle>Appearance</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <Palette className="h-5 w-5" />
+                  Appearance
+                </CardTitle>
                 <CardDescription>
                   Customize the look and feel of the admin panel
                 </CardDescription>
               </CardHeader>
-              <CardContent>
+              <CardContent className="space-y-6">
                 <div className="flex items-center justify-between">
                   <div>
                     <Label>Theme</Label>
@@ -881,155 +754,6 @@ export default function Settings() {
             </Card>
           </TabsContent>
         </Tabs>
-
-        {/* Reject Dialog */}
-        <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Reject Registration</DialogTitle>
-              <DialogDescription>
-                Are you sure you want to reject {selectedPending?.email}?
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <Label htmlFor="rejection_reason">Reason (optional)</Label>
-                <Textarea
-                  id="rejection_reason"
-                  placeholder="Enter reason for rejection..."
-                  value={rejectionReason}
-                  onChange={(e) => setRejectionReason(e.target.value)}
-                  rows={3}
-                />
-              </div>
-            </div>
-            <div className="flex justify-end gap-3">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setRejectDialogOpen(false);
-                  setRejectionReason("");
-                  setSelectedPending(null);
-                }}
-              >
-                Cancel
-              </Button>
-              <Button variant="destructive" onClick={handleReject}>
-                Reject Registration
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
-
-        {/* Role Selection Dialog */}
-        <Dialog open={showRoleDialog} onOpenChange={setShowRoleDialog}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Edit User Roles</DialogTitle>
-              <DialogDescription>
-                Select one or more roles for this user
-              </DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4 py-4 max-h-[400px] overflow-y-auto">
-              <div className="space-y-3">
-                <div className="text-sm font-semibold text-muted-foreground">Administration</div>
-                {["super admin", "admistater"].map((role) => (
-                  <div key={role} className="flex items-center space-x-2 pl-2">
-                    <Checkbox
-                      id={role}
-                      checked={selectedRoles.includes(role)}
-                      disabled={!canEdit}
-                      onCheckedChange={(checked) => {
-                        if (checked) {
-                          setSelectedRoles([...selectedRoles, role]);
-                        } else {
-                          setSelectedRoles(
-                            selectedRoles.filter((r) => r !== role)
-                          );
-                        }
-                      }}
-                    />
-                    <Label
-                      htmlFor={role}
-                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 capitalize cursor-pointer"
-                    >
-                      {role}
-                    </Label>
-                  </div>
-                ))}
-              </div>
-              <div className="space-y-3">
-                <div className="text-sm font-semibold text-muted-foreground">Team Admins</div>
-                {["dev team admin", "social media team admin", "content team admin", "pr & outreach team admin", "design team admin"].map((role) => (
-                  <div key={role} className="flex items-center space-x-2 pl-2">
-                    <Checkbox
-                      id={role}
-                      checked={selectedRoles.includes(role)}
-                      disabled={!canEdit}
-                      onCheckedChange={(checked) => {
-                        if (checked) {
-                          setSelectedRoles([...selectedRoles, role]);
-                        } else {
-                          setSelectedRoles(
-                            selectedRoles.filter((r) => r !== role)
-                          );
-                        }
-                      }}
-                    />
-                    <Label
-                      htmlFor={role}
-                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 capitalize cursor-pointer"
-                    >
-                      {role}
-                    </Label>
-                  </div>
-                ))}
-              </div>
-              <div className="space-y-3">
-                <div className="text-sm font-semibold text-muted-foreground">Team Members</div>
-                {["dev member", "social media member", "content member", "pr & outreach member", "design member"].map((role) => (
-                  <div key={role} className="flex items-center space-x-2 pl-2">
-                    <Checkbox
-                      id={role}
-                      checked={selectedRoles.includes(role)}
-                      disabled={!canEdit}
-                      onCheckedChange={(checked) => {
-                        if (checked) {
-                          setSelectedRoles([...selectedRoles, role]);
-                        } else {
-                          setSelectedRoles(
-                            selectedRoles.filter((r) => r !== role)
-                          );
-                        }
-                      }}
-                    />
-                    <Label
-                      htmlFor={role}
-                      className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 capitalize cursor-pointer"
-                    >
-                      {role}
-                    </Label>
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="flex justify-end gap-3">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setShowRoleDialog(false);
-                  setEditingUserId(null);
-                  setSelectedRoles([]);
-                }}
-              >
-                Cancel
-              </Button>
-              <Button onClick={handleUpdateRoles} disabled={!canEdit}>
-                Save Roles
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog>
       </div>
     </>
   );

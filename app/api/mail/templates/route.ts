@@ -52,7 +52,8 @@ export async function POST(request: NextRequest) {
       .insert({
         name,
         subject,
-        body: emailBody,
+        body_html: emailBody.replace(/\n/g, "<br>"),
+        body_text: emailBody,
         variables: variables,
       })
       .select()
@@ -95,7 +96,8 @@ export async function PATCH(request: NextRequest) {
       .update({
         name,
         subject,
-        body: emailBody,
+        body_html: emailBody.replace(/\n/g, "<br>"),
+        body_text: emailBody,
         variables: variables,
       })
       .eq("id", id)
@@ -117,8 +119,19 @@ export async function PATCH(request: NextRequest) {
 // DELETE - Delete email template
 export async function DELETE(request: NextRequest) {
   try {
+    // Support both query param and body
     const { searchParams } = new URL(request.url);
-    const id = searchParams.get("id");
+    let id = searchParams.get("id");
+    
+    // If not in query params, try body
+    if (!id) {
+      try {
+        const body = await request.json();
+        id = body.id;
+      } catch {
+        // No body provided
+      }
+    }
 
     if (!id) {
       return NextResponse.json(

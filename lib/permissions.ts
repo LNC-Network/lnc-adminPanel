@@ -113,6 +113,22 @@ export function canManageChatGroups(roles: string[]): boolean {
   return isSuperAdmin(roles) || isTeamAdmin(roles);
 }
 
+// Check if user can access mailing service
+export function canAccessMailing(roles: string[]): boolean {
+  // Super Admin, Admistater, and all Team Admins can access mailing
+  const teamAdminRoles = [
+    ROLES.DEV_TEAM_ADMIN,
+    ROLES.SOCIAL_MEDIA_TEAM_ADMIN,
+    ROLES.CONTENT_TEAM_ADMIN,
+    ROLES.PR_TEAM_ADMIN,
+    ROLES.DESIGN_TEAM_ADMIN,
+  ];
+  
+  return isSuperAdmin(roles) || 
+         isAdmistater(roles) || 
+         roles.some(role => teamAdminRoles.includes(role as typeof teamAdminRoles[number]));
+}
+
 // Get team-specific access for content/forms
 export function getTeamAccess(roles: string[]): {
   canView: boolean;
