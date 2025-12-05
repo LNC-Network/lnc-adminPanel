@@ -26,7 +26,8 @@ export const metadata: Metadata = {
     "LNC Admin",
     "Project Management",
     "LNC community Admin Panel",
-    "LNC Community Admin"
+    "LNC Community Admin",
+    "LNC Community"
   ],
   authors: [{ name: "LNC Network", url: siteUrl }],
   creator: "LNC Network",
