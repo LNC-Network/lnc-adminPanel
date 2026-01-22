@@ -11,13 +11,14 @@ import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 import ThemeSwitch from "@/components/ThemeSwitch";
 import RegisterForm from "@/components/register-form";
-import { UserPlus } from "lucide-react";
+import { UserPlus, ArrowRight, Loader2 } from "lucide-react";
 
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showRegister, setShowRegister] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
   const handleLogin = async (e: React.FormEvent) => {
@@ -28,6 +29,7 @@ export default function LoginPage() {
       return;
     }
 
+    setIsLoading(true);
     try {
       const res = await fetch("/api/auth/login", {
         method: "POST",
@@ -41,6 +43,7 @@ export default function LoginPage() {
 
       if (!res.ok) {
         toast.error(data.error || "Invalid credentials");
+        setIsLoading(false);
         return;
       }
 
@@ -62,111 +65,117 @@ export default function LoginPage() {
     } catch (err) {
       console.error("Login error:", err);
       toast.error("Login failed. Please try again.");
+      setIsLoading(false);
     }
   };
 
 
   return (
     <>
-      <Toaster closeButton richColors position="bottom-left" />
-      <div className="fixed bottom-5 right-5 sm:left-5 sm:right-auto z-50">
-        <ThemeSwitch />
-      </div>
+      <Toaster closeButton richColors position="bottom-right" theme="dark" />
 
-      <div className="flex h-screen w-screen flex-col lg:flex-row">
-        <div className="flex flex-col gap-4 p-4 sm:p-6 md:p-10 flex-1">
-          <div className="flex justify-center gap-2 md:justify-start">
-            <Link href="/" className="flex items-center gap-2 font-medium text-sm sm:text-base">
-              <div className="flex h-6 w-6 items-center justify-center rounded-md bg-primary text-primary-foreground">
+      {/* Background is handled by layout, but we ensure z-index allows interaction */}
+      <div className="flex min-h-screen w-full items-center justify-center p-4 relative z-10">
+
+        {/* Animated Background Orbs (Optional enhancements to the ThreeJS bg) */}
+        <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none z-[-1]">
+          <div className="absolute top-[20%] left-[20%] w-64 h-64 bg-primary/20 rounded-full blur-[100px] animate-pulse" />
+          <div className="absolute bottom-[20%] right-[20%] w-64 h-64 bg-accent/20 rounded-full blur-[100px] animate-pulse delay-1000" />
+        </div>
+
+        <div className="w-full max-w-md animate-fade-in">
+          <div className="glass-panel p-8 rounded-2xl border border-white/10 backdrop-blur-2xl shadow-2xl">
+            <div className="flex flex-col items-center gap-2 mb-8 text-center">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/20 text-primary ring-1 ring-primary/50 mb-4 shadow-[0_0_15px_rgba(139,92,246,0.5)]">
                 <Image
                   src="/icons/icon-192x192.svg"
-                  width={24}
-                  height={24}
+                  width={32}
+                  height={32}
                   alt="logo"
+                  className="w-8 h-8"
                 />
               </div>
-              LNC Admin Panel
-            </Link>
-          </div>
+              <h1 className="text-2xl font-bold tracking-tight text-white">
+                {showRegister ? "Create an Account" : "Welcome Back"}
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                {showRegister ? "Enter your details to get started" : "Enter your credentials to access the admin panel"}
+              </p>
+            </div>
 
-          <div className="flex flex-1 items-center justify-center px-4">
             {showRegister ? (
               <RegisterForm onBack={() => setShowRegister(false)} />
             ) : (
-              <div className="w-full max-w-xs sm:max-w-sm">
-                <form className="flex flex-col gap-4 sm:gap-6" onSubmit={handleLogin}>
-                  <div className="grid gap-4 sm:gap-6">
-                    <div className="grid gap-2">
-                      <Label htmlFor="email" className="text-sm sm:text-base">Email</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="m@example.com"
-                        required
-                        autoComplete="username"
-                        onChange={(e) => setEmail(e.target.value)}
-                      />
-                    </div>
-
-                    <div className="grid gap-2">
-                      <div className="flex items-center">
-                        <Label htmlFor="password" className="text-sm sm:text-base">Password</Label>
-                        <Link
-                          href="mailto:jit.nathdeb@gmail.com?subject=Forgot%20password&body=Send%20details%20about%20you"
-                          className="ml-auto text-xs sm:text-sm underline-offset-4 hover:underline"
-                        >
-                          Forgot?
-                        </Link>
-                      </div>
-                      <Input
-                        id="password"
-                        type="password"
-                        required
-                        autoComplete="current-password"
-                        onChange={(e) => setPassword(e.target.value)}
-                      />
-                    </div>
-
-                    <Button type="submit" className="w-full bg-primary">
-                      Login
-                    </Button>
-
-                    <div className="relative">
-                      <div className="absolute inset-0 flex items-center">
-                        <span className="w-full border-t" />
-                      </div>
-                      <div className="relative flex justify-center text-xs uppercase">
-                        <span className="bg-background px-2 text-muted-foreground">
-                          New User?
-                        </span>
-                      </div>
-                    </div>
-
-                    <Button
-                      type="button"
-                      variant="outline"
-                      className="w-full"
-                      onClick={() => setShowRegister(true)}
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="name@example.com"
+                    required
+                    className="bg-black/20 border-white/10 focus:border-primary/50 focus:ring-primary/20 transition-all h-10"
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="password">Password</Label>
+                    <Link
+                      href="mailto:jit.nathdeb@gmail.com?subject=Forgot%20password"
+                      className="text-xs text-primary hover:text-primary/80 transition-colors"
                     >
-                      <UserPlus className="mr-2 h-4 w-4" />
-                      Register for Account
-                    </Button>
+                      Forgot password?
+                    </Link>
                   </div>
-                </form>
-              </div>
+                  <Input
+                    id="password"
+                    type="password"
+                    required
+                    className="bg-black/20 border-white/10 focus:border-primary/50 focus:ring-primary/20 transition-all h-10"
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+                </div>
+                <Button
+                  type="submit"
+                  className="w-full h-11 bg-primary hover:bg-primary/90 text-white font-medium shadow-[0_0_15px_rgba(139,92,246,0.3)] transition-all hover:scale-[1.02] hover:shadow-[0_0_20px_rgba(139,92,246,0.5)]"
+                  disabled={isLoading}
+                >
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Signing in...
+                    </>
+                  ) : (
+                    <>
+                      Sign In
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </>
+                  )}
+                </Button>
+              </form>
             )}
-          </div>
-        </div>
 
-        <div className="relative hidden w-1/2 bg-muted lg:block">
-          <Image
-            src="/login.webp"
-            alt="Image"
-            fill
-            className="absolute inset-0 h-full w-full object-cover"
-          />
+            <div className="mt-6 text-center text-sm">
+              <span className="text-muted-foreground">
+                {showRegister ? "Already have an account? " : "Don't have an account? "}
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowRegister(!showRegister)}
+                className="font-medium text-primary hover:text-primary/80 underline-offset-4 hover:underline transition-colors"
+              >
+                {showRegister ? "Sign in" : "Register now"}
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-8 text-center text-xs text-muted-foreground/50">
+            <p>Protected by LNC Network Security</p>
+          </div>
         </div>
       </div>
     </>
   );
 }
+

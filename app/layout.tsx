@@ -3,6 +3,7 @@ import { ThemeProvider } from "next-themes";
 import { Analytics } from "@vercel/analytics/next";
 import { PWARegister, InstallPrompt } from "@/components/pwa-register";
 import AnalyticsTracker from "@/components/analytics-tracker";
+import ThreeBackgroundWrapper from "@/components/ui/three-background-wrapper";
 import "./globals.css";
 
 const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || "https://lnc-admin-panel.vercel.app";
@@ -184,7 +185,8 @@ export default function RootLayout({
         <meta name="msapplication-tap-highlight" content="no" />
       </head>
       <body>
-        <ThemeProvider attribute="class" defaultTheme="dark">
+        <ThemeProvider attribute="class" defaultTheme="dark" forcedTheme="dark">
+          <ThreeBackgroundWrapper />
           <PWARegister />
           <InstallPrompt />
           <AnalyticsTracker />
@@ -195,3 +197,4 @@ export default function RootLayout({
     </html>
   );
 }
+

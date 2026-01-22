@@ -23,7 +23,9 @@ import {
   Calendar as CalendarIcon,
   BarChart3,
   Activity,
-  Mail
+  Mail,
+  Search,
+  ChevronRight
 } from "lucide-react";
 import dynamic from "next/dynamic";
 import Content from "./content";
@@ -279,27 +281,28 @@ export default function DashboardClient() {
   const Sidebar = ({ mobile = false }: { mobile?: boolean }) => (
     <aside
       className={`${mobile ? "w-full" : "w-64"
-        } bg-muted/40 border-r border-muted min-h-screen p-4 flex flex-col`}
+        } glass-panel border-r border-white/5 min-h-screen p-4 flex flex-col bg-sidebar-background backdrop-blur-xl`}
     >
-      <div className="flex items-center gap-2 mb-8 px-2">
-        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+      <div className="flex items-center gap-3 mb-8 px-2 mt-2">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/20 text-primary ring-1 ring-primary/50 shadow-[0_0_10px_rgba(139,92,246,0.3)]">
           <Image
-            src="/avatars/shadcn.jpg"
-            width={32}
-            height={32}
+            src="/icons/icon-192x192.svg"
+            width={24}
+            height={24}
             alt="logo"
-            className="rounded-lg"
+            className="w-6 h-6"
           />
         </div>
         <div className="flex flex-col">
-          <span className="font-semibold text-sm">LNC Admin</span>
-          <span className="text-xs text-muted-foreground">Panel</span>
+          <span className="font-bold text-base tracking-wide text-white">LNC Admin</span>
+          <span className="text-[10px] uppercase tracking-wider text-muted-foreground">Panel</span>
         </div>
       </div>
 
       <nav className="flex-1 space-y-1">
         {navigationItems.map((item) => {
           const Icon = item.icon;
+          const isActive = currentTab === item.id;
           return (
             <button
               key={item.id}
@@ -307,22 +310,25 @@ export default function DashboardClient() {
                 setCurrentTab(item.id);
                 if (mobile) setMobileMenuOpen(false);
               }}
-              className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${currentTab === item.id
-                ? "bg-primary text-primary-foreground"
-                : "hover:bg-muted"
+              className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-all duration-200 group ${isActive
+                  ? "bg-primary text-white shadow-[0_0_15px_rgba(139,92,246,0.4)]"
+                  : "text-muted-foreground hover:bg-white/5 hover:text-white"
                 }`}
             >
-              <Icon className="h-4 w-4" />
-              {item.label}
+              <div className="flex items-center gap-3">
+                <Icon className={`h-4 w-4 ${isActive ? 'text-white' : 'text-muted-foreground group-hover:text-white'}`} />
+                <span className="font-medium">{item.label}</span>
+              </div>
+              {isActive && <ChevronRight className="h-3 w-3 opacity-50" />}
             </button>
           );
         })}
       </nav>
 
-      <div className="mt-auto pt-4 border-t border-muted">
+      <div className="mt-auto pt-4 border-t border-white/10">
         <Button
           variant="ghost"
-          className="w-full justify-start gap-3"
+          className="w-full justify-start gap-3 text-muted-foreground hover:text-red-400 hover:bg-red-500/10"
           onClick={handleLogout}
         >
           <LogOut className="h-4 w-4" />
@@ -334,55 +340,63 @@ export default function DashboardClient() {
 
   return (
     <>
-      <Toaster position="top-center" richColors closeButton />
-      <div className="flex h-screen overflow-hidden">
+      <Toaster position="top-center" richColors closeButton theme="dark" />
+      <div className="flex h-screen overflow-hidden bg-transparent">
         {/* Desktop Sidebar */}
-        <div className="hidden lg:block">
+        <div className="hidden lg:block relative z-20">
           <Sidebar />
         </div>
 
         {/* Mobile Sidebar */}
         <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-          <SheetContent side="left" className="p-0 w-64">
+          <SheetContent side="left" className="p-0 w-64 border-r-white/10 bg-black/90 backdrop-blur-xl">
             <Sidebar mobile />
           </SheetContent>
         </Sheet>
 
         {/* Main Content */}
-        <div className="flex-1 flex flex-col overflow-hidden">
-          {/* Header */}
-          <header className="flex justify-between h-16 items-center bg-background border-b border-muted px-4 md:px-6">
+        <div className="flex-1 flex flex-col overflow-hidden relative z-10">
+
+          {/* Glass Header */}
+          <header className="flex justify-between h-16 items-center px-4 md:px-6 z-20 glass-panel border-b border-white/5 mx-4 mt-4 rounded-xl">
             <div className="flex items-center gap-4">
               <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
                 <SheetTrigger asChild>
-                  <Button variant="ghost" size="icon" className="lg:hidden">
+                  <Button variant="ghost" size="icon" className="lg:hidden hover:bg-white/5">
                     <Menu className="h-5 w-5" />
                   </Button>
                 </SheetTrigger>
               </Sheet>
 
-              <h1 className="text-xl font-semibold">
+              <h1 className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-gray-400">
                 {navigationItems.find((item) => item.id === currentTab)?.label ||
                   "Dashboard"}
               </h1>
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
+              {/* <div className="hidden md:flex relative mr-2">
+                <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                <Input 
+                  placeholder="Search..." 
+                  className="w-64 pl-9 h-9 bg-black/20 border-white/10 focus:ring-primary/50 text-xs" 
+                />
+              </div> */}
+
               <ThemeSwitch />
+
               <DropdownMenu open={notificationsOpen} onOpenChange={setNotificationsOpen}>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="relative">
-                    <Bell className="h-5 w-5" />
+                  <Button variant="ghost" size="icon" className="relative hover:bg-white/5">
+                    <Bell className="h-5 w-5 text-muted-foreground" />
                     {notificationCount > 0 && (
-                      <span className="absolute top-1 right-1 h-5 w-5 bg-gradient-to-r from-pink-400 to-fuchsia-400 rounded-full text-[10px] text-white flex items-center justify-center shadow-lg shadow-pink-400/30">
-                        {notificationCount > 9 ? '9+' : notificationCount}
-                      </span>
+                      <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-red-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(239,68,68,0.6)]"></span>
                     )}
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-80" align="end">
+                <DropdownMenuContent className="w-80 glass-panel border-white/10" align="end">
                   <DropdownMenuLabel>Notifications</DropdownMenuLabel>
-                  <DropdownMenuSeparator />
+                  <DropdownMenuSeparator className="bg-white/10" />
                   {notificationCount === 0 ? (
                     <div className="p-4 text-center text-sm text-muted-foreground">
                       No new notifications
@@ -401,7 +415,7 @@ export default function DashboardClient() {
                                 setCurrentTab('overview');
                                 setNotificationsOpen(false);
                               }}
-                              className="cursor-pointer"
+                              className="cursor-pointer focus:bg-white/5"
                             >
                               <div className="flex flex-col gap-1">
                                 <div className="text-sm font-medium">{user.email}</div>
@@ -415,7 +429,7 @@ export default function DashboardClient() {
                       )}
                       {joinRequests.length > 0 && (
                         <div>
-                          {pendingUsers.length > 0 && <DropdownMenuSeparator />}
+                          {pendingUsers.length > 0 && <DropdownMenuSeparator className="bg-white/10" />}
                           <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
                             Chat Join Requests ({joinRequests.length})
                           </div>
@@ -426,7 +440,7 @@ export default function DashboardClient() {
                                 setCurrentTab('chat');
                                 setNotificationsOpen(false);
                               }}
-                              className="cursor-pointer"
+                              className="cursor-pointer focus:bg-white/5"
                             >
                               <div className="flex flex-col gap-1">
                                 <div className="text-sm font-medium">{req.user_email}</div>
@@ -440,7 +454,7 @@ export default function DashboardClient() {
                       )}
                       {chatUnseenCount > 0 && (
                         <div>
-                          {(pendingUsers.length > 0 || joinRequests.length > 0) && <DropdownMenuSeparator />}
+                          {(pendingUsers.length > 0 || joinRequests.length > 0) && <DropdownMenuSeparator className="bg-white/10" />}
                           <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">
                             Unread Chat Messages ({chatUnseenCount})
                           </div>
@@ -449,10 +463,10 @@ export default function DashboardClient() {
                               setCurrentTab('chat');
                               setNotificationsOpen(false);
                             }}
-                            className="cursor-pointer"
+                            className="cursor-pointer focus:bg-white/5"
                           >
                             <div className="flex flex-col gap-1">
-                              <div className="text-sm font-medium">
+                              <div className="text-sm font-medium text-primary">
                                 💬 You have {chatUnseenCount} unread message{chatUnseenCount > 1 ? 's' : ''}
                               </div>
                               <div className="text-xs text-muted-foreground">
@@ -466,35 +480,38 @@ export default function DashboardClient() {
                   )}
                 </DropdownMenuContent>
               </DropdownMenu>
+
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                    <Avatar className="h-8 w-8">
+                  <Button variant="ghost" className="relative h-9 w-9 rounded-full ring-2 ring-white/10 hover:ring-white/20 transition-all p-0 overflow-hidden">
+                    <Avatar className="h-9 w-9">
                       <AvatarImage src="/avatars/shadcn.jpg" />
-                      <AvatarFallback>{userEmail.substring(0, 2).toUpperCase() || "AD"}</AvatarFallback>
+                      <AvatarFallback className="bg-primary/20 text-primary font-bold">
+                        {userEmail.substring(0, 2).toUpperCase() || "AD"}
+                      </AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" align="end" forceMount>
+                <DropdownMenuContent className="w-56 glass-panel border-white/10" align="end" forceMount>
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">Account</p>
+                      <p className="text-sm font-medium leading-none text-white">Account</p>
                       <p className="text-xs leading-none text-muted-foreground">
                         {userEmail || "user@example.com"}
                       </p>
                     </div>
                   </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => setProfileDialogOpen(true)}>
-                    <UserCircle className="mr-2 h-4 w-4" />
+                  <DropdownMenuSeparator className="bg-white/10" />
+                  <DropdownMenuItem onClick={() => setProfileDialogOpen(true)} className="focus:bg-white/5 cursor-pointer">
+                    <UserCircle className="mr-2 h-4 w-4 text-primary" />
                     <span>Edit Profile</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem disabled>
-                    <Shield className="mr-2 h-4 w-4" />
-                    <span>Role: {userRoles.join(", ") || "No role assigned"}</span>
+                  <DropdownMenuItem disabled className="opacity-75">
+                    <Shield className="mr-2 h-4 w-4 text-emerald-400" />
+                    <span>Role: {userRoles[0] || "User"}</span>
                   </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout}>
+                  <DropdownMenuSeparator className="bg-white/10" />
+                  <DropdownMenuItem onClick={handleLogout} className="focus:bg-red-500/10 focus:text-red-400 cursor-pointer text-red-400">
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Log out</span>
                   </DropdownMenuItem>
@@ -503,7 +520,7 @@ export default function DashboardClient() {
 
               {/* Profile Update Dialog */}
               <Dialog open={profileDialogOpen} onOpenChange={setProfileDialogOpen}>
-                <DialogContent className="sm:max-w-[425px]">
+                <DialogContent className="sm:max-w-[425px] glass-panel border-white/10">
                   <DialogHeader>
                     <DialogTitle>Edit Profile</DialogTitle>
                     <DialogDescription>
@@ -518,6 +535,7 @@ export default function DashboardClient() {
                         value={displayName}
                         onChange={(e) => setDisplayName(e.target.value)}
                         placeholder="Enter your name"
+                        className="bg-black/20 border-white/10 focus:ring-primary/50"
                       />
                     </div>
                     <div className="grid gap-2">
@@ -528,6 +546,7 @@ export default function DashboardClient() {
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
                         placeholder="Leave blank to keep current"
+                        className="bg-black/20 border-white/10 focus:ring-primary/50"
                       />
                     </div>
                     <div className="grid gap-2">
@@ -539,6 +558,7 @@ export default function DashboardClient() {
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         placeholder="Confirm new password"
                         disabled={!newPassword}
+                        className="bg-black/20 border-white/10 focus:ring-primary/50"
                       />
                     </div>
                   </div>
@@ -547,10 +567,11 @@ export default function DashboardClient() {
                       variant="outline"
                       onClick={() => setProfileDialogOpen(false)}
                       disabled={updating}
+                      className="border-white/10 hover:bg-white/5"
                     >
                       Cancel
                     </Button>
-                    <Button onClick={handleUpdateProfile} disabled={updating}>
+                    <Button onClick={handleUpdateProfile} disabled={updating} className="bg-primary hover:bg-primary/90 text-white">
                       {updating ? "Updating..." : "Save Changes"}
                     </Button>
                   </div>
@@ -560,77 +581,94 @@ export default function DashboardClient() {
           </header>
 
           {/* Content Area */}
-          <main className="flex-1 overflow-auto p-4 md:p-6 bg-background">
+          <main className="flex-1 overflow-auto p-4 md:p-6 no-scrollbar">
             {currentTab === "overview" && (
-              <div className="space-y-6">
+              <div className="space-y-6 animate-fade-in">
                 {/* Welcome Section */}
                 <div className="flex flex-col gap-2">
-                  <h1 className="text-2xl md:text-3xl font-bold tracking-tight">
-                    Welcome back, {userEmail.split('@')[0] || 'Admin'}! 👋
+                  <h1 className="text-3xl font-bold tracking-tight text-white mb-1">
+                    Welcome back, <span className="text-primary">{userEmail.split('@')[0] || 'Admin'}</span>! 👋
                   </h1>
-                  <p className="text-sm md:text-base text-muted-foreground">
-                    Here's what's happening with your admin panel today.
+                  <p className="text-muted-foreground">
+                    Here's what's happening regarding your tasks today.
                   </p>
                 </div>
 
                 {/* Quick Actions */}
-                <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-                  <Card className="cursor-pointer hover:shadow-lg transition-shadow active:scale-95" onClick={() => setCurrentTab('content')}>
+                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+                  <Card
+                    className="glass-card cursor-pointer group"
+                    onClick={() => setCurrentTab('content')}
+                  >
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">
-                        Content
+                      <CardTitle className="text-sm font-medium text-muted-foreground group-hover:text-white transition-colors">
+                        Content Management
                       </CardTitle>
-                      <FileText className="h-4 w-4 text-muted-foreground" />
+                      <div className="p-2 rounded-lg bg-blue-500/10 text-blue-400 group-hover:bg-blue-500 group-hover:text-white transition-colors">
+                        <FileText className="h-4 w-4" />
+                      </div>
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold">📝</div>
+                      <div className="text-2xl font-bold text-white mb-1">Manage</div>
                       <p className="text-xs text-muted-foreground">
-                        Manage your content
+                        Create & edit posts
                       </p>
                     </CardContent>
                   </Card>
 
-                  <Card className="cursor-pointer hover:shadow-lg transition-shadow active:scale-95" onClick={() => setCurrentTab('chat')}>
+                  <Card
+                    className="glass-card cursor-pointer group"
+                    onClick={() => setCurrentTab('chat')}
+                  >
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">
+                      <CardTitle className="text-sm font-medium text-muted-foreground group-hover:text-white transition-colors">
                         Messages
                       </CardTitle>
-                      <MessageSquare className="h-4 w-4 text-muted-foreground" />
+                      <div className="p-2 rounded-lg bg-violet-500/10 text-violet-400 group-hover:bg-violet-500 group-hover:text-white transition-colors">
+                        <MessageSquare className="h-4 w-4" />
+                      </div>
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold">{chatUnseenCount}</div>
+                      <div className="text-2xl font-bold text-white mb-1">{chatUnseenCount}</div>
                       <p className="text-xs text-muted-foreground">
-                        Unseen messages
+                        Unread messages
                       </p>
                     </CardContent>
                   </Card>
 
-                  <Card className="cursor-pointer hover:shadow-lg transition-shadow active:scale-95" onClick={() => setCurrentTab('forms')}>
+                  <Card
+                    className="glass-card cursor-pointer group"
+                    onClick={() => setCurrentTab('forms')}
+                  >
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">
-                        Forms
+                      <CardTitle className="text-sm font-medium text-muted-foreground group-hover:text-white transition-colors">
+                        Form Builder
                       </CardTitle>
-                      <FormInput className="h-4 w-4 text-muted-foreground" />
+                      <div className="p-2 rounded-lg bg-pink-500/10 text-pink-400 group-hover:bg-pink-500 group-hover:text-white transition-colors">
+                        <FormInput className="h-4 w-4" />
+                      </div>
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold">📋</div>
+                      <div className="text-2xl font-bold text-white mb-1">Create</div>
                       <p className="text-xs text-muted-foreground">
-                        Create and manage forms
+                        Build new forms
                       </p>
                     </CardContent>
                   </Card>
 
-                  <Card className="border-l-4 border-l-green-500">
+                  <Card className="glass-card border-l-4 border-l-emerald-500 bg-emerald-950/20">
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">
-                        Status
+                      <CardTitle className="text-sm font-medium text-emerald-400">
+                        System Status
                       </CardTitle>
-                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      <div className="p-2 rounded-lg bg-emerald-500/10 text-emerald-400">
+                        <Activity className="h-4 w-4" />
+                      </div>
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold text-green-500">Online</div>
-                      <p className="text-xs text-muted-foreground">
-                        System operational
+                      <div className="text-2xl font-bold text-emerald-400 mb-1">Online</div>
+                      <p className="text-xs text-emerald-400/60">
+                        All systems operational
                       </p>
                     </CardContent>
                   </Card>
@@ -639,7 +677,7 @@ export default function DashboardClient() {
                 {/* Main Content Grid */}
                 <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
                   {/* Quick Access */}
-                  <Card>
+                  <Card className="glass-card">
                     <CardHeader>
                       <CardTitle>Quick Access</CardTitle>
                       <CardDescription>
@@ -647,72 +685,98 @@ export default function DashboardClient() {
                       </CardDescription>
                     </CardHeader>
                     <CardContent>
-                      <div className="grid grid-cols-2 gap-2 sm:gap-3">
-                        <Button variant="outline" className="h-20 sm:h-24 flex-col gap-1 sm:gap-2 active:scale-95 transition-transform" onClick={() => setCurrentTab('settings')}>
-                          <SettingsIcon className="h-5 w-5" />
-                          <span className="text-xs sm:text-sm">Settings</span>
+                      <div className="grid grid-cols-2 gap-3">
+                        <Button
+                          variant="outline"
+                          className="h-24 flex-col gap-3 bg-black/20 border-white/5 hover:bg-white/5 hover:border-primary/30 transition-all group"
+                          onClick={() => setCurrentTab('settings')}
+                        >
+                          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform text-primary">
+                            <SettingsIcon className="h-5 w-5" />
+                          </div>
+                          <span className="text-sm font-medium group-hover:text-white">Settings</span>
                         </Button>
-                        <Button variant="outline" className="h-20 sm:h-24 flex-col gap-1 sm:gap-2 active:scale-95 transition-transform" onClick={() => setCurrentTab('chat')}>
-                          <MessageSquare className="h-5 w-5" />
-                          <span className="text-xs sm:text-sm">Chat</span>
+                        <Button
+                          variant="outline"
+                          className="h-24 flex-col gap-3 bg-black/20 border-white/5 hover:bg-white/5 hover:border-primary/30 transition-all group"
+                          onClick={() => setCurrentTab('chat')}
+                        >
+                          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform text-primary">
+                            <MessageSquare className="h-5 w-5" />
+                          </div>
+                          <span className="text-sm font-medium group-hover:text-white">Chat</span>
                         </Button>
-                        <Button variant="outline" className="h-20 sm:h-24 flex-col gap-1 sm:gap-2 active:scale-95 transition-transform" onClick={() => setCurrentTab('tickets')}>
-                          <ListTodo className="h-5 w-5" />
-                          <span className="text-xs sm:text-sm">Tickets</span>
+                        <Button
+                          variant="outline"
+                          className="h-24 flex-col gap-3 bg-black/20 border-white/5 hover:bg-white/5 hover:border-primary/30 transition-all group"
+                          onClick={() => setCurrentTab('tickets')}
+                        >
+                          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform text-primary">
+                            <ListTodo className="h-5 w-5" />
+                          </div>
+                          <span className="text-sm font-medium group-hover:text-white">Tickets</span>
                         </Button>
-                        <Button variant="outline" className="h-20 sm:h-24 flex-col gap-1 sm:gap-2 active:scale-95 transition-transform" onClick={() => setCurrentTab('database')}>
-                          <DatabaseIcon className="h-5 w-5" />
-                          <span className="text-xs sm:text-sm">Database</span>
+                        <Button
+                          variant="outline"
+                          className="h-24 flex-col gap-3 bg-black/20 border-white/5 hover:bg-white/5 hover:border-primary/30 transition-all group"
+                          onClick={() => setCurrentTab('database')}
+                        >
+                          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform text-primary">
+                            <DatabaseIcon className="h-5 w-5" />
+                          </div>
+                          <span className="text-sm font-medium group-hover:text-white">Database</span>
                         </Button>
                       </div>
                     </CardContent>
                   </Card>
 
                   {/* Account Info */}
-                  <Card>
+                  <Card className="glass-card">
                     <CardHeader>
                       <CardTitle>Your Profile</CardTitle>
                       <CardDescription>
-                        Your account information
+                        Manage your account settings
                       </CardDescription>
                     </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="flex items-center gap-3">
-                        <Avatar className="h-10 w-10 sm:h-12 sm:w-12 flex-shrink-0">
-                          <AvatarFallback className="text-base sm:text-lg">
+                    <CardContent className="space-y-6">
+                      <div className="flex items-center gap-4 p-4 rounded-xl bg-black/20 border border-white/5">
+                        <Avatar className="h-16 w-16 border-2 border-primary/20 shadow-lg shadow-primary/10">
+                          <AvatarFallback className="text-2xl bg-primary/10 text-primary">
                             {userEmail[0]?.toUpperCase() || 'A'}
                           </AvatarFallback>
                         </Avatar>
                         <div className="min-w-0 flex-1">
-                          <p className="font-medium truncate">{displayName || userEmail.split('@')[0]}</p>
-                          <p className="text-xs sm:text-sm text-muted-foreground truncate">{userEmail}</p>
+                          <p className="text-lg font-bold text-white truncate">{displayName || userEmail.split('@')[0]}</p>
+                          <p className="text-sm text-muted-foreground truncate">{userEmail}</p>
+                          <Badge variant="outline" className="mt-2 text-xs border-primary/30 text-primary bg-primary/5">
+                            {userRoles[0] || 'Member'}
+                          </Badge>
                         </div>
                       </div>
-                      <Button variant="outline" className="w-full active:scale-95 transition-transform" onClick={() => setProfileDialogOpen(true)}>
+                      <Button
+                        className="w-full bg-white/5 hover:bg-white/10 text-white border border-white/10"
+                        onClick={() => setProfileDialogOpen(true)}
+                      >
                         <UserCircle className="h-4 w-4 mr-2" />
-                        Edit Profile
+                        Edit Profile Details
                       </Button>
                     </CardContent>
                   </Card>
                 </div>
 
                 {/* Footer Info */}
-                <Card>
-                  <CardContent className="pt-4 sm:pt-6">
-                    <div className="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
-                      <div className="text-center sm:text-left">
-                        <p className="text-xs sm:text-sm font-medium">LNC Admin Panel</p>
-                        <p className="text-[10px] sm:text-xs text-muted-foreground">Version 2.0.0 • {new Date().getFullYear()}</p>
-                      </div>
-                      <div className="flex gap-2">
-                        <Badge variant="outline" className="gap-1 text-xs">
-                          <CheckCircle className="h-3 w-3 text-green-500" />
-                          Online
-                        </Badge>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                <div className="glass-panel rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted-foreground">
+                  <div className="text-center sm:text-left">
+                    <p className="font-medium text-white/50">LNC Admin Panel</p>
+                    <p>Version 2.0.0 • {new Date().getFullYear()}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <Badge variant="outline" className="gap-1.5 border-emerald-500/20 bg-emerald-500/10 text-emerald-400">
+                      <div className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                      System Operational
+                    </Badge>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -734,3 +798,4 @@ export default function DashboardClient() {
     </>
   );
 }
+
