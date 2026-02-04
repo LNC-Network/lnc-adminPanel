@@ -30,10 +30,10 @@ export function PWARegister() {
 
             // Check if user dismissed the prompt before
             const dismissed = localStorage.getItem('pwa-install-dismissed');
-            
+
             // Only show on dashboard page (after login) and if not dismissed
             const isDashboard = window.location.pathname.includes('/dashboard');
-            
+
             if (isDashboard && !dismissed) {
                 // Delay showing banner by 3 seconds to avoid interrupting user
                 setTimeout(() => {
@@ -117,7 +117,7 @@ export function InstallPrompt() {
     const handleDismiss = () => {
         // Store dismissal in localStorage so it doesn't show again
         localStorage.setItem('pwa-install-dismissed', 'true');
-        
+
         const banner = document.getElementById('install-banner');
         if (banner) banner.classList.add('hidden-initially');
     };
