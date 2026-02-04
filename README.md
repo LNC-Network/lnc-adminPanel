@@ -85,14 +85,33 @@ This project is built using modern web technologies:
 
 ---
 
+## 🏗️ System Overview
+
+![System Architecture Diagram](docs/images/lnc_system_overview_1770225437051.png)
+
+---
+
 ## 📚 Documentation & Guides
 
-We have detailed documentation available to help you navigate the system:
+We have comprehensive documentation to help you navigate and develop the system:
 
-- **[Roles & Permissions Guide](docs/ROLES.md)**: detailed breakdown of what each role can do.
-- **[Administrator Manual](docs/ADMIN-GUIDE.md)**: Comprehensive guide for system admins.
-- **[Email Notifications](docs/EMAIL-SYSTEM.md)**: How our automated email system works.
-- **[Database Setup](docs/DATABASE_SETUP.md)**: Technical guide for database schema.
+### For Administrators
+- **[User Guide](docs/USER-GUIDE.md)** - User management, permissions, and registration approval
+
+### For Developers & Technical Team
+- **[Setup Guide](docs/SETUP-GUIDE.md)** - Installation, configuration, and environment setup
+- **[System Architecture](docs/ARCHITECTURE.md)** - Technical architecture with visual diagrams
+- **[Developer Guide](docs/DEVELOPER-GUIDE.md)** - Testing, troubleshooting, and feature documentation
+- **[Documentation Index](docs/README.md)** - Complete documentation overview
+
+### Quick Links
+| Task | Documentation |
+|------|---------------|
+| First-time setup | [Setup Guide](docs/SETUP-GUIDE.md#initial-setup) |
+| Approve new users | [User Guide](docs/USER-GUIDE.md#user-registration-workflow) |
+| Manage roles | [User Guide](docs/USER-GUIDE.md#managing-roles-and-permissions) |
+| Email configuration | [Setup Guide](docs/SETUP-GUIDE.md#email-system-setup) |
+| View architecture | [Architecture](docs/ARCHITECTURE.md) |
 
 ## 🔒 Security & Privacy
 
