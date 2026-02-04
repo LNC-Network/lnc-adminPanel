@@ -112,22 +112,14 @@ export default function LoginPage() {
                   <Input
                     id="email"
                     type="email"
-                    placeholder="name@example.com"
+                    placeholder="name@lnc.com"
                     required
                     className="bg-black/20 border-white/10 focus:border-primary/50 focus:ring-primary/20 transition-all h-10"
                     onChange={(e) => setEmail(e.target.value)}
                   />
                 </div>
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="password">Password</Label>
-                    <Link
-                      href="mailto:jit.nathdeb@gmail.com?subject=Forgot%20password"
-                      className="text-xs text-primary hover:text-primary/80 transition-colors"
-                    >
-                      Forgot password?
-                    </Link>
-                  </div>
+                  <Label htmlFor="password">Password</Label>
                   <Input
                     id="password"
                     type="password"
@@ -135,6 +127,14 @@ export default function LoginPage() {
                     className="bg-black/20 border-white/10 focus:border-primary/50 focus:ring-primary/20 transition-all h-10"
                     onChange={(e) => setPassword(e.target.value)}
                   />
+                  <div className="flex justify-end">
+                    <Link
+                      href="mailto:jit.nathdeb@gmail.com?subject=Forgot%20password"
+                      className="text-xs text-primary hover:text-primary/80 transition-colors"
+                    >
+                      Forgot password?
+                    </Link>
+                  </div>
                 </div>
                 <Button
                   type="submit"
