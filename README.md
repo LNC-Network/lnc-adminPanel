@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="public/logo.jpg" alt="LNC Admin Panel Logo" width="150" />
+  <img src="./public/icons/apple-touch-icon.svg" alt="LNC Admin Panel Logo" width="150" />
   <br />
   <h1>LNC Admin Panel</h1>
   <p><strong>The Operational Hub for LNC Network</strong></p>
