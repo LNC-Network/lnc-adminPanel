@@ -1,6 +1,11 @@
 "use client";
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
+
+// Helper function to detect if device is mobile
+const isMobileDevice = () => {
+    return window.innerWidth <= 768 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+};
 
 export function PWARegister() {
     useEffect(() => {
@@ -31,10 +36,11 @@ export function PWARegister() {
             // Check if user dismissed the prompt before
             const dismissed = localStorage.getItem('pwa-install-dismissed');
 
-            // Only show on dashboard page (after login) and if not dismissed
+            // Only show on dashboard page (after login), if not dismissed, AND on mobile devices
             const isDashboard = window.location.pathname.includes('/dashboard');
+            const isMobile = isMobileDevice();
 
-            if (isDashboard && !dismissed) {
+            if (isDashboard && !dismissed && isMobile) {
                 // Delay showing banner by 3 seconds to avoid interrupting user
                 setTimeout(() => {
                     const installBanner = document.getElementById('install-banner');
@@ -98,6 +104,21 @@ export function PWARegister() {
 }
 
 export function InstallPrompt() {
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        // Check if device is mobile on mount
+        const checkMobile = () => {
+            setIsMobile(isMobileDevice());
+        };
+
+        checkMobile();
+
+        // Re-check on window resize
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
+
     const handleInstall = async () => {
         const deferredPrompt = (window as any).deferredPrompt;
         if (!deferredPrompt) return;
@@ -121,6 +142,11 @@ export function InstallPrompt() {
         const banner = document.getElementById('install-banner');
         if (banner) banner.classList.add('hidden-initially');
     };
+
+    // Don't render the component at all on desktop
+    if (!isMobile) {
+        return null;
+    }
 
     return (
         <div
