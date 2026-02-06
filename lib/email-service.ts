@@ -784,6 +784,77 @@ export async function sendPasswordResetEmail(
   }
 }
 
+export async function sendLoginNotificationEmail(
+  email: string,
+  details: {
+    time: string;
+    device: string;
+    ip: string;
+    location: string;
+  }
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    console.log(`📧 Sending login notification to: ${email}`);
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); color: white; padding: 30px; border-radius: 10px 10px 0 0; text-align: center; }
+            .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+            .detail-row { margin: 10px 0; border-bottom: 1px solid #eee; padding-bottom: 10px; }
+            .detail-label { font-weight: bold; color: #555; }
+            .footer { margin-top: 20px; font-size: 12px; color: #666; text-align: center; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>🛡️ New Login Detected</h1>
+            </div>
+            <div class="content">
+              <p>Hello,</p>
+              <p>We detected a new login to your LNC Admin Panel account.</p>
+              
+              <div class="detail-row">
+                <span class="detail-label">⏰ Time:</span> ${details.time}
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">📱 Device:</span> ${details.device}
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">📍 Location:</span> ${details.location}
+              </div>
+              <div class="detail-row">
+                <span class="detail-label">🔒 IP Address:</span> ${details.ip}
+              </div>
+
+              <p>If this was you, you can safely ignore this email.</p>
+              <p style="color: #d97706; font-weight: bold;">If you did not log in, please reset your password immediately.</p>
+              
+              <div class="footer">
+                <p>LNC Admin Panel Secure System</p>
+              </div>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    return await sendEmail({
+      to: email,
+      subject: '🛡️ LNC Admin: New Login Alert',
+      html,
+    });
+  } catch (error: any) {
+    console.error('❌ Error sending login notification:', error);
+    return { success: false, error: error.message };
+  }
+}
+
 export async function sendPasswordChangedEmail(
   email: string
 ): Promise<{ success: boolean; error?: string }> {

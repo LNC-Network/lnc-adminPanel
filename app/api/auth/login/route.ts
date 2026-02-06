@@ -39,7 +39,7 @@ export async function POST(req: Request) {
     // 1) fetch user
     const { data: user, error: userErr } = await supabase
       .from("users")
-      .select("id, email, password_hash, is_active")
+      .select("id, email, password_hash, is_active, personal_email")
       .eq("email", email)
       .maybeSingle();
 
@@ -212,6 +212,42 @@ export async function POST(req: Request) {
       path: "/",
       expires: refreshExpiry,
     });
+
+    // 9) Send Login Notification (Async/Fire-and-forget)
+    if (user.personal_email) {
+      (async () => {
+        try {
+          const ip = req.headers.get("x-forwarded-for")?.split(",")[0] || "Unknown IP";
+          const userAgent = req.headers.get("user-agent") || "Unknown Device";
+
+          // Simple location lookup (non-blocking)
+          let location = "Unknown Location";
+          if (ip !== "Unknown IP" && ip !== "::1" && ip !== "127.0.0.1") {
+            try {
+              const geoRes = await fetch(`http://ip-api.com/json/${ip}?fields=city,country`);
+              const geoData = await geoRes.json();
+              if (geoData?.city) {
+                location = `${geoData.city}, ${geoData.country}`;
+              }
+            } catch (e) {
+              // ignore geo error
+            }
+          }
+
+          // Dynamic import to avoid circular dependency
+          const { sendLoginNotificationEmail } = await import("@/lib/email-service");
+
+          await sendLoginNotificationEmail(user.personal_email, {
+            time: new Date().toLocaleString(),
+            device: userAgent,
+            ip,
+            location
+          });
+        } catch (notifyErr) {
+          console.error("Failed to send login notification:", notifyErr);
+        }
+      })();
+    }
 
     return response;
   } catch (err: any) {
