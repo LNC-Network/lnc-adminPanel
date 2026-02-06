@@ -125,7 +125,7 @@ export default function PublicFormPage() {
             </div>
 
             <div className="w-full max-w-[95%] sm:max-w-xl md:max-w-2xl relative z-10 animate-fade-in">
-                <div className="relative glass-panel p-4 sm:p-6 md:p-8 rounded-xl sm:rounded-2xl border border-white/10 shadow-2xl bg-black/95 sm:bg-black/85 sm:backdrop-blur-xl">
+                <div className="relative glass-panel p-4 sm:p-6 md:p-8 rounded-xl sm:rounded-2xl border border-white/10 shadow-2xl bg-black/98 backdrop-blur-xl">
 
                     {/* Header */}
                     <div className="mb-4 sm:mb-6 md:mb-8 text-center">
