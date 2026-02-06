@@ -286,7 +286,7 @@ export default function DashboardClient() {
       <div className="flex items-center gap-3 mb-8 px-2 mt-2">
         <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/20 text-primary ring-1 ring-primary/50 shadow-[0_0_10px_rgba(139,92,246,0.3)]">
           <Image
-            src="/icons/icon-192x192.svg"
+            src="/android-chrome-192x192.png"
             width={24}
             height={24}
             alt="logo"

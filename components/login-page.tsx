@@ -11,6 +11,7 @@ import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 import ThemeSwitch from "@/components/ThemeSwitch";
 import RegisterForm from "@/components/register-form";
+import ForgotPasswordForm from "@/components/ForgotPasswordForm";
 import { UserPlus, ArrowRight, Loader2 } from "lucide-react";
 import ParticleCanvas from "@/components/ParticleCanvas";
 
@@ -19,6 +20,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showRegister, setShowRegister] = useState(false);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
@@ -70,6 +72,17 @@ export default function LoginPage() {
     }
   };
 
+  const getHeaderText = () => {
+    if (showForgotPassword) return "Reset Password";
+    if (showRegister) return "Create an Account";
+    return "Welcome Back";
+  };
+
+  const getSubHeaderText = () => {
+    if (showForgotPassword) return "Securely reset your admin access";
+    if (showRegister) return "Enter your details to get started";
+    return "Enter your credentials to access the admin panel";
+  };
 
   return (
     <>
@@ -108,14 +121,16 @@ export default function LoginPage() {
                   />
                 </div>
                 <h1 className="text-2xl font-bold tracking-tight text-white">
-                  {showRegister ? "Create an Account" : "Welcome Back"}
+                  {getHeaderText()}
                 </h1>
                 <p className="text-sm text-muted-foreground">
-                  {showRegister ? "Enter your details to get started" : "Enter your credentials to access the admin panel"}
+                  {getSubHeaderText()}
                 </p>
               </div>
 
-              {showRegister ? (
+              {showForgotPassword ? (
+                <ForgotPasswordForm onBack={() => setShowForgotPassword(false)} />
+              ) : showRegister ? (
                 <RegisterForm onBack={() => setShowRegister(false)} />
               ) : (
                 <form onSubmit={handleLogin} className="space-y-4">
@@ -140,12 +155,13 @@ export default function LoginPage() {
                       onChange={(e) => setPassword(e.target.value)}
                     />
                     <div className="flex justify-end">
-                      <Link
-                        href="mailto:jit.nathdeb@gmail.com?subject=Forgot%20password"
+                      <button
+                        type="button"
+                        onClick={() => setShowForgotPassword(true)}
                         className="text-xs text-primary hover:text-primary/80 transition-colors"
                       >
                         Forgot password?
-                      </Link>
+                      </button>
                     </div>
                   </div>
                   <Button
@@ -191,4 +207,3 @@ export default function LoginPage() {
     </>
   );
 }
-

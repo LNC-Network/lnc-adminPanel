@@ -96,11 +96,11 @@ export const metadata: Metadata = {
   icons: {
     icon: [
       { url: "/favicon.ico", sizes: "any" },
-      { url: '/icons/icon-192x192.svg', sizes: '192x192', type: 'image/svg+xml' },
-      { url: '/icons/icon-512x512.svg', sizes: '512x512', type: 'image/svg+xml' },
+      { url: '/android-chrome-192x192.png', sizes: '192x192', type: 'image/png' },
+      { url: '/android-chrome-512x512.png', sizes: '512x512', type: 'image/png' },
     ],
     apple: [
-      { url: '/icons/apple-touch-icon.svg', sizes: '180x180', type: 'image/svg+xml' },
+      { url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' },
     ],
     shortcut: ["/favicon.ico"],
   },

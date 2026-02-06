@@ -70,9 +70,9 @@ export async function sendTemplateEmail(
     Object.entries(variables).forEach(([key, value]) => {
       const placeholder = new RegExp(`{{${key}}}`, 'g');
       const arrayPlaceholder = new RegExp(`{{#each ${key}}}([\\s\\S]*?){{/each}}`, 'g');
-      
+
       subject = subject.replace(placeholder, String(value));
-      
+
       // Handle arrays in HTML
       if (Array.isArray(value)) {
         htmlBody = htmlBody.replace(arrayPlaceholder, (_match: string, template: string) => {
@@ -81,7 +81,7 @@ export async function sendTemplateEmail(
       } else {
         htmlBody = htmlBody.replace(placeholder, String(value));
       }
-      
+
       textBody = textBody.replace(placeholder, String(value));
     });
 
@@ -186,44 +186,68 @@ async function sendQueuedEmail(queueId: string): Promise<{
       .update({ status: 'sending' })
       .eq('id', queueId);
 
+
     await logEmailEvent(queueId, 'sending', {});
 
-    // Check if Resend is configured
-    if (!resend) {
-      await supabase
-        .from('email_queue')
-        .update({
-          status: 'failed',
-          error_message: 'Resend API key not configured',
-        })
-        .eq('id', queueId);
+    let success = false;
+    let errorMessage = '';
 
-      await logEmailEvent(queueId, 'failed', { error: 'Resend API key not configured' });
-      return { success: false, error: 'Resend API key not configured' };
+    // Try Resend first if configured
+    if (resend) {
+      try {
+        const { data, error } = await resend.emails.send({
+          from: `${email.from_name} <${email.from_email}>`,
+          to: email.to_name ? `${email.to_name} <${email.to_email}>` : email.to_email,
+          subject: email.subject,
+          html: email.body_html,
+          text: email.body_text,
+        });
+
+        if (!error) {
+          success = true;
+          await logEmailEvent(queueId, 'sent', { provider: 'resend', resendId: data?.id });
+        } else {
+          console.warn('Resend failed, falling back to Gmail:', error.message);
+          errorMessage = error.message;
+        }
+      } catch (err: any) {
+        console.warn('Resend error, falling back to Gmail:', err.message);
+        errorMessage = err.message;
+      }
     }
 
-    // Send via Resend
-    const { data, error } = await resend.emails.send({
-      from: `${email.from_name} <${email.from_email}>`,
-      to: email.to_name ? `${email.to_name} <${email.to_email}>` : email.to_email,
-      subject: email.subject,
-      html: email.body_html,
-      text: email.body_text,
-    });
+    // Fallback to Gmail if Resend failed or not configured
+    if (!success && process.env.GMAIL_USER && process.env.GMAIL_APP_PASSWORD) {
+      try {
+        await gmailTransporter.sendMail({
+          from: `${email.from_name} <${email.from_email}>`,
+          to: email.to_name ? `${email.to_name} <${email.to_email}>` : email.to_email,
+          subject: email.subject,
+          html: email.body_html,
+          text: email.body_text,
+        });
 
-    if (error) {
+        success = true;
+        await logEmailEvent(queueId, 'sent', { provider: 'gmail' });
+      } catch (err: any) {
+        console.error('Gmail also failed:', err.message);
+        errorMessage = errorMessage ? `${errorMessage}; Gmail: ${err.message}` : err.message;
+      }
+    }
+
+    if (!success) {
       // Mark as failed
       await supabase
         .from('email_queue')
         .update({
           status: email.retry_count < email.max_retries ? 'retry' : 'failed',
-          error_message: error.message,
+          error_message: errorMessage || 'No email provider configured',
           retry_count: email.retry_count + 1,
         })
         .eq('id', queueId);
 
-      await logEmailEvent(queueId, 'failed', { error: error.message });
-      return { success: false, error: error.message };
+      await logEmailEvent(queueId, 'failed', { error: errorMessage });
+      return { success: false, error: errorMessage || 'No email provider configured' };
     }
 
     // Mark as sent
@@ -235,15 +259,13 @@ async function sendQueuedEmail(queueId: string): Promise<{
       })
       .eq('id', queueId);
 
-    await logEmailEvent(queueId, 'sent', { resendId: data?.id });
-
     return { success: true, emailId: queueId };
   } catch (error) {
     console.error('Error in sendQueuedEmail:', error);
-    
+
     // Update retry count
     await supabase.rpc('increment_email_retry', { email_id: queueId });
-    
+
     return { success: false, error: String(error) };
   }
 }
@@ -304,7 +326,7 @@ export async function processPendingEmails(): Promise<{
       } else {
         failed++;
       }
-      
+
       // Add small delay to avoid rate limiting
       await new Promise(resolve => setTimeout(resolve, 100));
     }
@@ -378,7 +400,7 @@ export async function sendRegistrationApprovedEmail(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     console.log(`📧 Attempting to send approval email to: ${email}`);
-    
+
     // Send via Gmail SMTP
     await gmailTransporter.sendMail({
       from: `${process.env.EMAIL_FROM_NAME || 'LNC Admin'} <${process.env.GMAIL_USER}>`,
@@ -488,7 +510,7 @@ export async function sendRegistrationRejectedEmail(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     console.log(`📧 Attempting to send rejection email to: ${email}`);
-    
+
     // Send via Gmail SMTP
     await gmailTransporter.sendMail({
       from: `${process.env.EMAIL_FROM_NAME || 'LNC Admin'} <${process.env.GMAIL_USER}>`,
@@ -603,7 +625,7 @@ export async function sendRoleChangedEmail(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     console.log(`📧 Attempting to send role change email to: ${email}`);
-    
+
     const html = `
       <!DOCTYPE html>
       <html>
@@ -686,7 +708,7 @@ export async function sendRoleChangedEmail(
         </body>
       </html>
     `;
-    
+
     // Send via Gmail SMTP
     await gmailTransporter.sendMail({
       from: `${process.env.EMAIL_FROM_NAME || 'LNC Admin'} <${process.env.GMAIL_USER}>`,
@@ -699,6 +721,65 @@ export async function sendRoleChangedEmail(
     return { success: true };
   } catch (error: any) {
     console.error('❌ Error sending role change email:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+export async function sendPasswordResetEmail(
+  email: string,
+  otp: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    console.log(`📧 Attempting to send password reset OTP to: ${email}`);
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; padding: 30px; border-radius: 10px 10px 0 0; text-align: center; }
+            .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+            .otp-box { background: white; padding: 20px; border-left: 4px solid #3b82f6; margin: 20px 0; text-align: center; }
+            .otp-code { font-size: 32px; font-weight: bold; letter-spacing: 5px; color: #2563eb; }
+            .footer { margin-top: 20px; font-size: 12px; color: #666; text-align: center; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>🔒 Password Reset Request</h1>
+            </div>
+            <div class="content">
+              <p>Hello,</p>
+              <p>We received a request to reset your password for the LNC Admin Panel.</p>
+              <p>Please use the following OTP (One-Time Password) to complete the process:</p>
+              
+              <div class="otp-box">
+                <div class="otp-code">${otp}</div>
+              </div>
+              
+              <p>This code will expire in 15 minutes.</p>
+              <p>If you did not request a password reset, please ignore this email.</p>
+              
+              <div class="footer">
+                <p>LNC Admin Panel Secure System</p>
+              </div>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    // Use existing sendEmail helper which handles queuing
+    return await sendEmail({
+      to: email,
+      subject: '🔒 LNC Admin: Password Reset OTP',
+      html,
+    });
+  } catch (error: any) {
+    console.error('❌ Error sending password reset email:', error);
     return { success: false, error: error.message };
   }
 }
