@@ -40,23 +40,27 @@ export default function LoginPage() {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ email, password }),
+        credentials: "include", // Important: include cookies in request/response
       });
 
       const data = await res.json();
 
       if (!res.ok) {
         toast.error(data.error || "Invalid credentials");
-        setIsLoading(false);
         return;
       }
 
-      // Store the access token (short-lived)
+      // Set cookie client-side as backup (server also sets it)
       Cookies.set("access_token", data.access_token, {
         secure: process.env.NODE_ENV === "production",
         sameSite: "lax",
-        expires: 0.5, // 12 hours max (your choice)
+        expires: 0.5,
+        path: "/",
       });
 
+      // Verify cookie was set
+      const cookieCheck = Cookies.get("access_token");
+      console.log("Cookie set:", !!cookieCheck, "Token length:", cookieCheck?.length);
 
       // Optional: store user in localStorage
       if (typeof window !== "undefined") {
@@ -64,10 +68,15 @@ export default function LoginPage() {
       }
 
       toast.success(`Welcome back, ${data.user.email}`);
-      router.push("/dashboard");
+
+      // Force redirect to dashboard - return early to prevent finally from interfering
+      console.log("Redirecting now...");
+      window.location.href = "/dashboard";
+      return; // Prevent further code execution
     } catch (err) {
       console.error("Login error:", err);
       toast.error("Login failed. Please try again.");
+    } finally {
       setIsLoading(false);
     }
   };

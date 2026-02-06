@@ -311,8 +311,8 @@ export default function DashboardClient() {
                 if (mobile) setMobileMenuOpen(false);
               }}
               className={`w-full flex items-center justify-between px-3 py-2.5 rounded-lg text-sm transition-all duration-200 group ${isActive
-                  ? "bg-primary text-white shadow-[0_0_15px_rgba(139,92,246,0.4)]"
-                  : "text-muted-foreground hover:bg-white/5 hover:text-white"
+                ? "bg-primary text-white shadow-[0_0_15px_rgba(139,92,246,0.4)]"
+                : "text-muted-foreground hover:bg-white/5 hover:text-white"
                 }`}
             >
               <div className="flex items-center gap-3">

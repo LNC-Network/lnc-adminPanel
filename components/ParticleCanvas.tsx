@@ -92,6 +92,13 @@ export default function ParticleCanvas() {
             const canvasWidth = Math.floor(rect.width);
             const canvasHeight = Math.floor(rect.height);
 
+            // Guard against zero dimensions
+            if (canvasWidth === 0 || canvasHeight === 0) {
+                console.log('Canvas dimensions not ready, retrying...');
+                setTimeout(initParticles, 100);
+                return;
+            }
+
             tempCanvas.width = canvasWidth;
             tempCanvas.height = canvasHeight;
 

@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import jwt from "jsonwebtoken";
+import { jwtVerify } from "jose";
 
 const protectedPaths = ["/admin", "/dashboard", "/api/users"];
 
-export function middleware(req: NextRequest) {
+export async function middleware(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   // 1. Skip unprotected paths
@@ -30,11 +30,13 @@ export function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL("/login", req.url));
   }
 
-  // 4. Verify token
+  // 4. Verify token using jose (Edge-compatible)
   try {
-    jwt.verify(token, process.env.JWT_SECRET!);
+    const secret = new TextEncoder().encode(process.env.JWT_SECRET!);
+    await jwtVerify(token, secret);
     return NextResponse.next();
-  } catch {
+  } catch (err: any) {
+    console.log("[Middleware] Token verification failed:", err.message);
     if (pathname.startsWith("/api"))
       return NextResponse.json({ error: "Invalid token" }, { status: 401 });
 

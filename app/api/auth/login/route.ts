@@ -198,8 +198,8 @@ export async function POST(req: Request) {
     // access_token cookie: NOT httpOnly so client-side code / middleware can read if needed.
     response.cookies.set("access_token", accessToken, {
       httpOnly: false,
-      secure: true,
-      sameSite: "strict",
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
       path: "/",
       maxAge: 60 * 10, // 10 minutes in seconds
     });
@@ -207,34 +207,47 @@ export async function POST(req: Request) {
     // refresh_token cookie: httpOnly
     response.cookies.set("refresh_token", refreshToken, {
       httpOnly: true,
-      secure: true,
-      sameSite: "strict",
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "lax",
       path: "/",
       expires: refreshExpiry,
     });
 
-    // 9) Send Login Notification (Async/Fire-and-forget)
+    // 9) Send Login Notification (Safely)
     if (user.personal_email) {
+      // Extract headers synchronously before response
+      const ip = req.headers.get("x-forwarded-for")?.split(",")[0] || "Unknown IP";
+      const userAgent = req.headers.get("user-agent") || "Unknown Device";
+
+      // Fire-and-forget pattern
       (async () => {
         try {
-          const ip = req.headers.get("x-forwarded-for")?.split(",")[0] || "Unknown IP";
-          const userAgent = req.headers.get("user-agent") || "Unknown Device";
+          console.log("Starting login notification for:", user.email);
 
-          // Simple location lookup (non-blocking)
           let location = "Unknown Location";
           if (ip !== "Unknown IP" && ip !== "::1" && ip !== "127.0.0.1") {
             try {
-              const geoRes = await fetch(`http://ip-api.com/json/${ip}?fields=city,country`);
-              const geoData = await geoRes.json();
-              if (geoData?.city) {
-                location = `${geoData.city}, ${geoData.country}`;
+              // Add timeout to fetch
+              const controller = new AbortController();
+              const timeoutId = setTimeout(() => controller.abort(), 2000); // 2s timeout
+
+              const geoRes = await fetch(`http://ip-api.com/json/${ip}?fields=city,country`, {
+                signal: controller.signal
+              });
+              clearTimeout(timeoutId);
+
+              if (geoRes.ok) {
+                const geoData = await geoRes.json();
+                if (geoData?.city) {
+                  location = `${geoData.city}, ${geoData.country}`;
+                }
               }
             } catch (e) {
               // ignore geo error
+              console.error("Geo lookup failed:", e);
             }
           }
 
-          // Dynamic import to avoid circular dependency
           const { sendLoginNotificationEmail } = await import("@/lib/email-service");
 
           await sendLoginNotificationEmail(user.personal_email, {
@@ -243,6 +256,7 @@ export async function POST(req: Request) {
             ip,
             location
           });
+          console.log("Login notification sent");
         } catch (notifyErr) {
           console.error("Failed to send login notification:", notifyErr);
         }
