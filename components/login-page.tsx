@@ -122,7 +122,7 @@ export default function LoginPage() {
               <div className="flex flex-col items-center gap-2 mb-8 text-center">
                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/20 text-primary ring-1 ring-primary/50 mb-4 shadow-[0_0_15px_rgba(139,92,246,0.5)]">
                   <Image
-                    src="/icons/icon-192x192.svg"
+                    src="/android-chrome-192x192.png"
                     width={32}
                     height={32}
                     alt="logo"
