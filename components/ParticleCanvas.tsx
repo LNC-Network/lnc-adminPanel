@@ -97,7 +97,7 @@ export default function ParticleCanvas() {
 
             const img = new Image();
             img.onload = () => {
-                const logoSize = Math.min(canvasWidth * 0.4, canvasHeight * 0.4, 250);
+                const logoSize = Math.min(canvasWidth * 0.7, canvasHeight * 0.7, 250);
                 const logoX = (canvasWidth - logoSize) / 2;
                 const logoY = (canvasHeight - logoSize) / 2;
 
@@ -206,7 +206,7 @@ export default function ParticleCanvas() {
             const rect = canvas.getBoundingClientRect();
             ctx.clearRect(0, 0, rect.width, rect.height);
 
-            const repelRadius = 150;
+            const repelRadius = 80;
             particlesRef.current.forEach((particle) => {
                 particle.update(mouseRef.current.x, mouseRef.current.y, repelRadius);
                 particle.draw(ctx);
