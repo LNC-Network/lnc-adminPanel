@@ -100,23 +100,23 @@ export default function PublicFormPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-transparent flex items-center justify-center">
-                <Loader2 className="w-10 h-10 animate-spin text-primary" />
+            <div className="min-h-screen bg-transparent flex items-center justify-center p-4">
+                <Loader2 className="w-8 h-8 sm:w-10 sm:h-10 animate-spin text-primary" />
             </div>
         );
     }
 
     if (error || !form) {
         return (
-            <div className="min-h-screen bg-background flex flex-col items-center justify-center text-center p-4">
-                <h1 className="text-2xl font-bold mb-2 text-destructive">Error</h1>
-                <p className="text-muted-foreground">{error || "Form not found"}</p>
+            <div className="min-h-screen bg-background flex flex-col items-center justify-center text-center p-4 sm:p-6">
+                <h1 className="text-xl sm:text-2xl font-bold mb-2 text-destructive">Error</h1>
+                <p className="text-sm sm:text-base text-muted-foreground">{error || "Form not found"}</p>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen w-full relative bg-background text-foreground overflow-x-hidden flex items-center justify-center p-4">
+        <div className="min-h-screen w-full relative bg-background text-foreground overflow-x-hidden flex items-center justify-center p-2 sm:p-4 md:p-6">
             <Toaster position="top-center" richColors />
 
             {/* Background Particles */}
@@ -124,24 +124,24 @@ export default function PublicFormPage() {
                 <ParticleCanvas />
             </div>
 
-            <div className="w-full max-w-2xl relative z-10 animate-fade-in">
-                <div className="glass-panel p-8 rounded-2xl border border-white/10 backdrop-blur-3xl shadow-2xl bg-black/40">
+            <div className="w-full max-w-[95%] sm:max-w-xl md:max-w-2xl relative z-10 animate-fade-in">
+                <div className="glass-panel p-4 sm:p-6 md:p-8 rounded-xl sm:rounded-2xl border border-white/10 shadow-2xl bg-black/70 sm:bg-black/60" style={{ WebkitBackdropFilter: 'blur(24px)', backdropFilter: 'blur(24px)' }}>
 
                     {/* Header */}
-                    <div className="mb-8 text-center">
-                        <h1 className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70">
+                    <div className="mb-4 sm:mb-6 md:mb-8 text-center">
+                        <h1 className="text-xl sm:text-2xl md:text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70">
                             {form.name}
                         </h1>
                         {form.description && (
-                            <p className="mt-2 text-muted-foreground">{form.description}</p>
+                            <p className="mt-1 sm:mt-2 text-sm sm:text-base text-muted-foreground">{form.description}</p>
                         )}
                     </div>
 
                     {!submitted ? (
-                        <form onSubmit={handleSubmit} className="space-y-6">
+                        <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5 md:space-y-6">
                             {form.fields.map((field) => (
-                                <div key={field.id} className="space-y-2">
-                                    <label className="text-sm font-medium text-gray-200">
+                                <div key={field.id} className="space-y-1.5 sm:space-y-2">
+                                    <label className="text-xs sm:text-sm font-medium text-gray-200">
                                         {field.label}
                                         {field.required && <span className="text-red-500 ml-1">*</span>}
                                     </label>
@@ -150,13 +150,13 @@ export default function PublicFormPage() {
                                         <textarea
                                             required={field.required}
                                             placeholder={field.placeholder}
-                                            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary/50 outline-none transition-all placeholder:text-gray-500 min-h-[100px]"
+                                            className="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base bg-white/5 border border-white/10 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary/50 outline-none transition-all placeholder:text-gray-500 min-h-[80px] sm:min-h-[100px] resize-y"
                                             onChange={(e) => handleChange(field.id, e.target.value)}
                                         />
                                     ) : field.type === "select" ? (
                                         <select
                                             required={field.required}
-                                            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary/50 outline-none transition-all text-gray-200 [&>option]:bg-slate-900"
+                                            className="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base bg-white/5 border border-white/10 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary/50 outline-none transition-all text-gray-200 [&>option]:bg-slate-900"
                                             onChange={(e) => handleChange(field.id, e.target.value)}
                                             defaultValue=""
                                         >
@@ -166,14 +166,14 @@ export default function PublicFormPage() {
                                             ))}
                                         </select>
                                     ) : field.type === "checkbox" || field.type === "toggle" ? (
-                                        <div className="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/10">
+                                        <div className="flex items-center gap-2 sm:gap-3 p-2.5 sm:p-3 bg-white/5 rounded-lg sm:rounded-xl border border-white/10">
                                             <input
                                                 type="checkbox"
                                                 id={field.id}
-                                                className="w-5 h-5 accent-primary rounded cursor-pointer"
+                                                className="w-4 h-4 sm:w-5 sm:h-5 accent-primary rounded cursor-pointer"
                                                 onChange={(e) => handleChange(field.id, e.target.checked)}
                                             />
-                                            <label htmlFor={field.id} className="text-sm text-gray-300 cursor-pointer select-none">
+                                            <label htmlFor={field.id} className="text-xs sm:text-sm text-gray-300 cursor-pointer select-none">
                                                 {field.placeholder || "Yes"}
                                             </label>
                                         </div>
@@ -182,7 +182,7 @@ export default function PublicFormPage() {
                                             type={field.type === "phone" ? "tel" : field.type}
                                             required={field.required}
                                             placeholder={field.placeholder}
-                                            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary/50 outline-none transition-all placeholder:text-gray-500"
+                                            className="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base bg-white/5 border border-white/10 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-primary/50 focus:border-primary/50 outline-none transition-all placeholder:text-gray-500"
                                             onChange={(e) => handleChange(field.id, e.target.value)}
                                         />
                                     )}
@@ -192,11 +192,11 @@ export default function PublicFormPage() {
                             <button
                                 type="submit"
                                 disabled={submitting}
-                                className="w-full py-4 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                                className="w-full py-3 sm:py-4 mt-2 bg-primary hover:bg-primary/90 text-white text-sm sm:text-base font-bold rounded-lg sm:rounded-xl shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 touch-manipulation"
                             >
                                 {submitting ? (
                                     <>
-                                        <Loader2 className="w-5 h-5 animate-spin" />
+                                        <Loader2 className="w-4 h-4 sm:w-5 sm:h-5 animate-spin" />
                                         Submitting...
                                     </>
                                 ) : (
@@ -205,20 +205,20 @@ export default function PublicFormPage() {
                             </button>
                         </form>
                     ) : (
-                        <div className="text-center py-12 animate-fade-in">
-                            <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6 text-green-400 border border-green-500/30">
-                                <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <div className="text-center py-8 sm:py-10 md:py-12 animate-fade-in">
+                            <div className="w-16 h-16 sm:w-20 sm:h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4 sm:mb-6 text-green-400 border border-green-500/30">
+                                <svg className="w-8 h-8 sm:w-10 sm:h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
                                 </svg>
                             </div>
-                            <h2 className="text-2xl font-bold text-white mb-2">Thank You!</h2>
-                            <p className="text-muted-foreground mb-8">Your submission has been received.</p>
+                            <h2 className="text-xl sm:text-2xl font-bold text-white mb-1 sm:mb-2">Thank You!</h2>
+                            <p className="text-sm sm:text-base text-muted-foreground mb-6 sm:mb-8">Your submission has been received.</p>
                             <button
                                 onClick={() => {
                                     setSubmitted(false);
                                     setFormData({});
                                 }}
-                                className="px-6 py-2 text-sm text-white/60 hover:text-white transition-colors"
+                                className="px-4 sm:px-6 py-2 text-xs sm:text-sm text-white/60 hover:text-white transition-colors touch-manipulation"
                             >
                                 Submit another response
                             </button>
@@ -226,7 +226,7 @@ export default function PublicFormPage() {
                     )}
                 </div>
 
-                <div className="mt-8 text-center text-xs text-white/20">
+                <div className="mt-4 sm:mt-6 md:mt-8 text-center text-[10px] sm:text-xs text-white/20">
                     Powered by LNC Forms
                 </div>
             </div>

@@ -118,7 +118,7 @@ export default function LoginPage() {
           </div>
 
           <div className="w-full max-w-md animate-fade-in z-10">
-            <div className="glass-panel p-8 rounded-2xl border border-white/10 backdrop-blur-2xl shadow-2xl">
+            <div className="glass-panel p-8 rounded-2xl border border-white/10 shadow-2xl" style={{ WebkitBackdropFilter: 'blur(24px)', backdropFilter: 'blur(24px)' }}>
               <div className="flex flex-col items-center gap-2 mb-8 text-center">
                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/20 text-primary ring-1 ring-primary/50 mb-4 shadow-[0_0_15px_rgba(139,92,246,0.5)]">
                   <Image

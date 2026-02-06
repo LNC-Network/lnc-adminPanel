@@ -71,11 +71,22 @@
 
 /* Glassmorphism Utilities */
 .glass-panel {
-    @apply bg-black/40 backdrop-blur-xl border border-white/10 shadow-2xl;
+    @apply bg-black/60 border border-white/10 shadow-2xl;
+    -webkit-backdrop-filter: blur(24px);
+    backdrop-filter: blur(24px);
+}
+
+/* Fallback for browsers that don't support backdrop-filter */
+@supports not (backdrop-filter: blur(24px)) {
+    .glass-panel {
+        @apply bg-black/90;
+    }
 }
 
 .glass-card {
-    @apply bg-zinc-900/60 backdrop-blur-md border border-white/5 shadow-lg hover:bg-zinc-800/60 transition-all duration-300 hover:border-white/10;
+    @apply bg-zinc-900/60 border border-white/5 shadow-lg hover:bg-zinc-800/60 transition-all duration-300 hover:border-white/10;
+    -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
 }
 
 /* Animations */
