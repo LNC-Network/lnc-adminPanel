@@ -62,10 +62,22 @@ export async function POST(req: Request) {
             );
         }
 
-        // 2. Hash New Password
+        // 2. Fetch User Details (to get personal_email)
+        const { data: user, error: userErr } = await supabase
+            .from("users")
+            .select("personal_email")
+            .eq("email", email)
+            .single();
+
+        if (userErr || !user) {
+            console.error("User fetch error during reset:", userErr);
+            // Proceed with reset even if fetch fails, but log it.
+        }
+
+        // 3. Hash New Password
         const passwordHash = await argon2.hash(password);
 
-        // 3. Update User Password
+        // 4. Update User Password
         const { error: updateErr } = await supabase
             .from("users")
             .update({ password_hash: passwordHash })
@@ -79,11 +91,18 @@ export async function POST(req: Request) {
             );
         }
 
-        // 4. Delete Used OTP
+        // 5. Delete Used OTP
         await supabase
             .from("password_resets")
             .delete()
             .eq("email", email);
+
+        // 6. Send Confirmation Email
+        if (user?.personal_email) {
+            // Dynamically import to avoid circular dependencies if any (though unlikely here)
+            const { sendPasswordChangedEmail } = await import("@/lib/email-service");
+            await sendPasswordChangedEmail(user.personal_email);
+        }
 
         return NextResponse.json(
             { message: "Password updated successfully" },

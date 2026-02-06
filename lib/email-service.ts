@@ -783,3 +783,51 @@ export async function sendPasswordResetEmail(
     return { success: false, error: error.message };
   }
 }
+
+export async function sendPasswordChangedEmail(
+  email: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    console.log(`📧 Sending password changed notification to: ${email}`);
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 30px; border-radius: 10px 10px 0 0; text-align: center; }
+            .content { background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; }
+            .footer { margin-top: 20px; font-size: 12px; color: #666; text-align: center; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>✅ Password Changed Successfully</h1>
+            </div>
+            <div class="content">
+              <p>Hello,</p>
+              <p>This is a confirmation that the password for your LNC Admin Panel account has been changed on ${new Date().toLocaleString()}.</p>
+              <p>If you did not perform this action, please contact your administrator immediately.</p>
+              
+              <div class="footer">
+                <p>LNC Admin Panel Secure System</p>
+              </div>
+            </div>
+          </div>
+        </body>
+      </html>
+    `;
+
+    return await sendEmail({
+      to: email,
+      subject: '✅ LNC Admin: Password Changed Successfully',
+      html,
+    });
+  } catch (error: any) {
+    console.error('❌ Error sending password changed email:', error);
+    return { success: false, error: error.message };
+  }
+}
