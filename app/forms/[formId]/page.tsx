@@ -120,7 +120,7 @@ export default function PublicFormPage() {
             <Toaster position="top-center" richColors />
 
             {/* Background Particles */}
-            <div className="fixed inset-0 z-0 opacity-50 pointer-events-none">
+            <div className="fixed inset-0 z-0 opacity-20 pointer-events-none">
                 <ParticleCanvas />
             </div>
 
